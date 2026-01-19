@@ -3,19 +3,23 @@ package com.lockstrm.plataforma;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-// @SpringBootApplication: Esta es la anotación más importante.
-// Le dice a Java: "Esto no es un programa normal, es una aplicación Spring Boot".
-// Activa automáticamente la configuración, el escaneo de componentes y la conexión a BBDD.
+/**
+ * Clase principal que sirve como punto de entrada para la aplicación Spring Boot.
+ * La anotación @SpringBootApplication es una conveniencia que encapsula:
+ * - @Configuration: Marca la clase como una fuente de definiciones de beans.
+ * - @EnableAutoConfiguration: Intenta configurar automáticamente la aplicación Spring.
+ * - @ComponentScan: Escanea componentes, configuraciones y servicios en el paquete actual.
+ */
 @SpringBootApplication
 public class LockstrmPlataformaApplication {
 
-    // El método main es estándar en Java. Todo programa empieza aquí.
+    /**
+     * Método principal estándar de Java, es el punto de inicio de la ejecución.
+     * @param args Argumentos de línea de comandos pasados al iniciar la aplicación.
+     */
     public static void main(String[] args) {
-        // SpringApplication.run(): Aquí ocurre la magia.
-        // 1. Arranca el servidor web (Tomcat) en el puerto 8080.
-        // 2. Lee el archivo application.properties.
-        // 3. Se conecta a la base de datos Docker.
-        // 4. Crea las tablas si no existen (gracias al ddl-auto).
+        // SpringApplication.run() arranca la aplicación.
+        // Inicia el contenedor de Spring, realiza la autoconfiguración y despliega el servidor web embebido (ej. Tomcat).
         SpringApplication.run(LockstrmPlataformaApplication.class, args);
         
         System.out.println(">>> 🚀 LOCKSTRM PLATAFORMA HA ARRANCADO CORRECTAMENTE 🚀 <<<");

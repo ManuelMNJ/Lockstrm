@@ -7,15 +7,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController // Indica que esta clase responde a peticiones web (API REST)
-@RequestMapping("/api/usuarios") // Todas las rutas empezarán por /api/usuarios
+/**
+ * Controlador REST para gestionar las operaciones relacionadas con los usuarios.
+ * Expone los endpoints de la API para interactuar con el recurso Usuario.
+ */
+@RestController
+@RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
 public class UsuarioControlador {
 
+    // Inyección de dependencias del servicio de usuarios.
     private final UsuarioServicio usuarioServicio;
 
-    // POST /api/usuarios/registro
-    // Recibe un JSON con los datos del usuario y lo crea
+    /**
+     * Endpoint para registrar un nuevo usuario en el sistema.
+     * Escucha las peticiones POST en la ruta /api/usuarios/registro.
+     * @param usuario El objeto Usuario a crear, deserializado desde el cuerpo (body) de la petición JSON.
+     * @return Un ResponseEntity con el usuario creado y un estado HTTP 201 (Created).
+     */
     @PostMapping("/registro")
     public ResponseEntity<Usuario> registrar(@RequestBody Usuario usuario) {
         Usuario nuevoUsuario = usuarioServicio.registrarUsuario(usuario);

@@ -4,34 +4,42 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa la tabla intermedia (asociativa) entre Usuario y Grupo.
+ * Modela la membresía de un usuario a un grupo, utilizando una clave primaria compuesta.
+ */
 @Entity
-@Table(name = "miembros_grupo") // [cite: 58]
+@Table(name = "miembros_grupo")
 @Data
 public class MiembrosGrupo {
 
-    // @EmbeddedId: Aquí uso la clase "llave doble" que creé en el paso anterior.
-    // Esto será la Primary Key de la tabla.
+    // Define la clave primaria compuesta, incrustada desde la clase MiembrosGrupoId.
     @EmbeddedId
     private MiembrosGrupoId id = new MiembrosGrupoId();
 
-    // RELACIÓN CON USUARIO
-    // @MapsId("idUsuario"): MAGIA. Le digo que el campo 'idUsuario' de la llave compuesta
-    // se corresponde con ESTE objeto Usuario. Así no duplico datos.
+    // Relación con Usuario, mapeada a través de la clave compuesta.
+    // @MapsId indica que el atributo 'idUsuario' de la clave embebida (@EmbeddedId)
+    // se utiliza como clave foránea, mapeando a la clave primaria de la entidad Usuario.
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idUsuario")
-    @JoinColumn(name = "id_usuario") // [cite: 59]
+    @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
-    // RELACIÓN CON GRUPO
+    // Relación con Grupo, mapeada de forma similar a la del usuario.
+    // @MapsId indica que el atributo 'idGrupo' de la clave embebida (@EmbeddedId)
+    // se utiliza como clave foránea, mapeando a la clave primaria de la entidad Grupo.
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idGrupo")
-    @JoinColumn(name = "id_grupo") // [cite: 60]
+    @JoinColumn(name = "id_grupo")
     private Grupo grupo;
 
-    // Campo extra que pedía tu diagrama: Cuándo se unió al grupo.
-    @Column(name = "fecha_union", updatable = false) // [cite: 61]
+    @Column(name = "fecha_union", updatable = false)
     private LocalDateTime fechaUnion;
 
+    /**
+     * Callback de JPA que se ejecuta antes de persistir la entidad.
+     * Establece la fecha de unión del miembro al grupo.
+     */
     @PrePersist
     protected void onCreate() {
         if (this.fechaUnion == null) {

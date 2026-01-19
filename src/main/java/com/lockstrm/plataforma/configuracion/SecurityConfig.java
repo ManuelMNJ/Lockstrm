@@ -8,49 +8,62 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration // Le digo a Spring: "Oye, lee esto al arrancar porque aquí hay configuraciones
-               // importantes".
-@EnableWebSecurity // Activo la seguridad web de Spring Security.
+/**
+ * Clase de configuración para Spring Security.
+ * Define las reglas de seguridad web, autenticación y autorización de la aplicación.
+ */
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
-    // 1. EL ENCRIPTADOR DE CONTRASEÑAS (El que arregla el error en UsuarioService)
+    /**
+     * Define un bean para el encriptador de contraseñas.
+     * Este bean estará disponible en todo el contexto de Spring para ser inyectado donde se necesite.
+     * @return Una implementación de PasswordEncoder que utiliza el algoritmo BCrypt.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Uso BCrypt porque es el estándar actual. Es seguro porque incluye "sal"
-        // (salt) aleatoria
-        // y es lento de calcular a propósito para evitar ataques de fuerza bruta.
+        // Se utiliza BCrypt porque es el estándar de facto para el hashing de contraseñas.
+        // Internamente, genera un 'salt' aleatorio por cada contraseña, lo que protege contra
+        // ataques de tablas precalculadas (rainbow tables). Su naturaleza computacionalmente lenta
+        // también mitiga los ataques de fuerza bruta.
         return new BCryptPasswordEncoder();
     }
 
-    // 2. EL FILTRO DE SEGURIDAD (El Portero de la Discoteca)
-    // Aquí defino las reglas: quién pasa y quién no.
+    /**
+     * Configura la cadena de filtros de seguridad de Spring Security.
+     * Este método define qué rutas son públicas, cuáles requieren autenticación y cómo se gestiona el login.
+     * @param http El objeto HttpSecurity para configurar la seguridad web.
+     * @return El objeto SecurityFilterChain construido.
+     * @throws Exception Si ocurre un error durante la configuración.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilito CSRF de momento para facilitar las pruebas con formularios
-                // simples o Postman.
-                // En producción para una web con Thymeleaf, esto debería estar activado.
+                // Deshabilitación de la protección contra Cross-Site Request Forgery (CSRF).
+                // Es común deshabilitarlo para APIs RESTful sin estado o durante fases iniciales de desarrollo.
+                // NOTA: Para aplicaciones web tradicionales con formularios y sesiones, debe estar habilitado.
                 .csrf(csrf -> csrf.disable())
 
-                // Reglas de autorización de rutas
+                // Define las reglas de autorización para las peticiones HTTP.
                 .authorizeHttpRequests(auth -> auth
-                        // Permito entrar a cualquiera a las rutas de recursos estáticos (CSS, JS,
-                        // imágenes)
+                        // Permite el acceso público a recursos estáticos.
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                        // Permito entrar a cualquiera a la página de login y registro (cuando las
-                        // creemos)
+                        // Permite el acceso público a las rutas de registro y login.
                         .requestMatchers("/login", "/registro", "/api/usuarios/registro").permitAll()
-                        // Para TODO lo demás, el usuario tiene que estar autenticado.
-                        .anyRequest().authenticated())
-
-                // Configuración del formulario de Login (usaremos el de por defecto de momento)
-                .formLogin(form -> form
-                        .permitAll() // Todos pueden ver el formulario de login
+                        // Exige autenticación para cualquier otra petición no definida anteriormente.
+                        .anyRequest().authenticated()
                 )
 
-                // Configuración de Logout
+                // Configuración del formulario de login.
+                // Se utilizará el formulario de login provisto por defecto por Spring Security.
+                .formLogin(form -> form
+                        .permitAll() // Permite a todos los usuarios acceder a la página de login.
+                )
+
+                // Configuración del proceso de logout.
                 .logout(logout -> logout
-                        .permitAll());
+                        .permitAll()); // Permite a todos los usuarios acceder a la funcionalidad de logout.
 
         return http.build();
     }

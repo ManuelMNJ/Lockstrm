@@ -1,42 +1,54 @@
-1. ARRANCAR EL SERVIDOR MYSQL (El Motor)
-------------------------------------------------------------------------------
-Si la base de datos no conecta, abre una terminal y ejecuta esto.
-IMPORTANTE: No cierres esta terminal, déjala minimizada.
+==============================================================================
+📘 MANUAL DE OPERACIONES - PROYECTO TFG (LOCKSTRM)
+==============================================================================
 
+🛠️ RUTINA DE ARRANQUE (Al abrir el portátil)
+------------------------------------------------------------------------------
+Sigue este orden. Necesitas 2 terminales abiertas.
+
+PASO 1: LA BASE DE DATOS (Terminal 1)
+-------------------------------------
+1. Copia este comando:
 mysqld --datadir=$PWD/.data/mysql --socket=$PWD/.data/mysql/mysql.sock --bind-address=0.0.0.0 --port=3306 --console
 
-2. CONECTARSE A LA BASE DE DATOS (El Cliente)
-------------------------------------------------------------------------------
-Usa esto en una segunda terminal para ver las tablas manualmente.
-Usamos la IP 127.0.0.1 para forzar la conexión por red.
+2. Pégalo en la Terminal 1 y pulsa ENTER.
+3. NO CIERRES ESTA TERMINAL (minimízala).
 
-mysql -u lockstrm_user -p -h 127.0.0.1
 
-3. ARRANCAR LA APLICACIÓN SPRING BOOT
-------------------------------------------------------------------------------
-Alternativa al botón "Play" del editor. Útil si quieres ver el log completo.
-
+PASO 2: EL BACKEND JAVA (Terminal 2)
+-------------------------------------
+1. Abre una segunda terminal.
+2. Copia y pega:
 mvn spring-boot:run
 
-4. SOLUCIÓN "BASE DE DATOS DESAPARECIDA"
+3. Espera a ver: "Started LockstrmPlataformaApplication".
+
+
+PASO 3: GESTIÓN DE DATOS (Opcional - Terminal 2)
+------------------------------------------------
+Si quieres ver los datos "a mano" en la consola SQL:
+mysql -u lockstrm_user -p -h 127.0.0.1
+(Contraseña: pass)
+
+
+⚠️ SOLUCIONES RÁPIDAS (Si sale algo rojo)
 ------------------------------------------------------------------------------
-Si Java dice "Unknown database 'lockstrm_db'", ejecuta esto en la terminal para crearla a la fuerza:
 
-mysql -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS lockstrm_db;"
+CASO A: Java dice "ClassNotFoundException" o errores raros
+(Úsalo si cambias nombres de archivos y Java se lía)
+> mvn clean install -DskipTests
 
-5. SOLUCIÓN "CLASE NO ENCONTRADA" (Limpieza)
+CASO B: "Unknown database 'lockstrm_db'" al arrancar
+(Si la base de datos ha desaparecido)
+> mysql -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS lockstrm_db;"
+
+CASO C: Git dice "Rejected / Fetch first" al subir
+(Úsalo solo si estás seguro de que tu código local es el bueno)
+> git push -u origin main --force
+
+
+☁️ GUARDAR PROGRESO (Al terminar el día)
 ------------------------------------------------------------------------------
-Si cambias nombres de archivos y Java sigue buscando los viejos (Error: ClassNotFoundException),
-ejecuta esto para limpiar la "basura" y recompilar desde cero:
-
-mvn clean install -DskipTests
-
-6. SOLUCIÓN NUCLEAR (Si todo se rompe)
-------------------------------------------------------------------------------
-Si la base de datos se corrompe, ejecuta esto línea a línea para borrar y empezar de 0.
-¡CUIDADO! BORRA TODOS LOS DATOS.
-
-pkill -9 mysqld
-rm -rf .data/mysql
-mysqld --initialize-insecure --datadir=$PWD/.data/mysql
-(Luego volver al paso 1 para arrancar y paso 4 para crear la BBDD)
+1. git add .
+2. git commit -m "Avance del día"
+3. git push

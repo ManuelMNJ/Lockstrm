@@ -1,9 +1,18 @@
 package com.lockstrm.plataforma.model;
 
-// Esto es un ENUM.
-// Sirve para obligar a que el rol sea SOLAMENTE uno de estos dos.
-// Así evito que alguien se registre con rol "HACKER" o "INVITADO" si no lo tengo controlado.
+/**
+ * Enumeración que define los roles de sistema disponibles en la aplicación.
+ * El uso de un enum garantiza la integridad de los datos, ya que el rol de un usuario
+ * solo puede ser uno de los valores predefinidos, evitando inconsistencias.
+ */
 public enum Rol {
-    USUARIO,        // Usuario normal (gestiona sus vídeos)
-    SUPER_ADMIN     // El jefe (mantenimiento global)
+    /**
+     * Rol estándar para usuarios registrados. Tienen control sobre sus propios recursos (ej. vídeos).
+     */
+    USUARIO,
+
+    /**
+     * Rol con privilegios elevados para la administración global del sistema.
+     */
+    SUPER_ADMIN
 }
