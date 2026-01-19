@@ -1,29 +1,65 @@
-# To learn more about how to use Nix to configure your environment
-# see: https://developers.google.com/idx/guides/customize-idx-env
+# .idx/dev.nix
 { pkgs, ... }: {
-  # Which nixpkgs channel to use.
-  channel = "stable-23.11"; # or "unstable"
-  # Use https://search.nixos.org/packages to find packages
+  # Usamos el canal estable de Nix (software probado)
+  channel = "stable-23.11";
+
+  # Lista de programas a instalar en tu entorno
   packages = [
-    pkgs.zulu17
+    pkgs.jdk17 
     pkgs.maven
+    pkgs.mysql80
   ];
-  # Sets environment variables in the workspace
-  env = {};
+
+  # Variables de entorno del sistema
+  env = {
+    # Definimos dónde guardará MySQL los datos dentro de tu proyecto
+    MYSQL_DATA_DIR = "$PWD/.data/mysql";
+  };
+
+  # Configuración de extensiones de VS Code y scripts de inicio
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      "vscjava.vscode-java-pack"
-      "google.gemini-cli-vscode-ide-companion"
+      "vscjava.vscode-java-pack" # Pack esencial para Java
+      "rangav.vscode-thunder-client" # Para probar peticiones HTTP
+      "cweijan.vscode-mysql-client2" # Cliente visual para ver las tablas
     ];
+
     workspace = {
-      # Runs when a workspace is first created with this `dev.nix` file
+      # Se ejecuta solo la primera vez que creas el workspace
       onCreate = {
-        install = "mvn clean install";
+        mvn-install = "mvn clean install -DskipTests";
       };
-      # Runs when a workspace is (re)started
+
+      # Se ejecuta CADA VEZ que inicias o reinicias el entorno
       onStart = {
-        run-server = "PORT=3000 mvn spring-boot:run";
+        # Script inteligente para manejar la base de datos automáticamente
+        init-mysql = ''
+          # 1. Si no existe la carpeta de datos, inicializamos MySQL
+          if [ ! -d "$MYSQL_DATA_DIR" ]; then
+            echo ">>> Inicializando directorio de datos MySQL..."
+            mysqld --initialize-insecure --datadir="$MYSQL_DATA_DIR"
+          fi
+          
+          # 2. Si MySQL no está corriendo, lo arrancamos
+          if ! pgrep mysqld > /dev/null; then
+             echo ">>> Arrancando servidor MySQL..."
+             mysqld --datadir="$MYSQL_DATA_DIR" --port=3306 --bind-address=0.0.0.0 &
+             
+             # Esperamos 10 segundos a que arranque para configurarlo
+             sleep 10
+             
+             # 3. Creamos la Base de Datos y el Usuario
+             echo ">>> Configurando usuario y base de datos..."
+             mysql -u root -e "CREATE DATABASE IF NOT EXISTS lockstrm_db;"
+             # Creamos usuario 'lockstrm_user' con contraseña 'lockstrm_pass'
+             mysql -u root -e "CREATE USER IF NOT EXISTS 'lockstrm_user'@'%' IDENTIFIED BY 'lockstrm_pass';"
+             # Le damos todos los permisos
+             mysql -u root -e "GRANT ALL PRIVILEGES ON lockstrm_db.* TO 'lockstrm_user'@'%';"
+             mysql -u root -e "FLUSH PRIVILEGES;"
+             
+             echo ">>> ¡TODO LISTO! Base de datos 'lockstrm_db' operativa."
+          fi
+        '';
       };
     };
   };

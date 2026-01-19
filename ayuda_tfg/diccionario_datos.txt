@@ -1,0 +1,26 @@
+1. TABLAS PRINCIPALES
+---------------------
+- usuarios (id_usuario, email, password, nombre, rol_sistema, fecha_registro)
+  * rol_sistema: "USUARIO" o "SUPER_ADMIN"
+  * NOTA: Si se borra un usuario, desaparecen sus vídeos y grupos.
+
+- videos (id_video, titulo, url_cloud_secure, duracion_segundos, id_propietario)
+  * url_cloud_secure: Solo guarda la ID de Cloudinary, no el video real.
+
+- grupos (id_grupo, nombre, id_creador, fecha_creacion)
+  * id_creador: El usuario que "manda" en el grupo.
+
+- logs (id_log, id_usuario, id_video, fecha_hora, ip_acceso)
+  * Auditoría: Registra cada vez que alguien ve algo.
+
+
+
+2. TABLAS INTERMEDIAS (RELACIONES MUCHOS A MUCHOS)
+--------------------------------------------------
+- miembros_grupo
+  * CLAVE: Compuesta (id_usuario + id_grupo)
+  * Propósito: Dice qué usuarios están en qué grupo.
+
+- permisos_grupo
+  * CLAVE: Compuesta (id_video + id_grupo)
+  * Propósito: Dice qué grupos pueden ver qué video.

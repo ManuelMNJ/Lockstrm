@@ -1,0 +1,42 @@
+1. ARRANCAR EL SERVIDOR MYSQL (El Motor)
+------------------------------------------------------------------------------
+Si la base de datos no conecta, abre una terminal y ejecuta esto.
+IMPORTANTE: No cierres esta terminal, déjala minimizada.
+
+mysqld --datadir=$PWD/.data/mysql --socket=$PWD/.data/mysql/mysql.sock --bind-address=0.0.0.0 --port=3306 --console
+
+2. CONECTARSE A LA BASE DE DATOS (El Cliente)
+------------------------------------------------------------------------------
+Usa esto en una segunda terminal para ver las tablas manualmente.
+Usamos la IP 127.0.0.1 para forzar la conexión por red.
+
+mysql -u lockstrm_user -p -h 127.0.0.1
+
+3. ARRANCAR LA APLICACIÓN SPRING BOOT
+------------------------------------------------------------------------------
+Alternativa al botón "Play" del editor. Útil si quieres ver el log completo.
+
+mvn spring-boot:run
+
+4. SOLUCIÓN "BASE DE DATOS DESAPARECIDA"
+------------------------------------------------------------------------------
+Si Java dice "Unknown database 'lockstrm_db'", ejecuta esto en la terminal para crearla a la fuerza:
+
+mysql -u root -h 127.0.0.1 -P 3306 -e "CREATE DATABASE IF NOT EXISTS lockstrm_db;"
+
+5. SOLUCIÓN "CLASE NO ENCONTRADA" (Limpieza)
+------------------------------------------------------------------------------
+Si cambias nombres de archivos y Java sigue buscando los viejos (Error: ClassNotFoundException),
+ejecuta esto para limpiar la "basura" y recompilar desde cero:
+
+mvn clean install -DskipTests
+
+6. SOLUCIÓN NUCLEAR (Si todo se rompe)
+------------------------------------------------------------------------------
+Si la base de datos se corrompe, ejecuta esto línea a línea para borrar y empezar de 0.
+¡CUIDADO! BORRA TODOS LOS DATOS.
+
+pkill -9 mysqld
+rm -rf .data/mysql
+mysqld --initialize-insecure --datadir=$PWD/.data/mysql
+(Luego volver al paso 1 para arrancar y paso 4 para crear la BBDD)

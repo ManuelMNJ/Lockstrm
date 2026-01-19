@@ -1,0 +1,62 @@
+1. HERRAMIENTAS DE API 
+------------------------------------------------------------------------------
+Usa estos comandos en la terminal para crear usuarios reales a través de tu código Java.
+Esto prueba: Controlador -> Servicio -> Repositorio -> BBDD.
+
+# A) Registrar un Usuario Estándar
+curl -v -X POST http://localhost:8080/api/usuarios/registro \
+-H "Content-Type: application/json" \
+-d '{"nombre": "Pepito Grillo", "email": "pepito@test.com", "password": "1234"}'
+
+# B) Registrar un posible Administrador (Nota: Por defecto el código lo pone como USUARIO,
+#    pero sirve para probar que tu lógica de "rol por defecto" funciona).
+curl -v -X POST http://localhost:8080/api/usuarios/registro \
+-H "Content-Type: application/json" \
+-d '{"nombre": "Jefe Supremo", "email": "admin@test.com", "password": "admin", "rolSistema": "SUPER_ADMIN"}'
+
+
+2. INYECCIÓN SQL DIRECTA (Para tablas sin controlador aún)
+------------------------------------------------------------------------------
+Como aún no tenemos la web para subir vídeos o crear grupos, usa estos comandos
+DENTRO DE MYSQL para rellenar la base de datos y ver cómo queda.
+
+(Primero entra: mysql -u lockstrm_user -p -h 127.0.0.1)
+
+# A) Crear Vídeos Falsos (Asumiendo que el usuario con ID 1 existe)
+INSERT INTO videos (titulo, url_cloud_secure, duracion_segundos, id_propietario, fecha_subida)
+VALUES ('Tutorial Java 1', 'v123456', 120, 1, NOW());
+
+INSERT INTO videos (titulo, url_cloud_secure, duracion_segundos, id_propietario, fecha_subida)
+VALUES ('Gameplay Minecraft', 'v999999', 600, 1, NOW());
+
+# B) Crear un Grupo Falso
+INSERT INTO grupos (nombre, id_creador, fecha_creacion)
+VALUES ('Clase 1º DAM', 1, NOW());
+
+# C) Añadir Miembros al Grupo (Tabla intermedia con Clave Compuesta)
+# (Asumiendo que existe usuario 1 y usuario 2, y el grupo 1)
+INSERT INTO miembros_grupo (id_grupo, id_usuario, fecha_union) VALUES (1, 1, NOW());
+INSERT INTO miembros_grupo (id_grupo, id_usuario, fecha_union) VALUES (1, 2, NOW());
+
+
+3. PRUEBAS DE DESTRUCCIÓN (Integridad Referencial)
+------------------------------------------------------------------------------
+Usa esto para probar si tu decisión de "Cascade Delete" funciona.
+
+# Si borras al usuario 1... ¿Se borran sus vídeos y grupos automáticamente?
+DELETE FROM usuarios WHERE id_usuario = 1;
+
+# Comprobación (Deberían salir vacías si funcionó):
+SELECT * FROM videos WHERE id_propietario = 1;
+SELECT * FROM miembros_grupo WHERE id_usuario = 1;
+
+
+4. CONSULTAS ÚTILES (Para ver qué hay)
+------------------------------------------------------------------------------
+# Ver todos los usuarios
+SELECT * FROM usuarios;
+
+# Ver qué vídeos tiene cada usuario (Join simple)
+SELECT u.nombre, v.titulo 
+FROM usuarios u 
+JOIN videos v ON u.id_usuario = v.id_propietario;
