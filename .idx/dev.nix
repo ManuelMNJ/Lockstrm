@@ -8,6 +8,7 @@
     pkgs.jdk17 
     pkgs.maven
     pkgs.mysql80
+    pkgs.jq
   ];
 
   # Variables de entorno del sistema
@@ -23,7 +24,17 @@
       "rangav.vscode-thunder-client" # Para probar peticiones HTTP
       "cweijan.vscode-mysql-client2" # Cliente visual para ver las tablas
     ];
-
+  # Configuración de la vista previa
+    previews = {
+      enable = true;
+      previews = {
+        web = {
+          # Comando para arrancar el servidor automáticamente
+          command = ["mvn" "spring-boot:run" "-Dspring-boot.run.jvmArguments='-Dserver.port=$PORT'"];
+          manager = "web";
+        };
+      };
+    };
     workspace = {
       # Se ejecuta solo la primera vez que creas el workspace
       onCreate = {
@@ -62,5 +73,6 @@
         '';
       };
     };
+
   };
 }

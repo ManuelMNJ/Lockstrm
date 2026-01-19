@@ -37,7 +37,7 @@ public class UsuarioServicio {
 
         // 3. Asignación de rol por defecto.
         // Todo nuevo usuario se registra con el rol de USUARIO.
-        usuario.setRolSistema(Rol.USUARIO);
+        usuario.setRolSistema("USUARIO");
 
         // 4. Persistencia: Guardar el nuevo usuario en la base de datos a través del repositorio.
         return usuarioRepositorio.save(usuario);

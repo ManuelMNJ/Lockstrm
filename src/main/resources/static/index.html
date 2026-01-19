@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lockstrm - Plataforma de Vídeo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .video-card { transition: transform 0.2s; cursor: pointer; }
+        .video-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card-img-top { height: 180px; object-fit: cover; background-color: #000; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">🎥 Lockstrm</a>
+            <button class="btn btn-outline-light btn-sm" onclick="alert('Próximamente: Login')">Iniciar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card mb-5 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">📤 Subir nuevo vídeo</h5>
+                <form id="uploadForm" class="row g-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" id="titulo" placeholder="Título del vídeo" required>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="file" class="form-control" id="ficheroVideo" accept="video/mp4,video/mkv" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100" id="btnSubir">Subir 🚀</button>
+                    </div>
+                </form>
+                <div id="mensajeEstado" class="mt-2"></div>
+            </div>
+        </div>
+
+        <h4 class="mb-3 text-secondary">Explorar Vídeos</h4>
+        <div class="row row-cols-1 row-cols-md-3 g-4" id="galeriaVideos">
+            <div class="col text-center py-5 w-100">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p>Cargando contenido...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/videos'; // URL relativa (mismo servidor)
+
+        // 1. FUNCIÓN PARA CARGAR VÍDEOS
+        async function cargarVideos() {
+            try {
+                const respuesta = await fetch(API_URL);
+                const videos = await respuesta.json();
+                
+                const galeria = document.getElementById('galeriaVideos');
+                galeria.innerHTML = ''; // Limpiar spinner
+
+                if (videos.length === 0) {
+                    galeria.innerHTML = '<p class="text-center text-muted w-100">No hay vídeos subidos aún 😢</p>';
+                    return;
+                }
+
+                videos.forEach(video => {
+                    // Truco: Cloudinary genera miniaturas cambiando la extensión .mp4 por .jpg
+                    // Si tu URL acaba en .mp4, intentamos sacar la imagen. Si no, ponemos un placeholder negro.
+                    let thumbnail = video.urlCloudSecure.replace('.mp4', '.jpg'); 
+                    
+                    const tarjeta = `
+                        <div class="col">
+                            <div class="card h-100 video-card shadow-sm">
+                                <video src="${video.urlCloudSecure}" class="card-img-top" controls></video>
+                                <div class="card-body">
+                                    <h6 class="card-title fw-bold">${video.titulo}</h6>
+                                    <p class="card-text text-muted small">
+                                        Subido el: ${new Date(video.fechaSubida).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    galeria.innerHTML += tarjeta;
+                });
+
+            } catch (error) {
+                console.error("Error cargando vídeos:", error);
+                document.getElementById('galeriaVideos').innerHTML = 
+                    '<div class="alert alert-danger w-100">Error al conectar con el servidor 🛑</div>';
+            }
+        }
+
+        // 2. FUNCIÓN PARA SUBIR VÍDEO
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Evita que se recargue la página
+            
+            const btn = document.getElementById('btnSubir');
+            const msg = document.getElementById('mensajeEstado');
+            const fileInput = document.getElementById('ficheroVideo');
+            const tituloInput = document.getElementById('titulo');
+
+            // Preparar datos
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('titulo', tituloInput.value);
+            formData.append('idUsuario', '1'); // Hardcodeado por ahora (siempre es Manuel)
+            formData.append('duracion', '120'); // Hardcodeado por ahora
+
+            // Interfaz visual (Cargando...)
+            btn.disabled = true;
+            btn.innerHTML = 'Subiendo... ⏳';
+            msg.innerHTML = '';
+
+            try {
+                const respuesta = await fetch(API_URL + '/subir', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (respuesta.ok) {
+                    msg.innerHTML = '<span class="text-success fw-bold">¡Vídeo subido con éxito! 🎉</span>';
+                    fileInput.value = ''; // Limpiar form
+                    tituloInput.value = '';
+                    cargarVideos(); // Recargar la lista automáticamente
+                } else {
+                    throw new Error('Fallo en la subida');
+                }
+            } catch (error) {
+                msg.innerHTML = '<span class="text-danger fw-bold">Error al subir. Revisa la consola 💀</span>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Subir 🚀';
+            }
+        });
+
+        // Cargar vídeos al entrar
+        cargarVideos();
+    </script>
+</body>
+</html>
