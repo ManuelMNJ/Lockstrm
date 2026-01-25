@@ -1,45 +1,55 @@
 package com.lockstrm.plataforma.servicios;
 
-import com.lockstrm.plataforma.model.Rol;
+import com.lockstrm.plataforma.dto.Registro;
 import com.lockstrm.plataforma.model.Usuario;
 import com.lockstrm.plataforma.repositorios.UsuarioRepositorio;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/**
- * Servicio que encapsula la lógica de negocio relacionada con los usuarios.
- * Actúa como intermediario entre el controlador y el repositorio.
- */
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor // Inyección de dependencias vía constructor con Lombok
 public class UsuarioServicio {
 
-    private final UsuarioRepositorio usuarioRepositorio;
-    private final PasswordEncoder passwordEncoder; // Bean definido en SecurityConfig
+    @Autowired
+    private UsuarioRepositorio usuarioRepositorio;
 
-    /**
-     * Registra un nuevo usuario en el sistema.
-     * @param usuario El objeto Usuario con los datos para el registro.
-     * @return El usuario guardado en la base de datos, con la contraseña hasheada y rol asignado.
-     * @throws IllegalStateException Si el email ya está en uso.
-     */
-    public Usuario registrarUsuario(Usuario usuario) {
+    @Autowired
+    private PasswordEncoder passwordEncoder; // Inyectamos el encriptador
 
-        // 1. Validación: Comprobar si el email ya existe en la base de datos.
-        if (usuarioRepositorio.existsByEmail(usuario.getEmail())) {
-            throw new IllegalStateException("El email '" + usuario.getEmail() + "' ya está registrado.");
-        }
+    public List<Usuario> listarTodos() {
+        return usuarioRepositorio.findAll();
+    }
 
-        // 2. Seguridad: Hashear la contraseña del usuario antes de guardarla.
-        // Nunca se debe almacenar texto plano. Se utiliza el PasswordEncoder inyectado.
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-
-        // 3. Asignación de rol por defecto.
-        // Todo nuevo usuario se registra con el rol de USUARIO.
-        usuario.setRolSistema("USUARIO");
-
-        // 4. Persistencia: Guardar el nuevo usuario en la base de datos a través del repositorio.
+    public Usuario guardar(Usuario usuario) {
         return usuarioRepositorio.save(usuario);
+    }
+
+    public Usuario obtenerPorId(Long id) {
+        return usuarioRepositorio.findById(id).orElse(null);
+    }
+
+    // NUEVO MÉTODO: REGISTRAR CON ENCRIPTACIÓN
+    public Usuario registrarUsuario(Registro request) {
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setUsername(request.getUsername());
+        nuevoUsuario.setEmail(request.getEmail());
+
+        // AQUÍ OCURRE LA MAGIA: Encriptamos la contraseña antes de guardarla
+        String passEncriptada = passwordEncoder.encode(request.getPassword());
+        nuevoUsuario.setPassword(passEncriptada);
+
+        // Asignamos un rol por defecto (opcional)
+        // nuevoUsuario.setRol("USER");
+
+        return usuarioRepositorio.save(nuevoUsuario);
+    }
+
+    public Usuario buscarPorEmail(String email) {
+        return usuarioRepositorio.findAll().stream()
+                .filter(u -> u.getEmail().equals(email))
+                .findFirst()
+                .orElse(null);
     }
 }

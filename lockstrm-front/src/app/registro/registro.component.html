@@ -1,0 +1,25 @@
+<div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
+  <h2>🔐 Registro en Lockstrm</h2>
+
+  <div style="background: #f4f4f4; padding: 20px; display: inline-block; border-radius: 10px;">
+
+    <div>
+      <input type="text" placeholder="Usuario" [(ngModel)]="usuario.username" style="padding: 10px; margin: 5px;">
+    </div>
+
+    <div>
+      <input type="email" placeholder="Email" [(ngModel)]="usuario.email" style="padding: 10px; margin: 5px;">
+    </div>
+
+    <div>
+      <input type="password" placeholder="Contraseña" [(ngModel)]="usuario.password" style="padding: 10px; margin: 5px;">
+    </div>
+
+    <button (click)="registrar()" style="background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; margin-top: 10px;">
+      Registrarse 🚀
+    </button>
+
+  </div>
+
+  <p style="margin-top: 20px; font-weight: bold;">{{ mensaje }}</p>
+</div>

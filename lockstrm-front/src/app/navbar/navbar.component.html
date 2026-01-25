@@ -1,0 +1,24 @@
+<nav style="background-color: #333; padding: 1rem; color: white; display: flex; justify-content: space-between; align-items: center;">
+
+  <div style="font-weight: bold; font-size: 1.2rem;">
+    🔐 Lockstrm
+  </div>
+
+  <div style="display: flex; gap: 20px;">
+
+    <a routerLink="/home" style="color: white; text-decoration: none; cursor: pointer;">Inicio</a>
+
+    <ng-container *ngIf="usuarioLogueado">
+      <a routerLink="/grupos" style="color: white; text-decoration: none; cursor: pointer;">👥 Grupos</a>
+      <a routerLink="/videos" style="color: white; text-decoration: none; cursor: pointer;">🎬 Mis Vídeos</a>
+      <span style="color: #aaa;">Hola, {{ usuarioLogueado.username }}</span>
+      <button (click)="cerrarSesion()" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Salir</button>
+    </ng-container>
+
+    <ng-container *ngIf="!usuarioLogueado">
+      <a routerLink="/login" style="color: white; text-decoration: none; cursor: pointer;">Entrar</a>
+      <a routerLink="/registro" style="background: #007bff; padding: 5px 10px; border-radius: 4px; color: white; text-decoration: none; cursor: pointer;">Registrarse</a>
+    </ng-container>
+
+  </div>
+</nav>

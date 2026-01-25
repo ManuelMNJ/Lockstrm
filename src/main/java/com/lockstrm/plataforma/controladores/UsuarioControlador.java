@@ -1,5 +1,6 @@
 package com.lockstrm.plataforma.controladores;
 
+import com.lockstrm.plataforma.dto.Registro;
 import com.lockstrm.plataforma.model.Usuario;
 import com.lockstrm.plataforma.servicios.UsuarioServicio;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ public class UsuarioControlador {
      * @return Un ResponseEntity con el usuario creado y un estado HTTP 201 (Created).
      */
     @PostMapping("/registro")
-    public ResponseEntity<Usuario> registrar(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = usuarioServicio.registrarUsuario(usuario);
+    public ResponseEntity<Usuario> registrar(@RequestBody Registro request) {
+        Usuario nuevoUsuario = usuarioServicio.registrarUsuario(request);
         return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
     }
 }

@@ -37,4 +37,8 @@ public class Usuario {
     protected void onCreate() {
         fechaRegistro = LocalDateTime.now();
     }
+
+    public void setUsername(String username) {
+
+    }
 }
