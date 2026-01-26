@@ -20,7 +20,7 @@ public class VideoControlador {
 
     private final VideoServicio videoServicio;
 
-    // ENDPOINT 1: SUBIR VÍDEO
+
     @PostMapping("/subir")
     public ResponseEntity<Map<String, Object>> subirVideo(
             @RequestParam("file") MultipartFile file,
@@ -52,7 +52,7 @@ public class VideoControlador {
         }
     }
 
-    // ENDPOINT 2: VER TODOS (NUEVO)
+
     @GetMapping
     public ResponseEntity<List<Video>> listarVideos() {
         List<Video> videos = videoServicio.obtenerTodos();

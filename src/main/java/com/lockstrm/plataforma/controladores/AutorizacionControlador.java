@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200") // <--- AÑADE ESTO (Permite entrar a Angular)
+@CrossOrigin(origins = "http://localhost:4200")
 public class AutorizacionControlador {
     @Autowired
     private UsuarioServicio usuarioServicio;
@@ -34,7 +34,7 @@ public class AutorizacionControlador {
 
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Login request) { // <--- AQUÍ USAMOS TU CLASE 'Login'
+    public ResponseEntity<?> login(@RequestBody Login request) {
         // 1. Buscamos al usuario
         Usuario usuario = usuarioServicio.buscarPorEmail(request.getEmail());
 
