@@ -1,5 +1,5 @@
 <div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
-  <h2> Registro en Lockstrm</h2>
+  <h2>🔐 Registro en Lockstrm</h2>
 
   <div style="background: #f4f4f4; padding: 20px; display: inline-block; border-radius: 10px;">
 
@@ -16,7 +16,7 @@
     </div>
 
     <button (click)="registrar()" style="background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; margin-top: 10px;">
-      Registrarse 
+      Registrarse 🚀
     </button>
 
   </div>

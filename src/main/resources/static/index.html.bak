@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lockstrm - Plataforma de Vídeo</title>
-    <link href="https/cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .video-card { transition: transform 0.2s; cursor: pointer; }
@@ -16,7 +16,7 @@
 
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#"> Lockstrm</a>
+            <a class="navbar-brand fw-bold" href="#">🎥 Lockstrm</a>
             <button class="btn btn-outline-light btn-sm" onclick="alert('Próximamente: Login')">Iniciar Sesión</button>
         </div>
     </nav>
@@ -24,7 +24,7 @@
     <div class="container">
         <div class="card mb-5 shadow-sm">
             <div class="card-body">
-                <h5 class="card-title mb-3"> Subir nuevo vídeo</h5>
+                <h5 class="card-title mb-3">📤 Subir nuevo vídeo</h5>
                 <form id="uploadForm" class="row g-3">
                     <div class="col-md-5">
                         <input type="text" class="form-control" id="titulo" placeholder="Título del vídeo" required>
@@ -33,7 +33,7 @@
                         <input type="file" class="form-control" id="ficheroVideo" accept="video/mp4,video/mkv" required>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100" id="btnSubir">Subir </button>
+                        <button type="submit" class="btn btn-primary w-100" id="btnSubir">Subir 🚀</button>
                     </div>
                 </form>
                 <div id="mensajeEstado" class="mt-2"></div>
@@ -62,7 +62,7 @@
                 galeria.innerHTML = ''; // Limpiar spinner
 
                 if (videos.length === 0) {
-                    galeria.innerHTML = '<p class="text-center text-muted w-100">No hay vídeos subidos aún </p>';
+                    galeria.innerHTML = '<p class="text-center text-muted w-100">No hay vídeos subidos aún 😢</p>';
                     return;
                 }
 
@@ -90,7 +90,7 @@
             } catch (error) {
                 console.error("Error cargando vídeos:", error);
                 document.getElementById('galeriaVideos').innerHTML = 
-                    '<div class="alert alert-danger w-100">Error al conectar con el servidor </div>';
+                    '<div class="alert alert-danger w-100">Error al conectar con el servidor 🛑</div>';
             }
         }
 
@@ -122,7 +122,7 @@
                 });
 
                 if (respuesta.ok) {
-                    msg.innerHTML = '<span class="text-success fw-bold">¡Vídeo subido con éxito! </span>';
+                    msg.innerHTML = '<span class="text-success fw-bold">¡Vídeo subido con éxito! 🎉</span>';
                     fileInput.value = ''; // Limpiar form
                     tituloInput.value = '';
                     cargarVideos(); // Recargar la lista automáticamente
@@ -130,10 +130,10 @@
                     throw new Error('Fallo en la subida');
                 }
             } catch (error) {
-                msg.innerHTML = '<span class="text-danger fw-bold">Error al subir. Revisa la consola </span>';
+                msg.innerHTML = '<span class="text-danger fw-bold">Error al subir. Revisa la consola 💀</span>';
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Subir ';
+                btn.innerHTML = 'Subir 🚀';
             }
         });
 

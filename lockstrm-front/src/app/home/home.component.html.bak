@@ -1,7 +1,7 @@
 <div style="text-align: center; padding: 50px; font-family: sans-serif;">
 
   <h1 style="font-size: 3rem; color: #333; margin-bottom: 10px;">
-     Bienvenido a Lockstrm
+    🔐 Bienvenido a Lockstrm
   </h1>
 
   <p style="font-size: 1.2rem; color: #666; max-width: 600px; margin: 0 auto;">
@@ -13,17 +13,17 @@
   <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
 
     <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; width: 250px;">
-      <h3> Grupos</h3>
+      <h3>👥 Grupos</h3>
       <p>Crea grupos y administra quién puede ver qué.</p>
     </div>
 
     <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; width: 250px;">
-      <h3> Vídeos</h3>
+      <h3>🎬 Vídeos</h3>
       <p>Sube contenido y compártelo solo con quien tú quieras.</p>
     </div>
 
     <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; width: 250px;">
-      <h3> Seguridad</h3>
+      <h3>🛡️ Seguridad</h3>
       <p>Tus datos protegidos con la mejor tecnología.</p>
     </div>
 
@@ -32,7 +32,7 @@
   <div style="margin-top: 50px;">
     <p>¿Aún no tienes cuenta?</p>
     <a routerLink="/registro" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-      ¡Únete ahora! 
+      ¡Únete ahora! 🚀
     </a>
   </div>
 

@@ -22,7 +22,7 @@ public class LockstrmPlataformaApplication {
         // Inicia el contenedor de Spring, realiza la autoconfiguración y despliega el servidor web embebido (ej. Tomcat).
         SpringApplication.run(LockstrmPlataformaApplication.class, args);
         
-        System.out.println(">>> 🚀 LOCKSTRM PLATAFORMA HA ARRANCADO CORRECTAMENTE 🚀 <<<");
+        System.out.println(">>>  LOCKSTRM PLATAFORMA HA ARRANCADO CORRECTAMENTE  <<<");
     }
 
 }

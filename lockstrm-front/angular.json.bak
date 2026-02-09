@@ -57,7 +57,7 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "lockstrm-front:buildroduction"
+              "buildTarget": "lockstrm-front:build:production"
             },
             "development": {
               "buildTarget": "lockstrm-front:build:development"

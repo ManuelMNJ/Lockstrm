@@ -4,13 +4,13 @@ Usa estos comandos en la terminal para crear usuarios reales a través de tu có
 Esto prueba: Controlador -> Servicio -> Repositorio -> BBDD.
 
 # A) Registrar un Usuario Estándar
-curl -v -X POST http/localhost:8080/api/usuarios/registro \
+curl -v -X POST http://localhost:8080/api/usuarios/registro \
 -H "Content-Type: application/json" \
 -d '{"nombre": "Pepito Grillo", "email": "pepito@test.com", "password": "1234"}'
 
 # B) Registrar un posible Administrador (Nota: Por defecto el código lo pone como USUARIO,
 #    pero sirve para probar que tu lógica de "rol por defecto" funciona).
-curl -v -X POST http/localhost:8080/api/usuarios/registro \
+curl -v -X POST http://localhost:8080/api/usuarios/registro \
 -H "Content-Type: application/json" \
 -d '{"nombre": "Jefe Supremo", "email": "admin@test.com", "password": "admin", "rolSistema": "SUPER_ADMIN"}'
 

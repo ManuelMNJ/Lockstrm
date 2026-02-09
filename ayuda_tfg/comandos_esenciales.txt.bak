@@ -1,8 +1,8 @@
 ==============================================================================
- MANUAL DE OPERACIONES - PROYECTO TFG (LOCKSTRM)
+📘 MANUAL DE OPERACIONES - PROYECTO TFG (LOCKSTRM)
 ==============================================================================
 
- RUTINA DE ARRANQUE (Al abrir el portátil)
+🛠️ RUTINA DE ARRANQUE (Al abrir el portátil)
 ------------------------------------------------------------------------------
 Sigue este orden. Necesitas 2 terminales abiertas.
 
@@ -31,7 +31,7 @@ mysql -u lockstrm_user -p -h 127.0.0.1
 (Contraseña: pass)
 
 
- SOLUCIONES RÁPIDAS (Si sale algo rojo)
+⚠️ SOLUCIONES RÁPIDAS (Si sale algo rojo)
 ------------------------------------------------------------------------------
 
 CASO A: Java dice "ClassNotFoundException" o errores raros
@@ -47,7 +47,7 @@ CASO C: Git dice "Rejected / Fetch first" al subir
 > git push -u origin main --force
 
 
- GUARDAR PROGRESO (Al terminar el día)
+☁️ GUARDAR PROGRESO (Al terminar el día)
 ------------------------------------------------------------------------------
 1. git add .
 2. git commit -m "Avance del día"

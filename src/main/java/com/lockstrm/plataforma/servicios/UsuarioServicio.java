@@ -30,18 +30,16 @@ public class UsuarioServicio {
         return usuarioRepositorio.findById(id).orElse(null);
     }
 
-    // NUEVO MÉTODO: REGISTRAR CON ENCRIPTACIÓN
+
     public Usuario registrarUsuario(Registro request) {
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setUsername(request.getUsername());
         nuevoUsuario.setEmail(request.getEmail());
 
-        // AQUÍ OCURRE LA MAGIA: Encriptamos la contraseña antes de guardarla
+
         String passEncriptada = passwordEncoder.encode(request.getPassword());
         nuevoUsuario.setPassword(passEncriptada);
 
-        // Asignamos un rol por defecto (opcional)
-        // nuevoUsuario.setRol("USER");
 
         return usuarioRepositorio.save(nuevoUsuario);
     }

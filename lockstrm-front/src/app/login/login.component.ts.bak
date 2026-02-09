@@ -23,7 +23,7 @@ export class LoginComponent {
   constructor(private http: HttpClient,private router: Router) { }
 
   hacerLogin() {
-    const url = 'http/localhost:8080/api/auth/login';
+    const url = 'http://localhost:8080/api/auth/login';
 
     this.http.post(url, this.loginObj).subscribe({
       next: (res: any) => {
@@ -32,7 +32,7 @@ export class LoginComponent {
       },
       error: (err) => {
         console.error('Error:', err);
-        this.mensaje = ' Error: Datos incorrectos';
+        this.mensaje = '❌ Error: Datos incorrectos';
       }
     });
   }

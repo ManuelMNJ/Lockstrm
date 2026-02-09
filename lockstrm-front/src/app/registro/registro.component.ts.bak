@@ -32,17 +32,17 @@ export class RegistroComponent {
   // Metodo que se ejecuta al enviar el formulario de registro.
   registrar() {
     // URL del backend Java donde esta el endpoint de registro.
-    const url = 'http/localhost:8080/api/auth/registro';
+    const url = 'http://localhost:8080/api/auth/registro';
 
     // Enviamos los datos con una peticion POST.
     this.http.post(url, this.usuario).subscribe({
       next: (respuesta: any) => {
-        alert('¡Cuenta creada! Ahora inicia sesión '); // Opcional: un aviso visual
+        alert('¡Cuenta creada! Ahora inicia sesión 🚀'); // Opcional: un aviso visual
         this.router.navigate(['/login']);
       },
       error: (error) => {
         console.error('Error:', error);
-        this.mensaje = ' Error al registrar (Revisa la consola)';
+        this.mensaje = '❌ Error al registrar (Revisa la consola)';
       }
     });
   }
