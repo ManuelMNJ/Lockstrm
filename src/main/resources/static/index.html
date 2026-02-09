@@ -50,16 +50,15 @@
     </div>
 
     <script>
-        const API_URL = '/api/videos'; // URL relativa (mismo servidor)
+        const API_URL = '/api/videos';
 
-        // 1. FUNCIÓN PARA CARGAR VÍDEOS
         async function cargarVideos() {
             try {
                 const respuesta = await fetch(API_URL);
                 const videos = await respuesta.json();
                 
                 const galeria = document.getElementById('galeriaVideos');
-                galeria.innerHTML = ''; // Limpiar spinner
+                galeria.innerHTML = '';
 
                 if (videos.length === 0) {
                     galeria.innerHTML = '<p class="text-center text-muted w-100">No hay vídeos subidos aún </p>';
@@ -67,9 +66,7 @@
                 }
 
                 videos.forEach(video => {
-                    // Truco: Cloudinary genera miniaturas cambiando la extensión .mp4 por .jpg
-                    // Si tu URL acaba en .mp4, intentamos sacar la imagen. Si no, ponemos un placeholder negro.
-                    let thumbnail = video.urlCloudSecure.replace('.mp4', '.jpg'); 
+                    let thumbnail = video.urlCloudSecure.replace('.mp4', '.jpg');
                     
                     const tarjeta = `
                         <div class="col">
@@ -94,23 +91,20 @@
             }
         }
 
-        // 2. FUNCIÓN PARA SUBIR VÍDEO
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Evita que se recargue la página
-            
+            e.preventDefault();
+
             const btn = document.getElementById('btnSubir');
             const msg = document.getElementById('mensajeEstado');
             const fileInput = document.getElementById('ficheroVideo');
             const tituloInput = document.getElementById('titulo');
 
-            // Preparar datos
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('titulo', tituloInput.value);
-            formData.append('idUsuario', '1'); // Hardcodeado por ahora (siempre es Manuel)
-            formData.append('duracion', '120'); // Hardcodeado por ahora
+            formData.append('idUsuario', '1');
+            formData.append('duracion', '120');
 
-            // Interfaz visual (Cargando...)
             btn.disabled = true;
             btn.innerHTML = 'Subiendo... ⏳';
             msg.innerHTML = '';
@@ -123,9 +117,9 @@
 
                 if (respuesta.ok) {
                     msg.innerHTML = '<span class="text-success fw-bold">¡Vídeo subido con éxito! </span>';
-                    fileInput.value = ''; // Limpiar form
+                    fileInput.value = '';
                     tituloInput.value = '';
-                    cargarVideos(); // Recargar la lista automáticamente
+                    cargarVideos();
                 } else {
                     throw new Error('Fallo en la subida');
                 }
@@ -137,7 +131,6 @@
             }
         });
 
-        // Cargar vídeos al entrar
         cargarVideos();
     </script>
 </body>

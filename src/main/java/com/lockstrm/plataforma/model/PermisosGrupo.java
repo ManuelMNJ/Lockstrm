@@ -2,29 +2,37 @@ package com.lockstrm.plataforma.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.io.Serializable;
 
-/**
- * Entidad que representa la tabla asociativa para los permisos de un grupo sobre un vídeo.
- * Utiliza una clave primaria compuesta para definir la relación.
- */
+
 @Entity
 @Table(name = "permisos_grupo")
 @Data
-public class PermisosGrupo {
+public class PermisosGrupo implements Serializable {
 
-    @EmbeddedId
-    private PermisosGrupoId id = new PermisosGrupoId();
+    @Id
+    @Column(name = "id_video_id")
+    private Long idVideoId;
+
+    @Id
+    @Column(name = "id_grupo_id")
+    private Long idGrupoId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("idGrupo")
-    @JoinColumn(name = "id_grupo")
-    private Grupo grupo;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("idVideo")
-    @JoinColumn(name = "id_video")
+    @JoinColumn(name = "id_video_id", insertable = false, updatable = false)
     private Video video;
 
-    // Se podría añadir un campo extra si fuera necesario, como por ejemplo:
-    // private boolean puedeEditar;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_grupo_id", insertable = false, updatable = false)
+    private Grupo grupo;
+
+
+    public PermisosGrupo() {
+    }
+
+
+    public PermisosGrupo(Long idVideoId, Long idGrupoId) {
+        this.idVideoId = idVideoId;
+        this.idGrupoId = idGrupoId;
+    }
 }

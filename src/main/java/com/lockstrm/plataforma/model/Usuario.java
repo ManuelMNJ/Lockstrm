@@ -3,7 +3,7 @@ package com.lockstrm.plataforma.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.ToString; // <--- IMPORTANTE: Nuevo import
+import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,10 +27,9 @@ public class Usuario {
 
     private String rolSistema;
 
-    // --- AQUÍ ESTÁ EL CAMBIO CRÍTICO ---
     @OneToMany(mappedBy = "propietario", cascade = CascadeType.ALL)
-    @JsonIgnore          // Evita bucle en el JSON (Salida web)
-    @ToString.Exclude    // Evita bucle en la consola (Logs de Java)
+    @JsonIgnore
+    @ToString.Exclude
     private List<Video> videosSubidos;
 
     @PrePersist
@@ -39,6 +38,6 @@ public class Usuario {
     }
 
     public void setUsername(String username) {
-
+        this.nombre = username;
     }
 }

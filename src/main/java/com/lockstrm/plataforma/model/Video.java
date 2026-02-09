@@ -22,12 +22,11 @@ public class Video {
 
     @ManyToOne
     @JoinColumn(name = "id_propietario", nullable = false)
-    // ESTA ES LA LÍNEA MÁGICA QUE CORTA EL BUCLE:
-    @JsonIgnoreProperties("videosSubidos") 
+    @JsonIgnoreProperties("videosSubidos")
     private Usuario propietario;
 
     @PrePersist
     protected void onCreate() {
         fechaSubida = LocalDateTime.now();
     }
-}   
+}

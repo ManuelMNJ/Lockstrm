@@ -16,7 +16,7 @@ public class UsuarioServicio {
     private UsuarioRepositorio usuarioRepositorio;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // Inyectamos el encriptador
+    private PasswordEncoder passwordEncoder;
 
     public List<Usuario> listarTodos() {
         return usuarioRepositorio.findAll();
@@ -30,12 +30,10 @@ public class UsuarioServicio {
         return usuarioRepositorio.findById(id).orElse(null);
     }
 
-
     public Usuario registrarUsuario(Registro request) {
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setUsername(request.getUsername());
         nuevoUsuario.setEmail(request.getEmail());
-
 
         String passEncriptada = passwordEncoder.encode(request.getPassword());
         nuevoUsuario.setPassword(passEncriptada);
