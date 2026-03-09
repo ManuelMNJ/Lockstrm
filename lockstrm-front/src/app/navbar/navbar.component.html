@@ -1,23 +1,23 @@
-<nav style="background-color: #333; padding: 1rem; color: white; display: flex; justify-content: space-between; align-items: center;">
+<nav class="navbar-root">
 
-  <div style="font-weight: bold; font-size: 1.2rem;">
+  <div class="navbar-brand">
      Lockstrm
   </div>
 
-  <div style="display: flex; gap: 20px;">
+  <div class="navbar-links">
 
-    <a routerLink="/home" style="color: white; text-decoration: none; cursor: pointer;">Inicio</a>
+    <a routerLink="/home" class="navbar-link">Inicio</a>
 
     <ng-container *ngIf="usuarioLogueado">
-      <a routerLink="/grupos" style="color: white; text-decoration: none; cursor: pointer;"> Grupos</a>
-      <a routerLink="/videos" style="color: white; text-decoration: none; cursor: pointer;"> Mis Vídeos</a>
-      <span style="color: #aaa;">Hola, {{ usuarioLogueado.username }}</span>
-      <button (click)="cerrarSesion()" style="background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Salir</button>
+      <a routerLink="/grupos" class="navbar-link"> Grupos</a>
+      <a routerLink="/videos" class="navbar-link"> Mis Vídeos</a>
+      <span class="navbar-welcome">Hola, {{ usuarioLogueado.username }}</span>
+      <button (click)="cerrarSesion()" class="navbar-logout">Salir</button>
     </ng-container>
 
     <ng-container *ngIf="!usuarioLogueado">
-      <a routerLink="/login" style="color: white; text-decoration: none; cursor: pointer;">Entrar</a>
-      <a routerLink="/registro" style="background: #007bff; padding: 5px 10px; border-radius: 4px; color: white; text-decoration: none; cursor: pointer;">Registrarse</a>
+      <a routerLink="/login" class="navbar-link">Entrar</a>
+      <a routerLink="/registro" class="navbar-register">Registrarse</a>
     </ng-container>
 
   </div>

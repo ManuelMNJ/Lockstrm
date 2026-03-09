@@ -1,0 +1,38 @@
+.login-root {
+  text-align: center;
+  margin-top: 50px;
+  font-family: sans-serif;
+}
+
+.login-card {
+  background: #e3f2fd;
+  padding: 30px;
+  display: inline-block;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.login-field {
+  margin-bottom: 15px;
+}
+
+.login-input {
+  padding: 10px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.login-button {
+  background: #0d6efd;
+  color: white;
+  padding: 10px 30px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.login-mensaje {
+  margin-top: 20px;
+}

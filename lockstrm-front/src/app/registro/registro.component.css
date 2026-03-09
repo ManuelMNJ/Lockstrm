@@ -1,0 +1,32 @@
+.registro-root {
+  text-align: center;
+  margin-top: 50px;
+  font-family: sans-serif;
+}
+
+.registro-card {
+  background: #f4f4f4;
+  padding: 20px;
+  display: inline-block;
+  border-radius: 10px;
+}
+
+.registro-input {
+  padding: 10px;
+  margin: 5px;
+}
+
+.registro-button {
+  background: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.registro-mensaje {
+  margin-top: 20px;
+  font-weight: bold;
+}

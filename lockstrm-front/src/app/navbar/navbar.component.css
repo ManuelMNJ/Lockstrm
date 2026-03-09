@@ -1,0 +1,47 @@
+.navbar-root {
+  background-color: #333;
+  padding: 1rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.navbar-link {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.navbar-welcome {
+  color: #aaa;
+}
+
+.navbar-logout {
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.navbar-register {
+  background: #007bff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}

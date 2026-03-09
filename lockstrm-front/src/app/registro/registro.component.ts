@@ -1,9 +1,8 @@
-
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Para leer los inputs
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import {Router} from '@angular/router'; // Para hablar con Java
+import {Router} from '@angular/router';
 
 
 @Component({
@@ -21,21 +20,16 @@ export class RegistroComponent {
     password: ''
   };
 
-
   mensaje: string = '';
-
 
   constructor(private http: HttpClient, private router: Router) { }
 
-
   registrar() {
-    // URL del backend Java donde esta el endpoint de registro.
     const url = 'http://localhost:8080/api/auth/registro';
 
-    // Enviamos los datos con una peticion POST.
     this.http.post(url, this.usuario).subscribe({
       next: (respuesta: any) => {
-        alert('¡Cuenta creada! Ahora inicia sesión '); // Opcional: un aviso visual
+        alert('¡Cuenta creada! Ahora inicia sesión ');
         this.router.navigate(['/login']);
       },
       error: (error) => {
