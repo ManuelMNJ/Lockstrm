@@ -28,6 +28,7 @@ export class LoginComponent {
     this.http.post(url, this.loginObj).subscribe({
       next: (res: any) => {
         console.log('Respuesta:', res);
+        localStorage.setItem('usuarioLogueado', JSON.stringify(res));
         this.router.navigate(['/home']);
       },
       error: (err) => {

@@ -43,8 +43,13 @@ export class VideosComponent implements OnInit {
       return;
     }
 
-    // Le pasamos un 1 por defecto por si todavia no tienes el login conectado al 100%
-    const idUsuario = 1; 
+    const usuarioGuardado = localStorage.getItem('usuarioLogueado');
+    const idUsuario = usuarioGuardado ? JSON.parse(usuarioGuardado).id : null;
+
+    if (!idUsuario) {
+      this.mensaje = 'Error: No hay sesión activa. Por favor, inicia sesión.';
+      return;
+    }
 
     this.subiendo = true;
     this.mensaje = 'Subiendo a Cloudinary... Espera por favor.';
