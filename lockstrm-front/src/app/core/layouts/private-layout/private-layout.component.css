@@ -1,0 +1,253 @@
+/* ==========================================================================
+   Lockstrm — Private Layout (App Shell)
+   private-layout.component.css
+
+   Estructura de dos columnas implementada con CSS Grid:
+     • Columna 1 (fija): <aside class="sidebar">   — var(--sidebar-width)
+     • Columna 2 (flex): .main-wrapper             — 1fr
+   Dentro de .main-wrapper se usa Flexbox en dirección column para apilar
+   el <header> (fijo) sobre el <main> (scrollable).
+   ========================================================================== */
+
+/* ==========================================================================
+   APP SHELL — Grid container principal
+   ========================================================================== */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main);
+}
+
+/* ==========================================================================
+   SIDEBAR
+   ========================================================================== */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Brand / Logo ── */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.brand-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* ── Navigation ── */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4) var(--space-2);
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color var(--transition-fast),
+    color            var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.nav-item:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.nav-item.active svg {
+  color: var(--color-primary);
+}
+
+/* ── Sidebar footer ── */
+.sidebar-footer {
+  padding: var(--space-3) var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* Authenticated user card */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface-hover);
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Logout button (icon-only) */
+.btn-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-subtle);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.btn-logout:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--color-error);
+}
+
+.btn-logout svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Guest links wrapper */
+.guest-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ==========================================================================
+   MAIN WRAPPER — Flex column (header fijo + contenido scrollable)
+   ========================================================================== */
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main);
+}
+
+/* ── Page header ── */
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-8);
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-main);
+  flex-shrink: 0;
+  gap: var(--space-4);
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+}
+
+/* Icon inside .btn-primary (Subir vídeo) */
+.btn-primary .btn-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Scrollable content area (router-outlet host) ── */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-8);
+}

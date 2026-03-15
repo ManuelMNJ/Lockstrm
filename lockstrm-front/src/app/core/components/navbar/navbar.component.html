@@ -1,0 +1,24 @@
+<nav class="navbar-root">
+
+  <div class="navbar-brand">
+    Lockstrm
+  </div>
+
+  <div class="navbar-links">
+
+    <a routerLink="/home" class="navbar-link">Inicio</a>
+
+    <ng-container *ngIf="usuarioLogueado">
+      <a routerLink="/grupos" class="navbar-link">Grupos</a>
+      <a routerLink="/videos" class="navbar-link">Mis Vídeos</a>
+      <span class="navbar-welcome">Hola, {{ usuarioLogueado.username }}</span>
+      <button (click)="cerrarSesion()" class="navbar-logout">Salir</button>
+    </ng-container>
+
+    <ng-container *ngIf="!usuarioLogueado">
+      <a routerLink="/login" class="navbar-link">Entrar</a>
+      <a routerLink="/registro" class="navbar-register">Registrarse</a>
+    </ng-container>
+
+  </div>
+</nav>

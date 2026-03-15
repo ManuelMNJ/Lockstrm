@@ -1,0 +1,366 @@
+/* ==========================================================================
+   Lockstrm — Videos Component Styles
+   videos.component.css
+   ========================================================================== */
+
+/* ==========================================================================
+   PAGE WRAPPER
+   ========================================================================== */
+.videos-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ==========================================================================
+   UPLOAD PANEL
+   ========================================================================== */
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Form ── */
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Two-column layout for the input fields */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* Text input */
+.form-input {
+  padding: 9px 12px;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ghost);
+}
+
+.form-input::placeholder {
+  color: var(--text-subtle);
+}
+
+/* File input */
+.form-input--file {
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.form-input--file::file-selector-button {
+  background-color: var(--bg-surface-hover);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  margin-right: 12px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.form-input--file::file-selector-button:hover {
+  background-color: var(--bg-surface-active);
+}
+
+/* Upload button row */
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Disabled state for .btn-primary used within this component */
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Status / feedback message — base: success */
+.upload-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-success);
+  background-color: rgba(16, 185, 129, 0.08);
+  color: var(--color-success);
+  margin: 0;
+}
+
+.upload-message--warning {
+  border-left-color: var(--color-warning);
+  background-color: rgba(245, 158, 11, 0.08);
+  color: var(--color-warning);
+}
+
+.upload-message--error {
+  border-left-color: var(--color-error);
+  background-color: rgba(239, 68, 68, 0.08);
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   LIBRARY SECTION
+   ========================================================================== */
+.library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.section-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-subtle);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  padding: 2px 9px;
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   DATA TABLE
+   ========================================================================== */
+
+/* Horizontal scroll + clipping container */
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 640px;
+}
+
+/* ── Head ── */
+.data-table thead tr {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.data-table thead th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Body rows ── */
+.table-row {
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--transition-fast);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.data-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+}
+
+/* ── Column: Thumbnail ── */
+.col-thumb {
+  width: 72px;
+}
+
+.video-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 36px;
+  background-color: var(--bg-surface-active);
+  border-radius: var(--radius-sm);
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.video-thumb svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Column: Title ── */
+.col-title {
+  min-width: 160px;
+}
+
+.video-title {
+  font-weight: 500;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+/* ── Shared muted cell text ── */
+.cell-text {
+  color: var(--text-muted);
+}
+
+/* ── Group badge ── */
+.cell-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 9999px;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* ── Column: Actions ── */
+.col-actions {
+  width: 100px;
+  text-align: right;
+}
+
+.btn-view {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: transparent;
+  border: 1px solid var(--color-primary-ghost);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.btn-view:hover {
+  background-color: var(--color-primary-ghost);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.btn-view:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Empty state ── */
+.table-empty {
+  padding: 0 !important;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-6);
+  color: var(--text-subtle);
+}
+
+.empty-state svg {
+  width: 32px;
+  height: 32px;
+  opacity: 0.4;
+}
+
+.empty-state p {
+  font-size: 13px;
+  text-align: center;
+  margin: 0;
+}

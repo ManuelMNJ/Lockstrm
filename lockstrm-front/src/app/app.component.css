@@ -1,0 +1,9 @@
+/* ==========================================================================
+   app.component.css — vacío tras la refactorización de layouts.
+
+   Los estilos del shell privado (sidebar, cabecera, CSS Grid) están en:
+     src/app/layouts/private-layout/private-layout.component.css
+
+   Los estilos del shell público (nav bar) están en:
+     src/app/layouts/public-layout/public-layout.component.css
+   ========================================================================== */

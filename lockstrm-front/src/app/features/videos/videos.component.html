@@ -1,0 +1,185 @@
+<!-- ==========================================================================
+  Lockstrm — Video Manager
+  videos.component.html
+  Toda la lógica de negocio ([(ngModel)], (change), (click), [disabled], *ngIf,
+  *ngFor, subir(), seleccionarArchivo()) permanece intacta.
+  ========================================================================== -->
+<div class="videos-page">
+
+  <!-- ================================================================
+    UPLOAD PANEL
+    ================================================================ -->
+  <section class="upload-panel" aria-labelledby="upload-heading">
+
+    <div class="panel-header">
+      <h2 class="panel-title" id="upload-heading">Subir nuevo vídeo</h2>
+      <p class="panel-subtitle">Formato MP4. Tamaño máximo permitido: 95 MB por archivo.</p>
+    </div>
+
+    <div class="upload-form">
+
+      <div class="form-row">
+
+        <!-- Título -->
+        <div class="form-field">
+          <label class="form-label" for="titulo-video">Título del vídeo</label>
+          <input
+            id="titulo-video"
+            class="form-input"
+            type="text"
+            [(ngModel)]="tituloVideo"
+            placeholder="Introduce un título descriptivo"
+            autocomplete="off">
+        </div>
+
+        <!-- Archivo -->
+        <div class="form-field">
+          <label class="form-label" for="archivo-video">Archivo de vídeo (MP4)</label>
+          <input
+            id="archivo-video"
+            class="form-input form-input--file"
+            type="file"
+            accept="video/*"
+            (change)="seleccionarArchivo($event)">
+        </div>
+
+      </div>
+
+      <!-- Actions row -->
+      <div class="upload-actions">
+        <button class="btn-primary" (click)="subir()" [disabled]="subiendo">
+          <!-- Upload / cloud-upload icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="btn-icon">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          {{ subiendo ? 'Subiendo...' : 'Subir vídeo' }}
+        </button>
+      </div>
+
+      <!-- Status message — color driven by CSS modifier class -->
+      <p *ngIf="mensaje"
+         class="upload-message"
+         [class.upload-message--warning]="mensaje.startsWith('Aviso')"
+         [class.upload-message--error]="mensaje.startsWith('Error')"
+         role="status"
+         aria-live="polite">
+        {{ mensaje }}
+      </p>
+
+    </div>
+  </section>
+
+  <!-- ================================================================
+    VIDEO LIBRARY — Data Table
+    ================================================================ -->
+  <section class="library" aria-labelledby="library-heading">
+
+    <div class="section-header">
+      <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
+      <span class="section-badge">{{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}</span>
+    </div>
+
+    <div class="table-wrapper" role="region" aria-label="Listado de vídeos" tabindex="0">
+      <table class="data-table">
+
+        <thead>
+          <tr>
+            <th scope="col" class="col-thumb">Miniatura</th>
+            <th scope="col" class="col-title">Título</th>
+            <th scope="col" class="col-owner">Propietario</th>
+            <th scope="col" class="col-group">Grupo</th>
+            <th scope="col" class="col-date">Fecha</th>
+            <th scope="col" class="col-duration">Duración</th>
+            <th scope="col" class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <!-- Data rows -->
+          <tr *ngFor="let v of videos" class="table-row">
+
+            <!-- Thumbnail placeholder -->
+            <td class="col-thumb">
+              <div class="video-thumb" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
+            </td>
+
+            <!-- Title -->
+            <td class="col-title">
+              <span class="video-title">{{ v.titulo }}</span>
+            </td>
+
+            <!-- Owner -->
+            <td class="col-owner">
+              <span class="cell-text">
+                {{ v.propietario?.username || v.nombrePropietario || v.ownerUsername || '—' }}
+              </span>
+            </td>
+
+            <!-- Group -->
+            <td class="col-group">
+              <span class="cell-badge" *ngIf="v.grupo?.nombre || v.nombreGrupo || v.groupName; else noGroup">
+                {{ v.grupo?.nombre || v.nombreGrupo || v.groupName }}
+              </span>
+              <ng-template #noGroup><span class="cell-text">—</span></ng-template>
+            </td>
+
+            <!-- Upload date -->
+            <td class="col-date">
+              <span class="cell-text">
+                {{ v.fechaSubida ? (v.fechaSubida | date:'dd/MM/yyyy') : (v.uploadDate ? (v.uploadDate | date:'dd/MM/yyyy') : '—') }}
+              </span>
+            </td>
+
+            <!-- Duration -->
+            <td class="col-duration">
+              <span class="cell-text">
+                {{ v.duracion != null ? (v.duracion + ' min') : '—' }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="col-actions">
+              <a [href]="v.urlCloudSecure"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="btn-view"
+                 aria-label="Ver vídeo: {{ v.titulo }}">
+                Ver vídeo
+              </a>
+            </td>
+
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="videos.length === 0">
+            <td colspan="7" class="table-empty">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                </svg>
+                <p>No hay vídeos en la biblioteca. Comienza subiendo el primero.</p>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>

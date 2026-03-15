@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Lockstrm — Public Layout Styles
+   public-layout.component.css
+
+   Flex column de pantalla completa:
+     • .public-nav   → altura fija (57 px), barra superior con logo y CTAs
+     • .public-content → flex: 1, overflow-y: auto, padding interior
+   ========================================================================== */
+
+/* ==========================================================================
+   SHELL CONTAINER
+   ========================================================================== */
+.public-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main);
+}
+
+/* ==========================================================================
+   TOP NAVIGATION BAR
+   ========================================================================== */
+.public-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 57px;              /* alineado con la altura de .sidebar-brand */
+  padding: 0 var(--space-8);
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  gap: var(--space-4);
+}
+
+/* ── Brand (logo + name) ── */
+.public-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.brand-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* ── Right-side actions ── */
+.public-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* Ghost text link */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px var(--space-2);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover {
+  color: var(--text-main);
+}
+
+.nav-link--active {
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   CONTENT AREA
+   Routes render here via <router-outlet>
+   ========================================================================== */
+.public-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-8);
+}

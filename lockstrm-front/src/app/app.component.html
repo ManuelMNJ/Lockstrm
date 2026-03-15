@@ -1,16 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Document</title>
-</head>
-<body>
-  <app-navbar></app-navbar>
-
-  <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    <router-outlet></router-outlet>
-
-  </div>
-</body>
-</html>
+<!-- ==========================================================================
+  Lockstrm — AppComponent (raíz)
+  Punto de entrada único de la aplicación. No contiene estructura visual:
+  el layout (sidebar, cabecera) lo gestiona cada Layout Component.
+    • PublicLayoutComponent  → rutas públicas  (/, /home, /login, /registro)
+    • PrivateLayoutComponent → rutas privadas  (/videos, /grupos, /ajustes)
+  ========================================================================== -->
+<router-outlet/>

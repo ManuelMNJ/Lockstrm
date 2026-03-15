@@ -1,0 +1,187 @@
+<!-- ==========================================================================
+  Lockstrm — Home / Landing Page
+  home.component.html
+
+  Estructura Hero: CSS Grid 2 columnas (1fr 1fr)
+    • Columna izquierda → eyebrow + h1 + subtítulo + CTAs
+    • Columna derecha   → Mockup abstracto del reproductor (HTML/CSS puro)
+  ========================================================================== -->
+<div class="home-page">
+
+  <!-- ================================================================
+    HERO SECTION — Split layout 50 / 50
+    ================================================================ -->
+  <section class="hero" aria-label="Presentación del producto">
+
+    <!-- ── Columna izquierda: copy + CTAs ── -->
+    <div class="hero-left">
+
+      <span class="hero-eyebrow">Plataforma de Streaming Privado B2B</span>
+
+      <h1 class="hero-title">
+        Gestión segura de<br>contenido audiovisual<br>corporativo
+      </h1>
+
+      <p class="hero-subtitle">
+        Distribución privada de vídeo para equipos. Control total sobre
+        accesos, grupos de visualización y reproducciones en tiempo real.
+      </p>
+
+      <div class="hero-actions">
+        <a routerLink="/registro" class="btn-cta">Solicitar acceso</a>
+        <a routerLink="/login"    class="btn-ghost">Iniciar sesión</a>
+      </div>
+
+    </div>
+
+    <!-- ── Columna derecha: mockup abstracto del reproductor ── -->
+    <div class="hero-right" aria-hidden="true">
+
+      <div class="mockup-glow"></div>
+
+      <div class="mockup">
+
+        <div class="mk-chrome">
+          <div class="mk-dots" aria-hidden="true">
+            <span class="mk-dot mk-dot--a"></span>
+            <span class="mk-dot mk-dot--b"></span>
+            <span class="mk-dot mk-dot--c"></span>
+          </div>
+          <span class="mk-filename">presentacion-q4-2024.mp4</span>
+          <div class="mk-chrome-lock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="mk-screen">
+          <div class="mk-scanlines"></div>
+          <div class="mk-vignette"></div>
+          <span class="mk-quality">4K</span>
+          <div class="mk-play">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 3 20 12 6 21 6 3"/>
+            </svg>
+          </div>
+          <div class="mk-screen-footer">
+            <span class="mk-duration">06:31 / 18:42</span>
+          </div>
+        </div>
+
+        <div class="mk-scrubber">
+          <div class="mk-track">
+            <div class="mk-fill">
+              <span class="mk-thumb"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mk-controls">
+          <div class="mk-ctrl-left">
+            <svg class="mk-ctrl-icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span class="mk-time">
+              06:31 <span class="mk-sep">/</span> 18:42
+            </span>
+          </div>
+          <div class="mk-ctrl-right">
+            <svg class="mk-ctrl-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+            <svg class="mk-ctrl-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3
+                       m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="mk-footer">
+          <div class="mk-owner">
+            <div class="mk-avatar">M</div>
+            <div class="mk-owner-info">
+              <span class="mk-owner-name">Marketing — Equipo A</span>
+              <span class="mk-owner-sub">3 miembros con acceso</span>
+            </div>
+          </div>
+          <div class="mk-access">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Restringido</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================================================================
+    FEATURE CARDS
+    ================================================================ -->
+  <section class="features" aria-labelledby="features-heading">
+
+    <h2 class="features-title" id="features-heading">Funcionalidades principales</h2>
+
+    <div class="features-grid">
+
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Grupos de acceso</h3>
+        <p class="feature-card-body">
+          Crea grupos privados y administra con precisión quién puede
+          visualizar cada contenido dentro de tu organización.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Biblioteca de vídeo</h3>
+        <p class="feature-card-body">
+          Sube y organiza contenido audiovisual de hasta 95 MB por archivo.
+          Reproducción segura en streaming desde cualquier dispositivo.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="feature-card-title">Cifrado y control</h3>
+        <p class="feature-card-body">
+          Datos protegidos mediante cifrado en tránsito y en reposo.
+          Acceso gestionado por token de sesión y permisos por grupo.
+        </p>
+      </article>
+
+    </div>
+  </section>
+
+</div>
