@@ -1,12 +1,7 @@
-// =============================================================================
-// Lockstrm — NavbarComponent
-// Ruta: src/app/core/components/navbar/
-// Barra de navegación reutilizable. Actualmente no está montada en ningún
-// layout (los layouts implementan su propia nav). Reservado para uso futuro.
-// =============================================================================
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { AuthService, AuthResponse } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -17,20 +12,15 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class NavbarComponent implements OnInit {
 
-  usuarioLogueado: any = null;
+  usuarioLogueado: AuthResponse | null = null;
 
-  constructor(private router: Router) {}
+  constructor(private authService: AuthService) {}
 
-  ngOnInit() {
-    const usuarioGuardado = localStorage.getItem('usuarioLogueado');
-    if (usuarioGuardado) {
-      this.usuarioLogueado = JSON.parse(usuarioGuardado);
-    }
+  ngOnInit(): void {
+    this.usuarioLogueado = this.authService.getUser();
   }
 
-  cerrarSesion() {
-    localStorage.removeItem('usuarioLogueado');
-    this.usuarioLogueado = null;
-    this.router.navigate(['/login']);
+  cerrarSesion(): void {
+    this.authService.logout();
   }
 }

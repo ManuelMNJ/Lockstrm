@@ -8,8 +8,5 @@ public class LockstrmApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(LockstrmApplication.class, args);
-
-        System.out.println(">>>  LOCKSTRM PLATFORM HAS STARTED CORRECTLY  <<<");
     }
-
 }

@@ -3,48 +3,43 @@ package com.lockstrm.platform.services;
 import com.lockstrm.platform.dto.RegisterRequest;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
-public class UserService {
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository  userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    // Requerido por Spring Security: subject del JWT es el email del usuario
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
-    public List<Usuario> listarTodos() {
-        return userRepository.findAll();
-    }
-
-    public Usuario guardar(Usuario usuario) {
-        return userRepository.save(usuario);
-    }
-
-    public Usuario obtenerPorId(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return User.builder()
+                .username(usuario.getEmail())
+                .password(usuario.getPassword())
+                .authorities("ROLE_USER")
+                .build();
     }
 
     public Usuario registrarUsuario(RegisterRequest request) {
-        Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setUsername(request.getUsername());
-        nuevoUsuario.setEmail(request.getEmail());
-
-        String passEncriptada = passwordEncoder.encode(request.getPassword());
-        nuevoUsuario.setPassword(passEncriptada);
-
-        return userRepository.save(nuevoUsuario);
+        Usuario nuevo = new Usuario();
+        nuevo.setUsername(request.getUsername());
+        nuevo.setEmail(request.getEmail());
+        nuevo.setPassword(passwordEncoder.encode(request.getPassword()));
+        return userRepository.save(nuevo);
     }
 
     public Usuario buscarPorEmail(String email) {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

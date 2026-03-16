@@ -1,4 +1,4 @@
-package com.lockstrm.platform.repositories;
+﻿package com.lockstrm.platform.repositories;
 
 import com.lockstrm.platform.entities.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,4 +10,6 @@ import java.util.List;
 public interface VideoRepository extends JpaRepository<Video, Long> {
 
     List<Video> findByPropietario_IdUsuario(Long idPropietario);
+
+    List<Video> findByDuracionIsNullOrDuracionEquals(Integer duracion);
 }

@@ -1,9 +1,3 @@
-<!-- ==========================================================================
-  Lockstrm — Video Manager
-  videos.component.html
-  Toda la lógica de negocio ([(ngModel)], (change), (click), [disabled], *ngIf,
-  *ngFor, subir(), seleccionarArchivo()) permanece intacta.
-  ========================================================================== -->
 <div class="videos-page">
 
   <!-- ================================================================
@@ -19,8 +13,6 @@
     <div class="upload-form">
 
       <div class="form-row">
-
-        <!-- Título -->
         <div class="form-field">
           <label class="form-label" for="titulo-video">Título del vídeo</label>
           <input
@@ -31,11 +23,10 @@
             placeholder="Introduce un título descriptivo"
             autocomplete="off">
         </div>
-
-        <!-- Archivo -->
         <div class="form-field">
           <label class="form-label" for="archivo-video">Archivo de vídeo (MP4)</label>
           <input
+            #archivoInput
             id="archivo-video"
             class="form-input form-input--file"
             type="file"
@@ -44,11 +35,8 @@
         </div>
 
       </div>
-
-      <!-- Actions row -->
       <div class="upload-actions">
-        <button class="btn-primary" (click)="subir()" [disabled]="subiendo">
-          <!-- Upload / cloud-upload icon -->
+        <button class="btn-primary" (click)="subir()" [disabled]="uploadStatus === 'uploading'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                aria-hidden="true" class="btn-icon">
@@ -56,18 +44,20 @@
             <line x1="12" y1="12" x2="12" y2="21"/>
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
           </svg>
-          {{ subiendo ? 'Subiendo...' : 'Subir vídeo' }}
+          {{ uploadStatus === 'uploading' ? 'Subiendo... (Por favor, espera)' : 'Subir vídeo' }}
         </button>
       </div>
-
-      <!-- Status message — color driven by CSS modifier class -->
-      <p *ngIf="mensaje"
+      <p *ngIf="uploadStatus === 'success'"
          class="upload-message"
-         [class.upload-message--warning]="mensaje.startsWith('Aviso')"
-         [class.upload-message--error]="mensaje.startsWith('Error')"
          role="status"
          aria-live="polite">
-        {{ mensaje }}
+        Vídeo subido correctamente.
+      </p>
+      <p *ngIf="uploadStatus === 'error'"
+         class="upload-message upload-message--error"
+         role="alert"
+         aria-live="assertive">
+        {{ errorMessage }}
       </p>
 
     </div>
@@ -82,6 +72,13 @@
       <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
       <span class="section-badge">{{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}</span>
     </div>
+
+    <p *ngIf="listaError"
+       class="upload-message upload-message--error"
+       role="alert"
+       aria-live="assertive">
+      {{ listaError }}
+    </p>
 
     <div class="table-wrapper" role="region" aria-label="Listado de vídeos" tabindex="0">
       <table class="data-table">
@@ -99,11 +96,7 @@
         </thead>
 
         <tbody>
-
-          <!-- Data rows -->
           <tr *ngFor="let v of videos" class="table-row">
-
-            <!-- Thumbnail placeholder -->
             <td class="col-thumb">
               <div class="video-thumb" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -113,55 +106,37 @@
                 </svg>
               </div>
             </td>
-
-            <!-- Title -->
             <td class="col-title">
               <span class="video-title">{{ v.titulo }}</span>
             </td>
-
-            <!-- Owner -->
             <td class="col-owner">
               <span class="cell-text">
                 {{ v.propietario?.username || v.nombrePropietario || v.ownerUsername || '—' }}
               </span>
             </td>
-
-            <!-- Group -->
             <td class="col-group">
               <span class="cell-badge" *ngIf="v.grupo?.nombre || v.nombreGrupo || v.groupName; else noGroup">
                 {{ v.grupo?.nombre || v.nombreGrupo || v.groupName }}
               </span>
               <ng-template #noGroup><span class="cell-text">—</span></ng-template>
             </td>
-
-            <!-- Upload date -->
             <td class="col-date">
               <span class="cell-text">
                 {{ v.fechaSubida ? (v.fechaSubida | date:'dd/MM/yyyy') : (v.uploadDate ? (v.uploadDate | date:'dd/MM/yyyy') : '—') }}
               </span>
             </td>
-
-            <!-- Duration -->
             <td class="col-duration">
-              <span class="cell-text">
-                {{ v.duracion != null ? (v.duracion + ' min') : '—' }}
-              </span>
+              <span class="cell-text">{{ formatearDuracion(v.duracion) }}</span>
             </td>
-
-            <!-- Actions -->
             <td class="col-actions">
-              <a [href]="v.urlCloudSecure"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 class="btn-view"
-                 aria-label="Ver vídeo: {{ v.titulo }}">
+              <button class="btn-view"
+                      (click)="abrirReproductor(v)"
+                      [attr.aria-label]="'Ver vídeo: ' + v.titulo">
                 Ver vídeo
-              </a>
+              </button>
             </td>
 
           </tr>
-
-          <!-- Empty state -->
           <tr *ngIf="videos.length === 0">
             <td colspan="7" class="table-empty">
               <div class="empty-state">
@@ -181,5 +156,54 @@
     </div>
 
   </section>
+
+  <!-- ================================================================
+    VIDEO PLAYER MODAL
+    Se activa cuando videoReproduciendose !== null
+    ================================================================ -->
+  <div class="modal-overlay"
+       *ngIf="videoReproduciendose"
+       (click)="cerrarReproductor()"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="'Reproductor: ' + videoReproduciendose?.titulo">
+
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <span class="modal-title">{{ videoReproduciendose?.titulo }}</span>
+        <button class="modal-close"
+                (click)="cerrarReproductor()"
+                aria-label="Cerrar reproductor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-player">
+        <video
+          [src]="videoReproduciendose?.urlCloudSecure"
+          controls
+          autoplay
+          class="native-player">
+          Tu navegador no soporta la reproducción de vídeo HTML5.
+        </video>
+      </div>
+
+      <div class="modal-footer">
+        <span class="modal-meta">
+          Duración: {{ formatearDuracion(videoReproduciendose?.duracion) }}
+        </span>
+        <span class="modal-meta" *ngIf="videoReproduciendose?.fechaSubida">
+          Subido el {{ videoReproduciendose?.fechaSubida | date:'dd/MM/yyyy' }}
+        </span>
+      </div>
+
+    </div>
+  </div>
 
 </div>

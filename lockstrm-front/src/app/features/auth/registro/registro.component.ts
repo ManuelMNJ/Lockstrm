@@ -1,7 +1,3 @@
-// =============================================================================
-// Lockstrm — RegistroComponent
-// Ruta: src/app/features/auth/registro/
-// =============================================================================
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,27 +13,20 @@ import { Router } from '@angular/router';
 })
 export class RegistroComponent {
 
-  usuario = {
-    username: '',
-    email: '',
-    password: ''
-  };
+  usuario = { username: '', email: '', password: '' };
+  mensaje = '';
 
-  mensaje: string = '';
+  constructor(private http: HttpClient, private router: Router) {}
 
-  constructor(private http: HttpClient, private router: Router) { }
-
-  registrar() {
-    const url = 'http://localhost:8080/api/auth/registro';
-
-    this.http.post(url, this.usuario).subscribe({
-      next: (respuesta: any) => {
-        alert('Cuenta creada. Ahora inicia sesión.');
-        this.router.navigate(['/login']);
+  registrar(): void {
+    this.http.post('http://localhost:8080/api/auth/registro', this.usuario).subscribe({
+      next: () => {
+        this.mensaje = 'Cuenta creada. Ahora inicia sesion.';
+        setTimeout(() => this.router.navigate(['/login']), 1500);
       },
-      error: (error) => {
-        console.error('Error:', error);
-        this.mensaje = ' Error al registrar (Revisa la consola)';
+      error: (err) => {
+        console.error('[RegistroComponent] Error al registrar:', err);
+        this.mensaje = 'Error al registrar. Intenta de nuevo.';
       }
     });
   }
