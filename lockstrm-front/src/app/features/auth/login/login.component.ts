@@ -13,13 +13,13 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class LoginComponent {
 
-  loginObj = { email: '', password: '' };
-  mensaje  = '';
+  datosLogin = { email: '', password: '' };
+  mensaje    = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
   hacerLogin(): void {
-    this.authService.login(this.loginObj.email, this.loginObj.password).subscribe({
+    this.authService.login(this.datosLogin.email, this.datosLogin.password).subscribe({
       next:  () => this.router.navigate(['/videos']),
       error: (err) => {
         console.error('[LoginComponent] Error de autenticacion:', err);

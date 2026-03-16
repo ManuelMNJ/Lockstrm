@@ -36,7 +36,7 @@
 
       </div>
       <div class="upload-actions">
-        <button class="btn-primary" (click)="subir()" [disabled]="uploadStatus === 'uploading'">
+        <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                aria-hidden="true" class="btn-icon">
@@ -44,20 +44,20 @@
             <line x1="12" y1="12" x2="12" y2="21"/>
             <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
           </svg>
-          {{ uploadStatus === 'uploading' ? 'Subiendo... (Por favor, espera)' : 'Subir vídeo' }}
+          {{ estadoSubida === 'uploading' ? 'Subiendo... (Por favor, espera)' : 'Subir vídeo' }}
         </button>
       </div>
-      <p *ngIf="uploadStatus === 'success'"
+      <p *ngIf="estadoSubida === 'success'"
          class="upload-message"
          role="status"
          aria-live="polite">
         Vídeo subido correctamente.
       </p>
-      <p *ngIf="uploadStatus === 'error'"
+      <p *ngIf="estadoSubida === 'error'"
          class="upload-message upload-message--error"
          role="alert"
          aria-live="assertive">
-        {{ errorMessage }}
+        {{ mensajeError }}
       </p>
 
     </div>

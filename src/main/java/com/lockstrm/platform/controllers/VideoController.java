@@ -25,6 +25,8 @@ public class VideoController {
 
     @PostMapping("/subir")
     public ResponseEntity<Map<String, Object>> subirVideo(
+            // @AuthenticationPrincipal nos da el usuario ya autenticado por Spring Security
+            // sin tener que parsear el JWT a mano otra vez en el controlador.
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo
@@ -40,6 +42,8 @@ public class VideoController {
             respuesta.put("duracion", guardado.getDuracion());
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
+            // IOException la separamos porque cubre errores de lectura del archivo antes
+            // incluso de llegar a Cloudinary (disco lleno, stream cortado, etc.).
             respuesta.put("status",  "error");
             respuesta.put("mensaje", "Error al subir el archivo");
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);

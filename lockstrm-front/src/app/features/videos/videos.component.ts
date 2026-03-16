@@ -10,6 +10,13 @@ interface Video {
   urlCloudSecure: string;
   cloudinaryId: string;
   fechaSubida: string | null;
+  propietario?: { username: string };
+  nombrePropietario?: string;
+  ownerUsername?: string;
+  grupo?: { nombre: string };
+  nombreGrupo?: string;
+  groupName?: string;
+  uploadDate?: string;
 }
 
 @Component({
@@ -25,14 +32,16 @@ export class VideosComponent implements OnInit {
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
 
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
-  errorMessage = '';
+  estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
+  mensajeError = '';
   listaError   = '';
 
   videoReproduciendose: Video | null = null;
 
   @ViewChild('archivoInput') archivoInput!: ElementRef<HTMLInputElement>;
 
+  // Forzamos la detección de cambios manualmente porque al subir archivos grandes
+  // Angular pierde el rastro de la asincronía y la UI no se actualiza sola.
   private cdr = inject(ChangeDetectorRef);
 
   constructor(private videoService: VideoService) {}
@@ -47,39 +56,42 @@ export class VideosComponent implements OnInit {
 
   subir(): void {
     if (!this.archivoSeleccionado || !this.tituloVideo) {
-      this.uploadStatus = 'error';
-      this.errorMessage = 'Falta el titulo o el video.';
+      this.estadoSubida = 'error';
+      this.mensajeError = 'Falta el titulo o el video.';
       return;
     }
 
+    // 95 MB y no 100 para dejar margen: el contenedor multipart añade algo de peso extra
+    // y Cloudinary nos corta la subida si llegamos justo al límite.
     const LIMITE_MB    = 95;
     const LIMITE_BYTES = LIMITE_MB * 1024 * 1024;
 
     if (this.archivoSeleccionado.size > LIMITE_BYTES) {
-      this.uploadStatus = 'error';
-      this.errorMessage = `El video supera el limite de ${LIMITE_MB} MB.`;
+      this.estadoSubida = 'error';
+      this.mensajeError = `El video supera el limite de ${LIMITE_MB} MB.`;
       return;
     }
 
-    this.uploadStatus = 'uploading';
-    this.errorMessage = '';
+    this.estadoSubida = 'uploading';
+    this.mensajeError = '';
 
     this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo).subscribe({
       next: () => {
-        this.uploadStatus        = 'success';
+        this.estadoSubida        = 'success';
         this.tituloVideo         = '';
         this.archivoSeleccionado = null;
         this.archivoInput.nativeElement.value = '';
         this.cargarVideos();
         this.cdr.detectChanges();
+        // Le damos 3 segundos para que el usuario vea el mensaje de éxito antes de que el formulario se resetee.
         setTimeout(() => {
-          this.uploadStatus = 'idle';
+          this.estadoSubida = 'idle';
           this.cdr.detectChanges();
         }, 3000);
       },
       error: (err) => {
-        this.uploadStatus = 'error';
-        this.errorMessage = err?.error?.message || 'Error al subir. Comprueba la consola.';
+        this.estadoSubida = 'error';
+        this.mensajeError = err?.error?.message || 'Error al subir. Comprueba la consola.';
         console.error('[VideosComponent] Error en subida:', {
           status:     err?.status,
           statusText: err?.statusText,

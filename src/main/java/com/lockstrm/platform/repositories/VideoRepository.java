@@ -1,4 +1,4 @@
-﻿package com.lockstrm.platform.repositories;
+package com.lockstrm.platform.repositories;
 
 import com.lockstrm.platform.entities.Video;
 import org.springframework.data.jpa.repository.JpaRepository;

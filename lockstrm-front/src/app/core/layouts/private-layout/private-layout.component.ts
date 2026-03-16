@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService, AuthResponse } from '../../services/auth.service';
 
@@ -14,7 +14,7 @@ export class PrivateLayoutComponent implements OnInit {
 
   usuarioLogueado: AuthResponse | null = null;
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly router: Router) {}
 
   ngOnInit(): void {
     this.usuarioLogueado = this.authService.getUser();
@@ -22,5 +22,9 @@ export class PrivateLayoutComponent implements OnInit {
 
   cerrarSesion(): void {
     this.authService.logout();
+  }
+
+  irAVideos(): void {
+    this.router.navigate(['/videos']);
   }
 }
