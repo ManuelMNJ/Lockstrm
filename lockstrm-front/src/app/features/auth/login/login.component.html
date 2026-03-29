@@ -1,25 +1,111 @@
-<div class="login-root">
-  <h2> Iniciar Sesión</h2>
+<div class="auth-root">
+  <div class="auth-card">
 
-  <div class="login-card">
-
-    <div class="login-field">
-      <input type="email" placeholder="Introduce tu Email"
-             [(ngModel)]="datosLogin.email"
-             class="login-input">
+    <!-- Marca -->
+    <div class="auth-brand">
+      <svg class="auth-logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="var(--color-primary)"/>
+        <path d="M8 22 L16 10 L24 22" stroke="#fff" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="16" cy="22" r="2.5" fill="#fff"/>
+      </svg>
+      <span class="auth-brand-name">Lockstrm</span>
     </div>
 
-    <div class="login-field">
-      <input type="password" placeholder="Introduce tu Contraseña"
-             [(ngModel)]="datosLogin.password"
-             class="login-input">
+    <h1 class="auth-title">Iniciar sesión</h1>
+    <p class="auth-subtitle">Accede a tu espacio de trabajo</p>
+
+    <!-- Mensaje de registro exitoso -->
+    <div *ngIf="mensajeInfo" class="auth-info" role="status" aria-live="polite">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+          clip-rule="evenodd"/>
+      </svg>
+      {{ mensajeInfo }}
     </div>
 
-    <button (click)="hacerLogin()" class="login-button">
-      Entrar
-    </button>
+    <!-- Error de credenciales -->
+    <div *ngIf="errorLogin" class="auth-alert" role="alert" aria-live="assertive">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+          clip-rule="evenodd"/>
+      </svg>
+      {{ errorLogin }}
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="hacerLogin()" novalidate class="auth-form">
+
+      <!-- Email -->
+      <div class="form-field">
+        <label class="form-label" for="login-email">Correo electrónico</label>
+        <input
+          id="login-email"
+          type="email"
+          class="form-input"
+          [class.form-input--error]="email.invalid && email.touched"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="tu@empresa.com">
+        <span *ngIf="email.touched && email.errors?.['required']" class="field-error" role="alert">
+          El email es obligatorio.
+        </span>
+        <span *ngIf="email.touched && email.errors?.['email']" class="field-error" role="alert">
+          Introduce un email válido.
+        </span>
+      </div>
+
+      <!-- Password -->
+      <div class="form-field">
+        <label class="form-label" for="login-password">Contraseña</label>
+        <div class="pw-wrapper">
+          <input
+            id="login-password"
+            [type]="showPassword ? 'text' : 'password'"
+            class="form-input"
+            [class.form-input--error]="password.invalid && password.touched"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="Tu contraseña">
+          <button type="button" class="pw-toggle" (click)="showPassword = !showPassword"
+                  [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <!-- Ojo abierto -->
+            <svg *ngIf="!showPassword" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M2.458 10C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <!-- Ojo tachado -->
+            <svg *ngIf="showPassword" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3.98 8.223A10.477 10.477 0 001.934 10C3.226 14.338 7.244 17.5 12 17.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+            </svg>
+          </button>
+        </div>
+        <span *ngIf="password.touched && password.errors?.['required']" class="field-error" role="alert">
+          La contraseña es obligatoria.
+        </span>
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn-primary auth-submit"
+        [disabled]="form.invalid || cargando">
+        <svg *ngIf="cargando" class="btn-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5"
+                  stroke-dasharray="28 28" stroke-linecap="round"/>
+        </svg>
+        {{ cargando ? 'Accediendo…' : 'Iniciar sesión' }}
+      </button>
+
+    </form>
+
+    <p class="auth-footer">
+      ¿No tienes cuenta?
+      <a routerLink="/registro" class="auth-link">Regístrate</a>
+    </p>
 
   </div>
-
-  <h3 class="login-mensaje">{{ mensaje }}</h3>
 </div>

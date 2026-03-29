@@ -33,7 +33,8 @@ public class UserService implements UserDetailsService {
 
     public Usuario registrarUsuario(RegisterRequest request) {
         Usuario nuevo = new Usuario();
-        nuevo.setUsername(request.getUsername());
+        nuevo.setNombre(request.getNombre());
+        nuevo.setApellidos(request.getApellidos());
         nuevo.setEmail(request.getEmail());
         nuevo.setPassword(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(nuevo);

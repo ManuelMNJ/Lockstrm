@@ -2,20 +2,18 @@ package com.lockstrm.platform.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 
 @Entity
 @Table(name = "permisos_grupo")
 @Data
+@NoArgsConstructor
 public class PermisosGrupo implements Serializable {
 
-    @Id
-    @Column(name = "id_video_id")
-    private Long idVideoId;
-
-    @Id
-    @Column(name = "id_grupo_id")
-    private Long idGrupoId;
+    @EmbeddedId
+    private PermisosGrupoId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_video_id", insertable = false, updatable = false)
@@ -25,11 +23,7 @@ public class PermisosGrupo implements Serializable {
     @JoinColumn(name = "id_grupo_id", insertable = false, updatable = false)
     private Grupo grupo;
 
-    public PermisosGrupo() {
-    }
-
     public PermisosGrupo(Long idVideoId, Long idGrupoId) {
-        this.idVideoId = idVideoId;
-        this.idGrupoId = idGrupoId;
+        this.id = new PermisosGrupoId(idVideoId, idGrupoId);
     }
 }

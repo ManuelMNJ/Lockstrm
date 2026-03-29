@@ -18,6 +18,8 @@ public class Usuario {
 
     private String nombre;
 
+    private String apellidos;
+
     @Column(unique = true, nullable = false)
     private String email;
 

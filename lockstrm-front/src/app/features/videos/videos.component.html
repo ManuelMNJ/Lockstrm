@@ -34,6 +34,17 @@
             (change)="seleccionarArchivo($event)">
         </div>
 
+        <div class="form-field">
+          <label class="form-label" for="grupo-video">Asignar a grupo</label>
+          <select
+            id="grupo-video"
+            class="form-input form-select"
+            [(ngModel)]="idGrupoSeleccionado">
+            <option [ngValue]="null">Ningún grupo (Privado)</option>
+            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+          </select>
+        </div>
+
       </div>
       <div class="upload-actions">
         <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
@@ -185,8 +196,8 @@
       </div>
 
       <div class="modal-player">
-        <video
-          [src]="videoReproduciendose?.urlCloudSecure"
+        <video *ngIf="videoReproduciendose"
+          [src]="construirUrlStreaming(videoReproduciendose.idVideo)"
           controls
           autoplay
           class="native-player">

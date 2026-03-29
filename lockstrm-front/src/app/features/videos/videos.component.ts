@@ -2,6 +2,8 @@ import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild, inject } f
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VideoService } from '../../core/services/video.service';
+import { AuthService } from '../../core/services/auth.service';
+import { GrupoService } from '../../core/services/grupo.service';
 
 interface Video {
   idVideo: number;
@@ -29,8 +31,10 @@ interface Video {
 export class VideosComponent implements OnInit {
 
   videos: Video[] = [];
+  misGrupos: any[] = [];
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
+  idGrupoSeleccionado: number | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
   mensajeError = '';
@@ -44,10 +48,21 @@ export class VideosComponent implements OnInit {
   // Angular pierde el rastro de la asincronía y la UI no se actualiza sola.
   private cdr = inject(ChangeDetectorRef);
 
-  constructor(private videoService: VideoService) {}
+  constructor(
+    private videoService: VideoService,
+    private authService: AuthService,
+    private grupoService: GrupoService
+  ) {}
 
   ngOnInit(): void {
     this.cargarVideos();
+    this.grupoService.obtenerMisGrupos().subscribe({
+      next: (grupos) => {
+        this.misGrupos = grupos;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('[VideosComponent] Error al cargar grupos:', err)
+    });
   }
 
   seleccionarArchivo(event: Event): void {
@@ -75,11 +90,12 @@ export class VideosComponent implements OnInit {
     this.estadoSubida = 'uploading';
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo).subscribe({
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado).subscribe({
       next: () => {
         this.estadoSubida        = 'success';
         this.tituloVideo         = '';
         this.archivoSeleccionado = null;
+        this.idGrupoSeleccionado = null;
         this.archivoInput.nativeElement.value = '';
         this.cargarVideos();
         this.cdr.detectChanges();
@@ -126,6 +142,11 @@ export class VideosComponent implements OnInit {
   cerrarReproductor(): void {
     this.videoReproduciendose = null;
     this.cdr.detectChanges();
+  }
+
+  construirUrlStreaming(idVideo: number): string {
+    const token = this.authService.getToken() ?? '';
+    return `http://localhost:8080/api/videos/stream/${idVideo}?token=${token}`;
   }
 
   formatearDuracion(segundos: number | null | undefined): string {

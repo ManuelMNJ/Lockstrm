@@ -3,6 +3,7 @@ package com.lockstrm.platform.controllers;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,11 +30,12 @@ public class VideoController {
             // sin tener que parsear el JWT a mano otra vez en el controlador.
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
-            @RequestParam("titulo") String titulo
+            @RequestParam("titulo") String titulo,
+            @RequestParam(value = "idGrupo", required = false) Long idGrupo
     ) {
         Map<String, Object> respuesta = new HashMap<>();
         try {
-            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo);
+            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo);
             respuesta.put("status",   "exito");
             respuesta.put("mensaje",  "Video subido correctamente");
             respuesta.put("id_video", guardado.getIdVideo());
@@ -57,6 +59,18 @@ public class VideoController {
     @GetMapping
     public ResponseEntity<List<Video>> listarVideos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerPorEmailUsuario(userDetails.getUsername()));
+    }
+
+    @GetMapping("/stream/{id}")
+    public ResponseEntity<InputStreamResource> streamVideo(
+            @PathVariable Long id,
+            @RequestHeader(value = "Range", required = false) String rangeHeader
+    ) {
+        try {
+            return videoService.streamVideo(id, rangeHeader);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // Migracion puntual: rellena la duracion de videos subidos antes de que el backend extrajera

@@ -1,5 +1,6 @@
 package com.lockstrm.platform.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ public class Grupo {
     @Column(nullable = false, length = 100)
     private String nombre;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_creador", nullable = false)
     private Usuario creador;
