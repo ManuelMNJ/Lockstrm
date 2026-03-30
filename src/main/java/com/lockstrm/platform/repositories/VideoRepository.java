@@ -10,6 +10,4 @@ import java.util.List;
 public interface VideoRepository extends JpaRepository<Video, Long> {
 
     List<Video> findByPropietario_IdUsuario(Long idPropietario);
-
-    List<Video> findByDuracionIsNullOrDuracionEquals(Integer duracion);
 }

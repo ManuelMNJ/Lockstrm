@@ -7,6 +7,7 @@ import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.security.JwtService;
 import com.lockstrm.platform.services.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -34,9 +34,7 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest request) {
-        // Comprobación explícita antes de intentar guardar; evita depender de la excepción
-        // de constraint de BD y permite devolver un mensaje claro al frontend.
+    public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -53,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         Usuario usuario = userService.buscarPorEmail(request.getEmail());
 
         if (usuario == null || !passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup, Validators,
@@ -8,6 +9,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { debounceTime, switchMap, map, catchError, first } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-registro',
@@ -20,6 +22,8 @@ export class RegistroComponent {
 
   // Patrón: ≥8 chars, 1 mayúscula, 1 dígito, 1 carácter especial.
   private readonly PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+  private readonly apiUrl           = `${environment.apiUrl}/api/auth`;
+  private destroyRef                = inject(DestroyRef);
 
   form: FormGroup;
   cargando     = false;
@@ -49,12 +53,13 @@ export class RegistroComponent {
         debounceTime(500),
         switchMap(email =>
           this.http.get<{ disponible: boolean }>(
-            `http://localhost:8080/api/auth/check-email?email=${encodeURIComponent(email)}`
+            `${this.apiUrl}/check-email?email=${encodeURIComponent(email)}`
           )
         ),
         map(res => res.disponible ? null : { emailTomado: true }),
         catchError(() => of(null)),
-        first()
+        first(),
+        takeUntilDestroyed(this.destroyRef)
       );
     };
   }
@@ -85,16 +90,18 @@ export class RegistroComponent {
     this.cargando    = true;
     this.errorGlobal = '';
 
-    this.http.post('http://localhost:8080/api/auth/registro', this.form.value).subscribe({
-      next: () => {
-        this.cargando = false;
-        this.router.navigate(['/login'], { queryParams: { registrado: '1' } });
-      },
-      error: (err) => {
-        this.cargando    = false;
-        this.errorGlobal = err?.error?.error ?? 'Error al registrar. Inténtalo de nuevo.';
-        console.error('[RegistroComponent] Error:', err);
-      }
-    });
+    this.http.post(`${this.apiUrl}/registro`, this.form.value)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.cargando = false;
+          this.router.navigate(['/login'], { queryParams: { registrado: '1' } });
+        },
+        error: (err) => {
+          this.cargando    = false;
+          this.errorGlobal = err?.error?.error ?? 'Error al registrar. Inténtalo de nuevo.';
+          console.error('[RegistroComponent] Error:', err);
+        }
+      });
   }
 }

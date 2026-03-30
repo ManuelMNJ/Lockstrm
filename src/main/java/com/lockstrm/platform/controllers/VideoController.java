@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/videos")
-@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class VideoController {
 
@@ -26,13 +25,19 @@ public class VideoController {
 
     @PostMapping("/subir")
     public ResponseEntity<Map<String, Object>> subirVideo(
-            // @AuthenticationPrincipal nos da el usuario ya autenticado por Spring Security
-            // sin tener que parsear el JWT a mano otra vez en el controlador.
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo,
             @RequestParam(value = "idGrupo", required = false) Long idGrupo
     ) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("video/")) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "mensaje", "El archivo debe ser un video"
+            ));
+        }
+
         Map<String, Object> respuesta = new HashMap<>();
         try {
             Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo);
@@ -44,14 +49,12 @@ public class VideoController {
             respuesta.put("duracion", guardado.getDuracion());
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
-            // IOException la separamos porque cubre errores de lectura del archivo antes
-            // incluso de llegar a Cloudinary (disco lleno, stream cortado, etc.).
             respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error al subir el archivo");
+            respuesta.put("mensaje", "Error al leer el archivo");
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error interno: " + e.getMessage());
+            respuesta.put("mensaje", "Error interno al subir el video");
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -64,29 +67,13 @@ public class VideoController {
     @GetMapping("/stream/{id}")
     public ResponseEntity<InputStreamResource> streamVideo(
             @PathVariable Long id,
-            @RequestHeader(value = "Range", required = false) String rangeHeader
+            @RequestHeader(value = "Range", required = false) String rangeHeader,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         try {
-            return videoService.streamVideo(id, rangeHeader);
+            return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    // Migracion puntual: rellena la duracion de videos subidos antes de que el backend extrajera
-    // este dato de Cloudinary. Ejecutar una unica vez y luego retirar el endpoint.
-    @PostMapping("/admin/backfill-duraciones")
-    public ResponseEntity<Map<String, Object>> backfillDuraciones() {
-        Map<String, Object> respuesta = new HashMap<>();
-        try {
-            int actualizados = videoService.backfillDuraciones();
-            respuesta.put("status",       "ok");
-            respuesta.put("actualizados", actualizados);
-            return ResponseEntity.ok(respuesta);
-        } catch (Exception e) {
-            respuesta.put("status",  "error");
-            respuesta.put("mensaje", e.getMessage());
-            return ResponseEntity.internalServerError().body(respuesta);
         }
     }
 }

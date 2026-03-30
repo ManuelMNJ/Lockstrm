@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -18,6 +19,8 @@ export class LoginComponent implements OnInit {
   errorLogin   = '';
   mensajeInfo  = '';
   showPassword = false;
+
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private fb: FormBuilder,
@@ -50,13 +53,15 @@ export class LoginComponent implements OnInit {
     this.cargando   = true;
     this.errorLogin = '';
 
-    this.authService.login(this.email.value, this.password.value).subscribe({
-      next:  () => this.router.navigate(['/videos']),
-      error: (err) => {
-        this.cargando   = false;
-        this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';
-        console.error('[LoginComponent] Error de autenticacion:', err);
-      }
-    });
+    this.authService.login(this.email.value, this.password.value)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next:  () => this.router.navigate(['/videos']),
+        error: (err) => {
+          this.cargando   = false;
+          this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';
+          console.error('[LoginComponent] Error de autenticacion:', err);
+        }
+      });
   }
 }

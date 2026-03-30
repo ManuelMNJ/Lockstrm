@@ -2,21 +2,19 @@ package com.lockstrm.platform.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "miembros_grupo")
 @Data
+@NoArgsConstructor
 public class MiembrosGrupo implements Serializable {
 
-    @Id
-    @Column(name = "id_usuario_id")
-    private Long idUsuarioId;
-
-    @Id
-    @Column(name = "id_grupo_id")
-    private Long idGrupoId;
+    @EmbeddedId
+    private MiembrosGrupoId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_id", insertable = false, updatable = false)
@@ -36,11 +34,7 @@ public class MiembrosGrupo implements Serializable {
         }
     }
 
-    public MiembrosGrupo() {
-    }
-
     public MiembrosGrupo(Long idUsuarioId, Long idGrupoId) {
-        this.idUsuarioId = idUsuarioId;
-        this.idGrupoId = idGrupoId;
+        this.id = new MiembrosGrupoId(idUsuarioId, idGrupoId);
     }
 }
