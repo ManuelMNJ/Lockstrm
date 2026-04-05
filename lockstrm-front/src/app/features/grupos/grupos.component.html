@@ -1,1 +1,112 @@
-<p>grupos works!</p>
+<div class="grupos-page">
+
+  <!-- ================================================================
+    PAGE HEADER
+    ================================================================ -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Mis Grupos</h2>
+      <p class="page-sub">Gestiona los grupos de acceso a tus vídeos.</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true" class="btn-icon">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Crear grupo
+    </button>
+  </div>
+
+  <!-- ── Error ── -->
+  <p *ngIf="errorCarga" class="feedback-msg feedback-msg--error" role="alert">
+    {{ errorCarga }}
+  </p>
+
+  <!-- ── Loading ── -->
+  <div *ngIf="cargando" class="empty-state">
+    <p>Cargando grupos...</p>
+  </div>
+
+  <!-- ── Empty ── -->
+  <div *ngIf="!cargando && grupos.length === 0 && !errorCarga" class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    <p>Aún no tienes ningún grupo.</p>
+    <button class="btn-primary" (click)="abrirModal()">Crear el primero</button>
+  </div>
+
+  <!-- ── Group grid ── -->
+  <div *ngIf="!cargando && grupos.length > 0" class="grupos-grid">
+    <div *ngFor="let g of grupos" class="grupo-card">
+      <div class="grupo-card-icon" aria-hidden="true">
+        {{ inicialGrupo(g.nombre) }}
+      </div>
+      <div class="grupo-card-body">
+        <span class="grupo-card-name">{{ g.nombre }}</span>
+        <span class="grupo-card-date">Creado el {{ formatearFecha(g.fechaCreacion) }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================================================================
+  MODAL — Crear grupo
+  ================================================================ -->
+<div class="modal-overlay"
+     *ngIf="modalAbierto"
+     (click)="cerrarModal()"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Crear nuevo grupo">
+
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <span class="modal-title">Nuevo grupo</span>
+      <button class="modal-close" (click)="cerrarModal()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <label class="form-label" for="nombre-grupo">Nombre del grupo</label>
+      <input
+        id="nombre-grupo"
+        class="form-input"
+        type="text"
+        [(ngModel)]="nombreNuevoGrupo"
+        placeholder="Ej: Equipo de marketing"
+        autocomplete="off"
+        (keydown.enter)="crearGrupo()">
+
+      <p *ngIf="estadoCreacion === 'error'"
+         class="feedback-msg feedback-msg--error"
+         role="alert">
+        {{ errorCreacion }}
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary"
+              (click)="crearGrupo()"
+              [disabled]="estadoCreacion === 'loading' || !nombreNuevoGrupo.trim()">
+        {{ estadoCreacion === 'loading' ? 'Creando...' : 'Crear grupo' }}
+      </button>
+    </div>
+
+  </div>
+</div>

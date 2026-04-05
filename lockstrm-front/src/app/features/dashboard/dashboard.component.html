@@ -1,0 +1,136 @@
+<div class="dashboard-page">
+
+  <!-- ================================================================
+    WELCOME HEADER
+    ================================================================ -->
+  <section class="welcome-section">
+    <div>
+      <h2 class="welcome-title">
+        Bienvenido, {{ authService.getUser()?.username ?? 'usuario' }}
+      </h2>
+      <p class="welcome-sub">Aquí tienes un resumen de tu actividad en Lockstrm.</p>
+    </div>
+    <div class="welcome-actions">
+      <a routerLink="/videos" class="btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="btn-icon">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Subir vídeo
+      </a>
+      <a routerLink="/grupos" class="btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="btn-icon">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Ver grupos
+      </a>
+    </div>
+  </section>
+
+  <!-- ================================================================
+    STAT CARDS
+    ================================================================ -->
+  <section class="stats-grid" aria-label="Resumen de estadísticas">
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ totalVideos }}</span>
+        <span class="stat-label">Vídeos subidos</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ totalGrupos }}</span>
+        <span class="stat-label">Grupos creados</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-card--action" routerLink="/videos" role="button" tabindex="0"
+         aria-label="Ir a la biblioteca de vídeos">
+      <div class="stat-icon stat-icon--green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ cargando ? '…' : (videosRecientes[0]?.titulo ?? '—') }}</span>
+        <span class="stat-label">Último vídeo subido</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================================================================
+    RECENT VIDEOS
+    ================================================================ -->
+  <section class="recent-section" aria-labelledby="recent-heading">
+
+    <div class="section-header">
+      <h3 class="section-title" id="recent-heading">Vídeos recientes</h3>
+      <a routerLink="/videos" class="section-link">Ver todos</a>
+    </div>
+
+    <div *ngIf="cargando" class="empty-state">
+      <p>Cargando...</p>
+    </div>
+
+    <div *ngIf="!cargando && videosRecientes.length === 0" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="2"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+      </svg>
+      <p>Aún no has subido ningún vídeo.</p>
+      <a routerLink="/videos" class="btn-primary">Subir el primero</a>
+    </div>
+
+    <div *ngIf="!cargando && videosRecientes.length > 0" class="recent-grid">
+      <div *ngFor="let v of videosRecientes" class="video-card">
+        <div class="video-card-thumb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+        </div>
+        <div class="video-card-body">
+          <span class="video-card-title">{{ v.titulo }}</span>
+          <div class="video-card-meta">
+            <span>{{ formatearDuracion(v.duracion) }}</span>
+            <span *ngIf="v.fechaSubida">· {{ v.fechaSubida | date:'dd/MM/yyyy' }}</span>
+            <span *ngIf="v.grupo?.nombre || v.nombreGrupo" class="cell-badge">
+              {{ v.grupo?.nombre || v.nombreGrupo }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div>

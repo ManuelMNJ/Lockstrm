@@ -43,4 +43,15 @@ public class UserService implements UserDetailsService {
     public Usuario buscarPorEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
+
+    public boolean cambiarContrasena(String email, String actual, String nueva) {
+        Usuario usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        if (!passwordEncoder.matches(actual, usuario.getPassword())) {
+            return false;
+        }
+        usuario.setPassword(passwordEncoder.encode(nueva));
+        userRepository.save(usuario);
+        return true;
+    }
 }

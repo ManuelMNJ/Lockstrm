@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -50,11 +51,13 @@ public class VideoController {
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
             respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error al leer el archivo");
+            respuesta.put("mensaje", "Error al leer el archivo: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error interno al subir el video");
+            respuesta.put("mensaje", e.getMessage() != null ? e.getMessage() : "Error interno al subir el vídeo");
+            e.printStackTrace();
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -72,8 +75,32 @@ public class VideoController {
     ) {
         try {
             return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
+        } catch (AccessDeniedException e) {
+            // C-1: acceso denegado debe devolver 403, no 500
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            if (msg.contains("no encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/{idVideo}")
+    public ResponseEntity<?> eliminarVideo(
+            @PathVariable Long idVideo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            videoService.eliminarVideo(idVideo, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("mensaje", "Vídeo eliminado correctamente"));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Error al eliminar el vídeo"));
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 export interface VideoUploadResponse {
   id_video: number;
@@ -19,8 +19,13 @@ export interface Video {
   urlCloudSecure: string;
   cloudinaryId: string;
   fechaSubida: string | null;
+  uploadDate?: string | null;
   propietario?: { username: string };
+  nombrePropietario?: string;
+  ownerUsername?: string;
   grupo?: { nombre: string };
+  nombreGrupo?: string;
+  groupName?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -42,5 +47,9 @@ export class VideoService {
 
   obtenerVideos(): Observable<Video[]> {
     return this.http.get<Video[]>(this.apiUrl);
+  }
+
+  eliminarVideo(idVideo: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${idVideo}`);
   }
 }

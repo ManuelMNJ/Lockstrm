@@ -1,5 +1,6 @@
 package com.lockstrm.platform.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,12 +16,14 @@ public class PermisosGrupo implements Serializable {
     @EmbeddedId
     private PermisosGrupoId id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_video_id", insertable = false, updatable = false)
+    @JoinColumn(name = "id_video", insertable = false, updatable = false)
     private Video video;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_grupo_id", insertable = false, updatable = false)
+    @JoinColumn(name = "id_grupo", insertable = false, updatable = false)
     private Grupo grupo;
 
     public PermisosGrupo(Long idVideoId, Long idGrupoId) {

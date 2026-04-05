@@ -14,9 +14,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class PermisosGrupoId implements Serializable {
 
-    @Column(name = "id_video_id")
+    @Column(name = "id_video")
     private Long idVideoId;
 
-    @Column(name = "id_grupo_id")
+    @Column(name = "id_grupo")
     private Long idGrupoId;
 }

@@ -1,5 +1,6 @@
 package com.lockstrm.platform.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,12 @@ public class MiembrosGrupo implements Serializable {
     @EmbeddedId
     private MiembrosGrupoId id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_id", insertable = false, updatable = false)
     private Usuario usuario;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_grupo_id", insertable = false, updatable = false)
     private Grupo grupo;
