@@ -45,7 +45,14 @@
 
   <!-- ── Group grid ── -->
   <div *ngIf="!cargando && grupos.length > 0" class="grupos-grid">
-    <div *ngFor="let g of grupos" class="grupo-card">
+    <div *ngFor="let g of grupos"
+         class="grupo-card"
+         role="button"
+         tabindex="0"
+         [attr.aria-label]="'Abrir grupo ' + g.nombre"
+         (click)="abrirDetalle(g)"
+         (keydown.enter)="abrirDetalle(g)"
+         (keydown.space)="abrirDetalle(g)">
       <div class="grupo-card-icon" aria-hidden="true">
         {{ inicialGrupo(g.nombre) }}
       </div>
@@ -53,6 +60,10 @@
         <span class="grupo-card-name">{{ g.nombre }}</span>
         <span class="grupo-card-date">Creado el {{ formatearFecha(g.fechaCreacion) }}</span>
       </div>
+      <svg class="grupo-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
     </div>
   </div>
 

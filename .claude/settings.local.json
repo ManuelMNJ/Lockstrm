@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sort find:*)"
+      "Bash(sort find:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

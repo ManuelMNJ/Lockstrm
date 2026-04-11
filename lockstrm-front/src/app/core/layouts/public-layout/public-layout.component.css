@@ -1,13 +1,34 @@
 /* ==========================================================================
-   Lockstrm — Public Layout Styles
+   Lockstrm — Public Layout
    public-layout.component.css
 
-   El navbar global es responsabilidad de AppShellComponent (57 px).
-   Este layout sólo gestiona el área de contenido de las páginas públicas.
+   El navbar global (57px) vive en AppShellComponent.
+   Este layout sólo gestiona el área de contenido pública.
+
+   PROBLEMA ANTERIOR:
+     flex:1 en :host + flex:1 en .public-content genera una altura "flexbox"
+     que algunos navegadores no propagan correctamente como base de overflow.
+     El resultado: .public-content crece con su contenido → nunca hay scroll.
+
+   SOLUCIÓN:
+     Calcular la altura directamente como (100dvh - 57px).
+     dvh = dynamic viewport height, resuelve el problema de la barra de
+     dirección en móviles que hace variar 100vh.
    ========================================================================== */
 
+/* Host: flex item de shell-body, solo necesita ser bloque flex */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Área de contenido: altura EXPLÍCITA → overflow-y funciona siempre */
 .public-content {
   flex: 1;
+  height: calc(100dvh - 57px); /* navbar ocupa exactamente 57px */
+  max-height: calc(100dvh - 57px);
   overflow-y: auto;
-  min-height: 0;
+  overflow-x: hidden;
 }

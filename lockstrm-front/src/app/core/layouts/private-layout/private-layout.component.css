@@ -1,25 +1,36 @@
 /* ==========================================================================
-   Lockstrm — Private Layout (App Shell)
+   Lockstrm — Private Layout
    private-layout.component.css
 
-   Estructura de dos columnas implementada con CSS Grid:
-     • Columna 1 (fija): <aside class="sidebar">   — var(--sidebar-width)
-     • Columna 2 (flex): .main-wrapper             — 1fr
-   Dentro de .main-wrapper se usa Flexbox en dirección column para apilar
-   el <header> (fijo) sobre el <main> (scrollable).
+   ESTRUCTURA DE ALTURA (igual que public, calc directo en los contenedores):
+     shell-root (100dvh) → global-nav (57px) → shell-body (100dvh - 57px)
+       → :host (100dvh - 57px)
+         → .app-shell (grid, height: 100dvh - 57px)
+           ├── .sidebar  (height: 100dvh - 57px, overflow-y:auto)
+           └── .main-wrapper (height: 100dvh - 57px)
+                 ├── .main-header (~73px, flex-shrink:0)
+                 └── .main-content (flex:1, overflow-y:auto) ← SCROLL
    ========================================================================== */
 
+/* ── Host element ── */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: calc(100dvh - 57px); /* altura explícita para que el grid hijo resuelva height:100% */
+  overflow: hidden;
+}
+
 /* ==========================================================================
-   APP SHELL — Grid container principal
-   Nota: La altura ya no es 100vh porque AppShellComponent ocupa 57px con su
-         navbar global. Este componente es hijo del .shell-body (flex: 1) y
-         usa flex: 1 + height: 100% para llenar exactamente el espacio restante.
+   GRID PRINCIPAL (sidebar | main)
    ========================================================================== */
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  flex: 1;
-  min-height: 0;
+  /* Llena exactamente el host; height:100% funciona porque :host tiene
+     flex:1 y una altura definida por la cadena superior */
+  height: 100%;
   overflow: hidden;
   background-color: var(--bg-main);
 }
@@ -30,7 +41,7 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* El grid estira el item al 100% de la fila — no hace falta height:100% */
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
@@ -42,33 +53,41 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-4) var(--space-2);
+  padding: var(--space-3) var(--space-2);
   flex: 1;
 }
 
+/* ── Nav items ──────────────────────────────────────────────────────────────
+   FIX: font-weight fijo en 500 en TODOS los estados.
+   Antes era 500 (inactivo) → 600 (activo); ese cambio ensanchaba el texto
+   y producía un reflow visible ("salto") al hacer clic.
+   La distinción activo/inactivo se hace SÓLO con color y fondo.
+   ─────────────────────────────────────────────────────────────────────── */
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px var(--space-3);
+  /* Altura fija → inmune a cualquier variación de métricas tipográficas */
+  height: 36px;
+  padding: 0 var(--space-3);
   border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
   transition:
     background-color var(--transition-fast),
     color            var(--transition-fast);
-  white-space: nowrap;
-  overflow: hidden;
 }
 
 .nav-item svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  transition: color var(--transition-fast);
 }
 
 .nav-item:hover {
@@ -76,17 +95,17 @@
   color: var(--text-main);
 }
 
+/* Activo: sólo color/fondo — sin cambio de font-weight */
 .nav-item.active {
   background-color: var(--color-primary-ghost);
   color: var(--color-primary);
-  font-weight: 600;
 }
 
 .nav-item.active svg {
   color: var(--color-primary);
 }
 
-/* ── Section label (Mi Espacio / Compartido conmigo / General) ── */
+/* ── Section labels ── */
 .nav-section-label {
   display: block;
   font-size: 10px;
@@ -95,9 +114,17 @@
   text-transform: uppercase;
   color: var(--text-subtle);
   padding: var(--space-4) var(--space-3) var(--space-1);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   pointer-events: none;
   user-select: none;
+}
+
+/* ── Divider (entre "Inicio" y el resto de la nav) ── */
+.nav-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: var(--space-2) var(--space-3);
+  flex-shrink: 0;
 }
 
 /* ── Sidebar footer ── */
@@ -107,7 +134,7 @@
   flex-shrink: 0;
 }
 
-/* Authenticated user card */
+/* User card */
 .user-profile {
   display: flex;
   align-items: center;
@@ -153,10 +180,9 @@
 .user-role {
   font-size: 11px;
   color: var(--text-muted);
-  font-weight: 400;
 }
 
-/* Logout button (icon-only) */
+/* Logout icon button */
 .btn-logout {
   display: flex;
   align-items: center;
@@ -164,6 +190,7 @@
   width: 28px;
   height: 28px;
   padding: 0;
+  border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-subtle);
@@ -184,32 +211,18 @@
   height: 15px;
 }
 
-/* Guest links wrapper */
-.guest-links {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 /* ==========================================================================
-   MAIN WRAPPER — Flex column (header fijo + contenido scrollable)
+   MAIN WRAPPER  (cabecera fija + contenido con scroll)
    ========================================================================== */
-/* ── Divider between Inicio and the rest of the nav ── */
-.nav-divider {
-  height: 1px;
-  background-color: var(--border-subtle);
-  margin: var(--space-2) var(--space-3);
-}
-
 .main-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* El grid estira el item — no hace falta height:100% */
   overflow: hidden;
   background-color: var(--bg-main);
 }
 
-/* ── Page header ── */
+/* ── Page header (título de sección, fijo) ── */
 .main-header {
   display: flex;
   align-items: center;
@@ -229,15 +242,10 @@
   white-space: nowrap;
 }
 
-/* Icon inside .btn-primary (Subir vídeo) */
-.btn-primary .btn-icon {
-  width: 14px;
-  height: 14px;
-}
-
-/* ── Scrollable content area (router-outlet host) ── */
+/* ── Área de contenido (SCROLL ocurre aquí) ── */
 .main-content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-8);
 }

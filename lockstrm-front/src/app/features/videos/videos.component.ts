@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { VideoService, Video } from '../../core/services/video.service';
-import { AuthService } from '../../core/services/auth.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
+import { VideoStreamService } from '../../core/services/video-stream.service';
 import { environment } from '../../../environments/environment';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 
@@ -30,20 +30,29 @@ export class VideosComponent implements OnInit {
 
   deletingIds = new Set<number>();
 
+  errorEliminacion = '';
+  errorEliminacionVisible = false;
+  private errorEliminacionTimer: ReturnType<typeof setTimeout> | null = null;
+
   videoAEliminar: Video | null = null;
   videoReproduciendose: Video | null = null;
 
+  // ── Edición de vídeo ───────────────────────────────────────────────────────
+  videoEnEdicion: Video | null = null;
+  editTitulo    = '';
+  editIdGrupo: number | null = null;
+  estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
+  mensajeEdicion = '';
+
   @ViewChild('archivoInput') archivoInput!: ElementRef<HTMLInputElement>;
 
-  // Forzamos la detección de cambios manualmente porque al subir archivos grandes
-  // Angular pierde el rastro de la asincronía y la UI no se actualiza sola.
-  private cdr       = inject(ChangeDetectorRef);
+  private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
   constructor(
-    private videoService: VideoService,
-    private authService: AuthService,
-    private grupoService: GrupoService
+    private videoService:       VideoService,
+    private grupoService:       GrupoService,
+    private videoStreamService: VideoStreamService,
   ) {}
 
   ngOnInit(): void {
@@ -59,8 +68,26 @@ export class VideosComponent implements OnInit {
       });
   }
 
+  // ── Subida ─────────────────────────────────────────────────────────────────
+
+  /** Valida el tipo MIME antes de aceptar el archivo. */
   seleccionarArchivo(event: Event): void {
-    this.archivoSeleccionado = (event.target as HTMLInputElement).files?.[0] ?? null;
+    const input = event.target as HTMLInputElement;
+    const file  = input.files?.[0] ?? null;
+
+    if (file && !file.type.startsWith('video/')) {
+      this.estadoSubida = 'error';
+      this.mensajeError = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
+      this.archivoSeleccionado = null;
+      input.value = '';
+      return;
+    }
+
+    this.archivoSeleccionado = file;
+    if (this.estadoSubida === 'error') {
+      this.estadoSubida = 'idle';
+      this.mensajeError = '';
+    }
   }
 
   subir(): void {
@@ -87,17 +114,12 @@ export class VideosComponent implements OnInit {
     this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        // Safety net: libera el bloqueo si el observable termina sin pasar por
-        // next/error (e.g. componente destruido a mitad de la subida).
         finalize(() => {
-          if (this.estadoSubida === 'uploading') {
-            this.estadoSubida = 'idle';
-          }
+          if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
         })
       )
       .subscribe({
         next: (res) => {
-          // Optimistic UI: insertar el nuevo vídeo al inicio sin GET al servidor.
           const grupo = this.idGrupoSeleccionado
             ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
             : null;
@@ -138,6 +160,8 @@ export class VideosComponent implements OnInit {
       });
   }
 
+  // ── Eliminación ────────────────────────────────────────────────────────────
+
   solicitarEliminacion(video: Video): void {
     this.videoAEliminar = video;
     this.cdr.detectChanges();
@@ -167,7 +191,6 @@ export class VideosComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // Optimistic UI: eliminar en memoria sin GET al servidor.
           this.videos = this.videos.filter(v => v.idVideo !== video.idVideo);
           this.cdr.detectChanges();
         },
@@ -177,10 +200,79 @@ export class VideosComponent implements OnInit {
             statusText: err?.statusText,
             body:       err?.error,
           });
+          this.mostrarErrorEliminacion(
+            err?.error?.error || err?.error?.mensaje ||
+            `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`
+          );
           this.cdr.detectChanges();
         }
       });
   }
+
+  private mostrarErrorEliminacion(mensaje: string): void {
+    if (this.errorEliminacionTimer) clearTimeout(this.errorEliminacionTimer);
+    this.errorEliminacion        = mensaje;
+    this.errorEliminacionVisible = true;
+    this.cdr.detectChanges();
+    this.errorEliminacionTimer = setTimeout(() => {
+      this.errorEliminacionVisible = false;
+      this.cdr.detectChanges();
+    }, 6000);
+  }
+
+  // ── Edición ────────────────────────────────────────────────────────────────
+
+  iniciarEdicion(video: Video): void {
+    this.videoEnEdicion = video;
+    this.editTitulo     = video.titulo;
+    // Intentar pre-seleccionar el grupo actual buscándolo por nombre
+    const grupoActual   = video.grupo
+      ? this.misGrupos.find(g => g.nombre === video.grupo!.nombre)
+      : null;
+    this.editIdGrupo    = grupoActual?.idGrupo ?? null;
+    this.estadoEdicion  = 'idle';
+    this.mensajeEdicion = '';
+    this.cdr.detectChanges();
+  }
+
+  cancelarEdicion(): void {
+    this.videoEnEdicion = null;
+    this.estadoEdicion  = 'idle';
+    this.cdr.detectChanges();
+  }
+
+  guardarEdicion(): void {
+    const video = this.videoEnEdicion;
+    if (!video || !this.editTitulo.trim()) return;
+
+    this.estadoEdicion = 'saving';
+
+    this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), this.editIdGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          const grupoNuevo = this.editIdGrupo
+            ? this.misGrupos.find(g => g.idGrupo === this.editIdGrupo)
+            : null;
+
+          this.videos = this.videos.map(v =>
+            v.idVideo === video.idVideo
+              ? { ...v, titulo: this.editTitulo.trim(), grupo: grupoNuevo ? { nombre: grupoNuevo.nombre } : undefined }
+              : v
+          );
+          this.videoEnEdicion = null;
+          this.estadoEdicion  = 'idle';
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.estadoEdicion  = 'error';
+          this.mensajeEdicion = err?.error?.error || err?.error?.mensaje || 'No se pudo guardar el cambio.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  // ── Reproductor ────────────────────────────────────────────────────────────
 
   cargarVideos(): void {
     this.listaError = '';
@@ -209,9 +301,9 @@ export class VideosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /** URL segura sin token en query string — el Service Worker inyecta el JWT en el header. */
   construirUrlStreaming(idVideo: number): string {
-    const token = this.authService.getToken() ?? '';
-    return `${environment.apiUrl}/api/videos/stream/${idVideo}?token=${token}`;
+    return this.videoStreamService.buildUrl(idVideo);
   }
 
   formatearDuracion(segundos: number | null | undefined): string {
@@ -221,12 +313,15 @@ export class VideosComponent implements OnInit {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  /**
-   * Receives heartbeat events from VideoPlayerComponent.
-   * currentTime is the playback position in seconds at the moment of the ping.
-   * Extend this method to POST the event to a backend audit endpoint.
-   */
   onHeartbeat(currentTime: number): void {
-    console.log(`[Heartbeat] videoId=${this.videoReproduciendose?.idVideo} t=${Math.floor(currentTime)}s`);
+    const idVideo = this.videoReproduciendose?.idVideo;
+    if (!idVideo) return;
+
+    const segundos = Math.floor(currentTime);
+    this.videoService.registrarHeartbeat(idVideo, segundos)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),
+      });
   }
 }

@@ -62,4 +62,14 @@ export class VideoService {
   eliminarVideo(idVideo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idVideo}`);
   }
+
+  /** PATCH /api/videos/{id} — edita el título y/o reasigna (o elimina) el grupo del vídeo. */
+  editarVideo(idVideo: number, titulo: string, idGrupo: number | null): Observable<Video> {
+    return this.http.patch<Video>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupo });
+  }
+
+  /** POST /api/videos/{id}/heartbeat — registra los segundos vistos en tiempo real. */
+  registrarHeartbeat(idVideo: number, segundos: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { segundos });
+  }
 }

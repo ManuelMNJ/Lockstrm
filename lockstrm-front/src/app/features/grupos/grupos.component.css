@@ -102,9 +102,33 @@
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
+.grupo-card {
+  cursor: pointer;
+}
+
 .grupo-card:hover {
   border-color: var(--border-soft);
   background-color: var(--bg-surface-hover);
+}
+
+.grupo-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.grupo-card-arrow {
+  width: 16px;
+  height: 16px;
+  color: var(--text-subtle);
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.grupo-card:hover .grupo-card-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 .grupo-card-icon {

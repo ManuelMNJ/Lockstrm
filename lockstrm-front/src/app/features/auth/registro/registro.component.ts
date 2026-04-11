@@ -10,6 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { debounceTime, switchMap, map, catchError, first } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { passwordFortalezaValidator, calcPwReqs } from '../../../core/validators/password.validator';
 
 @Component({
   selector: 'app-registro',
@@ -20,9 +21,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class RegistroComponent {
 
-  // Patrón: ≥8 chars, 1 mayúscula, 1 dígito, 1 carácter especial.
-  private readonly PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
-  private readonly apiUrl           = `${environment.apiUrl}/api/auth`;
+  private readonly apiUrl = `${environment.apiUrl}/api/auth`;
   private destroyRef                = inject(DestroyRef);
 
   form: FormGroup;
@@ -39,7 +38,7 @@ export class RegistroComponent {
       nombre:    ['', Validators.required],
       apellidos: ['', Validators.required],
       email:     ['', [Validators.required, Validators.email], [this.emailDisponibleValidator()]],
-      password:  ['', [Validators.required, Validators.pattern(this.PASSWORD_PATTERN)]]
+      password:  ['', [Validators.required, passwordFortalezaValidator()]]
     });
   }
 
@@ -72,13 +71,7 @@ export class RegistroComponent {
 
   // Evalúa cada requisito de la contraseña en tiempo real contra el valor actual.
   get pwReqs() {
-    const v: string = this.password.value ?? '';
-    return {
-      length:    v.length >= 8,
-      uppercase: /[A-Z]/.test(v),
-      number:    /\d/.test(v),
-      special:   /[^A-Za-z\d]/.test(v)
-    };
+    return calcPwReqs(this.password.value ?? '');
   }
 
   registrar(): void {

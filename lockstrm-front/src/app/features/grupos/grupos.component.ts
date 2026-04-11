@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 
 @Component({
@@ -24,7 +25,14 @@ export class GruposComponent implements OnInit {
 
   private destroyRef = inject(DestroyRef);
 
-  constructor(private grupoService: GrupoService) {}
+  constructor(
+    private grupoService: GrupoService,
+    private router: Router,
+  ) {}
+
+  abrirDetalle(grupo: Grupo): void {
+    this.router.navigate(['/mi-espacio/grupos', grupo.idGrupo]);
+  }
 
   ngOnInit(): void {
     this.cargarGrupos();

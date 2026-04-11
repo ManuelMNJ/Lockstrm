@@ -3,6 +3,11 @@
    home.component.css
    ========================================================================== */
 
+/* Host element: bloque simple, deja que .public-content sea el scroll container */
+:host {
+  display: block;
+}
+
 /* ==========================================================================
    PAGE WRAPPER
    ========================================================================== */
@@ -10,9 +15,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
-  max-width: 1120px;         /* evita que el layout se estire en pantallas 4K */
+  max-width: 1120px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 var(--space-8); /* breathing room horizontal en viewports < 1120px */
 }
 
 /* ==========================================================================

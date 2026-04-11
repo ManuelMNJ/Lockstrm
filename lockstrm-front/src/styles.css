@@ -99,6 +99,14 @@ body {
   overflow: hidden;
 }
 
+/* Angular monta todo dentro de <app-root>. Sin altura explícita el elemento
+   es display:block con height:auto, lo que rompe la cadena flex que desciende
+   por AppShell → PublicLayout / PrivateLayout. */
+app-root {
+  display: block;
+  height: 100%;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;

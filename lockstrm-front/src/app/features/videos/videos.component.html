@@ -24,7 +24,7 @@
             autocomplete="off">
         </div>
         <div class="form-field">
-          <label class="form-label" for="archivo-video">Archivo de vídeo (MP4)</label>
+          <label class="form-label" for="archivo-video">Archivo de vídeo</label>
           <input
             #archivoInput
             id="archivo-video"
@@ -146,6 +146,18 @@
                         [attr.aria-label]="'Ver vídeo: ' + v.titulo">
                   Ver vídeo
                 </button>
+                <!-- Botón editar -->
+                <button class="btn-edit"
+                        (click)="iniciarEdicion(v)"
+                        [attr.aria-label]="'Editar vídeo: ' + v.titulo"
+                        title="Editar título o grupo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
                 <button class="btn-delete"
                         (click)="solicitarEliminacion(v)"
                         [disabled]="deletingIds.has(v.idVideo)"
@@ -187,7 +199,6 @@
 
   <!-- ================================================================
     VIDEO PLAYER MODAL
-    Se activa cuando videoReproduciendose !== null
     ================================================================ -->
   <div class="modal-overlay"
        *ngIf="videoReproduciendose"
@@ -223,8 +234,84 @@
   </div>
 
   <!-- ================================================================
+    EDIT MODAL
+    ================================================================ -->
+  <div class="modal-overlay edit-overlay"
+       *ngIf="videoEnEdicion"
+       (click)="cancelarEdicion()"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="edit-title">
+
+    <div class="edit-dialog" (click)="$event.stopPropagation()">
+
+      <div class="edit-header">
+        <h3 class="edit-title" id="edit-title">Editar vídeo</h3>
+        <button class="modal-close"
+                (click)="cancelarEdicion()"
+                aria-label="Cerrar editor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="edit-body">
+
+        <div class="edit-field">
+          <label class="form-label" for="edit-titulo">Título del vídeo</label>
+          <input
+            id="edit-titulo"
+            class="form-input"
+            type="text"
+            [(ngModel)]="editTitulo"
+            placeholder="Título descriptivo"
+            autocomplete="off">
+        </div>
+
+        <div class="edit-field">
+          <label class="form-label" for="edit-grupo">Grupo asignado</label>
+          <select
+            id="edit-grupo"
+            class="form-input form-select"
+            [(ngModel)]="editIdGrupo">
+            <option [ngValue]="null">Sin grupo (Privado)</option>
+            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+          </select>
+        </div>
+
+        <p *ngIf="estadoEdicion === 'error'"
+           class="edit-error"
+           role="alert">
+          {{ mensajeEdicion }}
+        </p>
+
+      </div>
+
+      <div class="edit-actions">
+        <button class="btn-confirm-cancel" (click)="cancelarEdicion()">
+          Cancelar
+        </button>
+        <button class="btn-confirm-save"
+                (click)="guardarEdicion()"
+                [disabled]="estadoEdicion === 'saving' || !editTitulo.trim()">
+          <svg *ngIf="estadoEdicion !== 'saving'" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round"
+               stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ estadoEdicion === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================================================================
     DELETE CONFIRMATION MODAL
-    Se activa cuando videoAEliminar !== null
     ================================================================ -->
   <div class="modal-overlay confirm-overlay"
        *ngIf="videoAEliminar"
@@ -274,6 +361,23 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- ================================================================
+    TOAST — Error al eliminar vídeo
+    ================================================================ -->
+  <div class="toast toast--error"
+       *ngIf="errorEliminacionVisible"
+       role="alert"
+       aria-live="assertive">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+         class="toast-icon" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span>{{ errorEliminacion }}</span>
   </div>
 
 </div>

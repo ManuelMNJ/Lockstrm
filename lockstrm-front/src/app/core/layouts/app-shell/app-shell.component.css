@@ -3,13 +3,19 @@
    app-shell.component.css
    ========================================================================== */
 
+/* Host element */
+:host {
+  display: block;
+  height: 100%;
+}
+
 /* ==========================================================================
    ROOT CONTAINER
    ========================================================================== */
 .shell-root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh; /* dvh resuelve el problema del 100vh en móvil con barra de browser */
   overflow: hidden;
   background-color: var(--bg-main);
 }

@@ -75,6 +75,14 @@ export class VideosCompartidosComponent implements OnInit {
   }
 
   onHeartbeat(currentTime: number): void {
-    console.log(`[Heartbeat] videoId=${this.videoReproduciendose?.idVideo} t=${Math.floor(currentTime)}s`);
+    const idVideo = this.videoReproduciendose?.idVideo;
+    if (!idVideo) return;
+
+    const segundos = Math.floor(currentTime);
+    this.videoService.registrarHeartbeat(idVideo, segundos)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),
+      });
   }
 }
