@@ -11,7 +11,7 @@
       <p class="welcome-sub">Aquí tienes un resumen de tu actividad en Lockstrm.</p>
     </div>
     <div class="welcome-actions">
-      <a routerLink="/videos" class="btn-primary">
+      <a routerLink="/mi-espacio/videos" class="btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
              aria-hidden="true" class="btn-icon">
@@ -20,7 +20,7 @@
         </svg>
         Subir vídeo
       </a>
-      <a routerLink="/grupos" class="btn-secondary">
+      <a routerLink="/mi-espacio/grupos" class="btn-secondary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
              aria-hidden="true" class="btn-icon">
@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div class="stat-card stat-card--action" routerLink="/videos" role="button" tabindex="0"
+    <div class="stat-card stat-card--action" routerLink="/mi-espacio/videos" role="button" tabindex="0"
          aria-label="Ir a la biblioteca de vídeos">
       <div class="stat-icon stat-icon--green">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -92,7 +92,7 @@
 
     <div class="section-header">
       <h3 class="section-title" id="recent-heading">Vídeos recientes</h3>
-      <a routerLink="/videos" class="section-link">Ver todos</a>
+      <a routerLink="/mi-espacio/videos" class="section-link">Ver todos</a>
     </div>
 
     <div *ngIf="cargando" class="empty-state">
@@ -106,7 +106,7 @@
         <line x1="2" y1="12" x2="22" y2="12"/>
       </svg>
       <p>Aún no has subido ningún vídeo.</p>
-      <a routerLink="/videos" class="btn-primary">Subir el primero</a>
+      <a routerLink="/mi-espacio/videos" class="btn-primary">Subir el primero</a>
     </div>
 
     <div *ngIf="!cargando && videosRecientes.length > 0" class="recent-grid">

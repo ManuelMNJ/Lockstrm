@@ -1,47 +1,9 @@
 <!-- ==========================================================================
   Lockstrm — Public Layout
-  Estructura: Flex column → <nav> (fijo, 57 px) | <main> (scrollable, flex 1)
-  Visible en rutas: /, /home, /login, /registro
-  NO contiene sidebar ni cabecera de zona privada.
+  Nota: El navbar global es responsabilidad de AppShellComponent.
+        Este layout sólo envuelve el área de contenido de las páginas públicas
+        (/, /login, /registro).
   ========================================================================== -->
-<div class="public-shell">
-
-  <!-- ================================================================
-    TOP NAV — logo + accesos directos
-    ================================================================ -->
-  <nav class="public-nav" aria-label="Navegación pública">
-
-    <!-- Brand -->
-    <a routerLink="/" class="public-brand" aria-label="Lockstrm — ir al inicio">
-      <div class="brand-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-      <span class="brand-name">Lockstrm</span>
-    </a>
-
-    <!-- Right-side links -->
-    <div class="public-nav-actions">
-      <a routerLink="/login"
-         routerLinkActive="nav-link--active"
-         class="nav-link">
-        Iniciar sesión
-      </a>
-      <a routerLink="/registro" class="btn-primary">
-        Solicitar acceso
-      </a>
-    </div>
-
-  </nav>
-
-  <!-- ================================================================
-    CONTENT — routed pages render here
-    ================================================================ -->
-  <main class="public-content" role="main">
-    <router-outlet/>
-  </main>
-
-</div>
+<main class="public-content" role="main">
+  <router-outlet/>
+</main>

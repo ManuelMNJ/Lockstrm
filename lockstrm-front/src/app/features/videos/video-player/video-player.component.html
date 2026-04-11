@@ -1,0 +1,227 @@
+<!--
+  VideoPlayerComponent — Lockstrm
+  ─────────────────────────────────────────────────────────────────────────────
+  Layer stack (z-index order, bottom → top):
+    <video>           z —  base
+    .pause-overlay    z 15 — large centered play button when paused
+    .watermark        z 10 — floating email (pointer-events: none)
+    .controls-bar     z 20 — bottom HUD
+    .click-flash      z 25 — ephemeral icon animation on play/pause
+    .buffering-spinner z 30 — ring spinner while network stalls
+-->
+
+<div
+  class="player-wrapper"
+  #playerContainer
+  (contextmenu)="onContextMenu($event)"
+  (mousemove)="onMouseMove()"
+  (mouseleave)="onMouseLeave()">
+
+  <!-- ── Native video element — NO controls attribute ──────────────────── -->
+  <video
+    #videoEl
+    class="player-video"
+    [src]="videoUrl"
+    preload="metadata"
+    disableremoteplayback
+    (click)="togglePlay()"
+    (timeupdate)="onTimeUpdate()"
+    (loadedmetadata)="onLoadedMetadata()"
+    (play)="isPlaying.set(true)"
+    (pause)="isPlaying.set(false)"
+    (ended)="onEnded()"
+    (waiting)="onWaiting()"
+    (canplay)="onCanPlay()">
+  </video>
+
+  <!-- ── Pause overlay ─────────────────────────────────────────────────── -->
+  <!--
+    Visible only when paused AND not buffering (buffering has its own spinner).
+    Covers the full video area so the user has a large click target.
+    pointer-events are intentionally ON here — it is the primary play affordance.
+  -->
+  @if (!isPlaying() && !isBuffering()) {
+    <div class="pause-overlay" (click)="togglePlay()" aria-hidden="true">
+      <div class="pause-overlay__btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+      </div>
+    </div>
+  }
+
+  <!-- ── Click flash ──────────────────────────────────────────────────── -->
+  <!--
+    Purely decorative. Shows a large play or pause icon for ~500 ms after
+    a toggle action, matching the new playback state.
+    pointer-events: none so it never blocks interaction.
+  -->
+  @if (showClickFlash()) {
+    <div class="click-flash" aria-hidden="true">
+      @if (isPlaying()) {
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5,3 19,12 5,21"/>
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6"  y="4" width="4" height="16" rx="1"/>
+          <rect x="14" y="4" width="4" height="16" rx="1"/>
+        </svg>
+      }
+    </div>
+  }
+
+  <!-- ── Buffering spinner ─────────────────────────────────────────────── -->
+  <!--
+    Shown while the browser fires the 'waiting' event (network stall).
+    Disappears when 'canplay' fires. pointer-events: none.
+  -->
+  @if (isBuffering()) {
+    <div class="buffering-spinner" aria-label="Cargando vídeo" role="status">
+      <div class="spinner-ring"></div>
+    </div>
+  }
+
+  <!-- ── Watermark ─────────────────────────────────────────────────────── -->
+  <!--
+    pointer-events: none  → does not interfere with clicks on the player.
+    position & opacity set in CSS; top/left driven by watermarkPos() signal.
+    Moves every 10 s (see initWatermark in the TS) to deter screen recording.
+  -->
+  <div
+    class="watermark"
+    [style.top]="watermarkPos().top"
+    [style.left]="watermarkPos().left"
+    aria-hidden="true">
+    {{ userIdentifier }}
+  </div>
+
+  <!-- ── Controls bar ──────────────────────────────────────────────────── -->
+  <div class="controls-bar" [class.controls-bar--hidden]="!showControls()">
+
+    <!-- Progress slider ─────────────────────────────────────────────── -->
+    <div class="progress-row">
+      <!--
+        [value] switches source depending on isDragging():
+          • NOT dragging → currentTime() (updated by onTimeUpdate every ~250 ms)
+          • Dragging      → scrubValue()  (updated by onScrubInput on every mousemove)
+        This is the key mechanism that prevents timeupdate from fighting the thumb.
+
+        --progress CSS custom property is read by the ::before pseudo-element
+        to paint the filled portion of the track.
+      -->
+      <input
+        type="range"
+        class="progress-slider"
+        [min]="0"
+        [max]="duration()"
+        step="0.5"
+        [value]="isDragging() ? scrubValue() : currentTime()"
+        [style.--progress]="progressPercent() + '%'"
+        (mousedown)="onScrubStart()"
+        (touchstart)="onScrubStart()"
+        (input)="onScrubInput($event)"
+        (change)="onScrubEnd($event)"
+        aria-label="Progreso del vídeo">
+    </div>
+
+    <!-- Bottom control row ──────────────────────────────────────────── -->
+    <div class="controls-row">
+
+      <!-- Play / Pause ───────────────────────────────────────────────── -->
+      <button
+        class="ctrl-btn"
+        (click)="togglePlay()"
+        [attr.aria-label]="isPlaying() ? 'Pausar' : 'Reproducir'">
+        @if (isPlaying()) {
+          <!-- Pause -->
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6"  y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+        } @else {
+          <!-- Play -->
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <polygon points="5,3 19,12 5,21"/>
+          </svg>
+        }
+      </button>
+
+      <!-- Time display ───────────────────────────────────────────────── -->
+      <span class="time-display" aria-live="off">
+        {{ formatTime(currentTime()) }} / {{ formatTime(duration()) }}
+      </span>
+
+      <!-- Spacer — pushes volume + fullscreen to the right ───────────── -->
+      <div class="ctrl-spacer"></div>
+
+      <!-- Mute button ────────────────────────────────────────────────── -->
+      <button
+        class="ctrl-btn"
+        (click)="toggleMute()"
+        [attr.aria-label]="isMuted() ? 'Activar sonido' : 'Silenciar'">
+        @if (isMuted() || volume() === 0) {
+          <!-- Muted -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9"  x2="17" y2="15"/>
+            <line x1="17" y1="9"  x2="23" y2="15"/>
+          </svg>
+        } @else {
+          <!-- Volume on -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        }
+      </button>
+
+      <!-- Volume slider ──────────────────────────────────────────────── -->
+      <input
+        type="range"
+        class="volume-slider"
+        min="0"
+        max="100"
+        step="1"
+        [value]="isMuted() ? 0 : volume() * 100"
+        [style.--progress]="(isMuted() ? 0 : volume() * 100) + '%'"
+        (input)="onVolumeChange($event)"
+        aria-label="Volumen">
+
+      <!-- Fullscreen ─────────────────────────────────────────────────── -->
+      <button
+        class="ctrl-btn"
+        (click)="toggleFullscreen()"
+        [attr.aria-label]="isFullscreen() ? 'Salir de pantalla completa' : 'Pantalla completa'">
+        @if (isFullscreen()) {
+          <!-- Exit fullscreen -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3"/>
+            <path d="M21 8h-3a2 2 0 0 1-2-2V3"/>
+            <path d="M3 16h3a2 2 0 0 1 2 2v3"/>
+            <path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
+          </svg>
+        } @else {
+          <!-- Enter fullscreen -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+            <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+          </svg>
+        }
+      </button>
+
+    </div><!-- /controls-row -->
+  </div><!-- /controls-bar -->
+
+</div><!-- /player-wrapper -->

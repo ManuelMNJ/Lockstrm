@@ -1,0 +1,332 @@
+/* ==========================================================================
+   Lockstrm — App Shell (Root Layout)
+   app-shell.component.css
+   ========================================================================== */
+
+/* ==========================================================================
+   ROOT CONTAINER
+   ========================================================================== */
+.shell-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-main);
+}
+
+/* ==========================================================================
+   GLOBAL NAVBAR
+   ========================================================================== */
+.global-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 57px;
+  padding: 0 var(--space-8);
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  gap: var(--space-4);
+  z-index: 100;
+}
+
+/* ── Brand ── */
+.global-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-md);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.brand-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* ── Right-side action group ── */
+.global-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* Ghost text link (Iniciar sesión) */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px var(--space-2);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.nav-link:hover,
+.nav-link--active {
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   "IR AL PANEL" BUTTON  (usuario autenticado)
+   Estilo primario compacto, con icono de cuadrícula.
+   ========================================================================== */
+.btn-panel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-primary-ghost);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast);
+}
+
+.btn-panel svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.btn-panel:hover {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.btn-panel--active {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+/* ==========================================================================
+   PROFILE WRAPPER  (botón trigger + dropdown)
+   ========================================================================== */
+.profile-wrapper {
+  position: relative;
+}
+
+/* ── Trigger button ── */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 10px 5px 5px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-main);
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.profile-trigger:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-default, var(--border-subtle));
+}
+
+.trigger-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.trigger-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trigger-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--text-subtle);
+  transition: transform var(--transition-fast);
+}
+
+.trigger-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   TRANSPARENT BACKDROP
+   Capa invisible a z-index 98 que cierra el menú al hacer clic fuera.
+   ========================================================================== */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+  background: transparent;
+}
+
+/* ==========================================================================
+   PROFILE DROPDOWN PANEL
+   ========================================================================== */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, var(--radius-md));
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 99;
+  overflow: hidden;
+
+  /* Entrada suave */
+  animation: dropdown-in 120ms ease-out;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ── Cabecera del dropdown ── */
+.dropdown-profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.dropdown-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.dropdown-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.dropdown-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-role {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ── Divider ── */
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 0;
+}
+
+/* ── Menu items ── */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px var(--space-4);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color var(--transition-fast),
+    color            var(--transition-fast);
+}
+
+.dropdown-item svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+.dropdown-item--danger:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   SHELL BODY
+   Contiene el router-outlet (PublicLayout o PrivateLayout).
+   ========================================================================== */
+.shell-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

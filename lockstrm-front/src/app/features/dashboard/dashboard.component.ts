@@ -29,7 +29,7 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.videoService.obtenerVideos()
+    this.videoService.obtenerMisVideos()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (videos) => {

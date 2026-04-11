@@ -29,6 +29,7 @@ public class GrupoService {
     /**
      * Devuelve todos los grupos a los que pertenece el usuario:
      * los que creó + los que integra como miembro (sin duplicados).
+     * Mantiene compatibilidad con clientes existentes.
      */
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposDelUsuario(String email) {
@@ -45,6 +46,18 @@ public class GrupoService {
             if (vistos.add(g.getIdGrupo())) resultado.add(g);
         }
         return resultado;
+    }
+
+    /** Grupos Creados por Mí: grupos donde el usuario autenticado es el administrador/creador (contexto Propietario). */
+    @Transactional(readOnly = true)
+    public List<Grupo> obtenerGruposCreados(String email) {
+        return grupoRepository.findByCreador_Email(email);
+    }
+
+    /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
+    @Transactional(readOnly = true)
+    public List<Grupo> obtenerGruposComoMiembro(String email) {
+        return miembrosGrupoRepository.findGruposComoMiembroNoCreador(email);
     }
 
     public Grupo crearGrupo(String emailCreador, String nombre) {

@@ -33,21 +33,19 @@ export class PrivateLayoutComponent implements OnInit {
 
   private actualizarHeader(url: string): void {
     if (url.startsWith('/dashboard')) {
-      this.pageTitle          = 'Dashboard';
-      this.mostrarBotonSubir  = false;
-    } else if (url.startsWith('/videos')) {
-      this.pageTitle          = 'Mis Vídeos';
-      this.mostrarBotonSubir  = false;
-    } else if (url.startsWith('/grupos')) {
-      this.pageTitle          = 'Mis Grupos';
-      this.mostrarBotonSubir  = false;
+      this.pageTitle = 'Dashboard';
+    } else if (url.startsWith('/mi-espacio/videos')) {
+      this.pageTitle = 'Mis Vídeos';
+    } else if (url.startsWith('/mi-espacio/grupos')) {
+      this.pageTitle = 'Mis Grupos';
+    } else if (url.startsWith('/compartido')) {
+      this.pageTitle = 'Vídeos Disponibles';
     } else if (url.startsWith('/ajustes')) {
-      this.pageTitle          = 'Ajustes';
-      this.mostrarBotonSubir  = false;
+      this.pageTitle = 'Ajustes';
     } else {
-      this.pageTitle          = 'Lockstrm';
-      this.mostrarBotonSubir  = false;
+      this.pageTitle = 'Lockstrm';
     }
+    this.mostrarBotonSubir = false;
   }
 
   cerrarSesion(): void {

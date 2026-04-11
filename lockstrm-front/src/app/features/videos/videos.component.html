@@ -140,11 +140,28 @@
               <span class="cell-text">{{ formatearDuracion(v.duracion) }}</span>
             </td>
             <td class="col-actions">
-              <button class="btn-view"
-                      (click)="abrirReproductor(v)"
-                      [attr.aria-label]="'Ver vídeo: ' + v.titulo">
-                Ver vídeo
-              </button>
+              <div class="actions-cell">
+                <button class="btn-view"
+                        (click)="abrirReproductor(v)"
+                        [attr.aria-label]="'Ver vídeo: ' + v.titulo">
+                  Ver vídeo
+                </button>
+                <button class="btn-delete"
+                        (click)="solicitarEliminacion(v)"
+                        [disabled]="deletingIds.has(v.idVideo)"
+                        [attr.aria-label]="'Eliminar vídeo: ' + v.titulo"
+                        title="Eliminar vídeo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/>
+                    <path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </div>
             </td>
 
           </tr>
@@ -196,22 +213,64 @@
       </div>
 
       <div class="modal-player">
-        <video *ngIf="videoReproduciendose"
-          [src]="construirUrlStreaming(videoReproduciendose.idVideo)"
-          controls
-          autoplay
-          class="native-player">
-          Tu navegador no soporta la reproducción de vídeo HTML5.
-        </video>
+        <app-video-player
+          [videoUrl]="construirUrlStreaming(videoReproduciendose!.idVideo)"
+          (heartbeat)="onHeartbeat($event)">
+        </app-video-player>
       </div>
 
-      <div class="modal-footer">
-        <span class="modal-meta">
-          Duración: {{ formatearDuracion(videoReproduciendose?.duracion) }}
-        </span>
-        <span class="modal-meta" *ngIf="videoReproduciendose?.fechaSubida">
-          Subido el {{ videoReproduciendose?.fechaSubida | date:'dd/MM/yyyy' }}
-        </span>
+    </div>
+  </div>
+
+  <!-- ================================================================
+    DELETE CONFIRMATION MODAL
+    Se activa cuando videoAEliminar !== null
+    ================================================================ -->
+  <div class="modal-overlay confirm-overlay"
+       *ngIf="videoAEliminar"
+       (click)="cancelarEliminacion()"
+       role="alertdialog"
+       aria-modal="true"
+       aria-labelledby="confirm-title"
+       aria-describedby="confirm-desc">
+
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+
+      <div class="confirm-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/>
+          <path d="M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </div>
+
+      <div class="confirm-body">
+        <h3 class="confirm-title" id="confirm-title">Eliminar vídeo</h3>
+        <p class="confirm-video-name">{{ videoAEliminar?.titulo }}</p>
+        <p class="confirm-desc" id="confirm-desc">
+          Esta acción eliminará el archivo de la nube, todos los permisos
+          asociados y el historial de reproducción.
+          <strong>No se puede deshacer.</strong>
+        </p>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" (click)="cancelarEliminacion()">
+          Cancelar
+        </button>
+        <button class="btn-confirm-delete" (click)="confirmarEliminacion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+          Eliminar permanentemente
+        </button>
       </div>
 
     </div>

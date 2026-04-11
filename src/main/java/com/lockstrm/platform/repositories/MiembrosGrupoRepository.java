@@ -17,4 +17,12 @@ public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, Mi
 
     @Query("SELECT mg.grupo FROM MiembrosGrupo mg WHERE mg.usuario.email = :email")
     List<Grupo> findGruposByUsuarioEmail(@Param("email") String email);
+
+    /**
+     * Grupos donde el usuario es miembro pero NO es el creador (contexto Espectador/Miembro puro).
+     */
+    @Query("SELECT mg.grupo FROM MiembrosGrupo mg " +
+           "WHERE mg.usuario.email = :email " +
+           "AND mg.grupo.creador.email <> :email")
+    List<Grupo> findGruposComoMiembroNoCreador(@Param("email") String email);
 }

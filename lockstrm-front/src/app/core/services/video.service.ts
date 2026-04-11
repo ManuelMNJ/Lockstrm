@@ -49,6 +49,16 @@ export class VideoService {
     return this.http.get<Video[]>(this.apiUrl);
   }
 
+  /** GET /api/videos/mios — vídeos subidos por el usuario autenticado (contexto Propietario). */
+  obtenerMisVideos(): Observable<Video[]> {
+    return this.http.get<Video[]>(`${this.apiUrl}/mios`);
+  }
+
+  /** GET /api/videos/compartidos — vídeos accesibles vía permisos de grupo (contexto Espectador). */
+  obtenerVideosCompartidos(): Observable<Video[]> {
+    return this.http.get<Video[]>(`${this.apiUrl}/compartidos`);
+  }
+
   eliminarVideo(idVideo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idVideo}`);
   }

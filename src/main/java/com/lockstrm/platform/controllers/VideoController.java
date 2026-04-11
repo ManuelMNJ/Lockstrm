@@ -1,7 +1,10 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.HeartbeatRequest;
 import com.lockstrm.platform.entities.Video;
+import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,7 @@ import java.util.Map;
 public class VideoController {
 
     private final VideoService videoService;
+    private final LogService   logService;
 
     @PostMapping("/subir")
     public ResponseEntity<Map<String, Object>> subirVideo(
@@ -62,9 +66,22 @@ public class VideoController {
         }
     }
 
+    /** Lista todos los vídeos del usuario (propios). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
     public ResponseEntity<List<Video>> listarVideos(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(videoService.obtenerPorEmailUsuario(userDetails.getUsername()));
+        return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
+    }
+
+    /** Mis Vídeos: vídeos subidos por el usuario autenticado (contexto Propietario). */
+    @GetMapping("/mios")
+    public ResponseEntity<List<Video>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
+    }
+
+    /** Vídeos Compartidos: vídeos accesibles vía permisos de grupo (contexto Espectador). */
+    @GetMapping("/compartidos")
+    public ResponseEntity<List<Video>> listarVideosCompartidos(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(videoService.obtenerVideosCompartidos(userDetails.getUsername()));
     }
 
     @GetMapping("/stream/{id}")
@@ -87,6 +104,24 @@ public class VideoController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Recibe el pulso de telemetría del reproductor cada 30 segundos.
+     * Actualiza el campo segundosVistos del registro de log del día actual,
+     * o crea un nuevo registro si es la primera sesión del día.
+     *
+     * @AuthenticationPrincipal inyecta el UserDetails cuyo username es el email
+     * (establecido por JwtAuthenticationFilter al validar el token Bearer).
+     */
+    @PostMapping("/{idVideo}/heartbeat")
+    public ResponseEntity<Void> heartbeat(
+            @PathVariable Long idVideo,
+            @Valid @RequestBody HeartbeatRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        logService.registrarHeartbeat(idVideo, userDetails.getUsername(), request.currentTime());
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{idVideo}")

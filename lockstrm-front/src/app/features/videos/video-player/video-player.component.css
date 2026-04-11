@@ -1,0 +1,469 @@
+/* ==========================================================================
+   Lockstrm — VideoPlayerComponent
+   video-player.component.css
+   ========================================================================== */
+
+/* ==========================================================================
+   PLAYER WRAPPER
+   ========================================================================== */
+
+.player-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #000;
+  overflow: hidden;
+  cursor: default;
+  /* border-radius intentionally 0: the parent modal already clips corners */
+}
+
+/* Hide the cursor when controls are gone and the video is playing */
+.player-wrapper:has(.controls-bar--hidden) {
+  cursor: none;
+}
+
+/* ==========================================================================
+   VIDEO ELEMENT
+   ========================================================================== */
+
+.player-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  cursor: inherit;
+}
+
+/* Hide the browser-injected Cast overlay button (Chrome/Edge) */
+.player-video::-webkit-media-controls-overlay-cast-button,
+.player-video::-webkit-media-controls-cast-button {
+  display: none;
+}
+
+/* Fullscreen overrides */
+.player-wrapper:fullscreen,
+.player-wrapper:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: unset;
+  border-radius: 0;
+}
+
+.player-wrapper:fullscreen          .player-video,
+.player-wrapper:-webkit-full-screen .player-video {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ==========================================================================
+   PAUSE OVERLAY
+   A large centered play button visible whenever the video is paused.
+   Covers the full player so the entire area acts as a click target.
+   ========================================================================== */
+
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Very faint tint so the button doesn't float on bright frames */
+  background: rgba(0, 0, 0, 0.20);
+  cursor: pointer;
+}
+
+.pause-overlay__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  /* Frosted-glass feel consistent with the dark design system */
+  background: rgba(255, 255, 255, 0.10);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    background-color 150ms ease,
+    border-color     150ms ease,
+    transform        150ms ease;
+}
+
+.pause-overlay:hover .pause-overlay__btn {
+  background: rgba(124, 58, 237, 0.30);   /* --color-primary tint */
+  border-color: rgba(124, 58, 237, 0.50);
+  transform: scale(1.08);
+}
+
+.pause-overlay__btn svg {
+  width: 28px;
+  height: 28px;
+  color: #fff;
+  /* Optical compensation: the play triangle looks shifted left */
+  translate: 2px 0;
+}
+
+/* ==========================================================================
+   CLICK FLASH
+   Ephemeral icon echoing the last play/pause action (≈500 ms).
+   pointer-events: none — must never block interaction.
+   ========================================================================== */
+
+.click-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.click-flash svg {
+  width: 76px;
+  height: 76px;
+  color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 0 16px rgba(124, 58, 237, 0.55));
+  animation: clickFlash 480ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes clickFlash {
+  0%   { opacity: 0.95; transform: scale(0.72); }
+  35%  { opacity: 1;    transform: scale(1.06); }
+  100% { opacity: 0;    transform: scale(1.40); }
+}
+
+/* ==========================================================================
+   BUFFERING SPINNER
+   Appears on the 'waiting' video event, disappears on 'canplay'.
+   pointer-events: none so dragging the progress bar still works.
+   ========================================================================== */
+
+.buffering-spinner {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.spinner-ring {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--color-primary);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   WATERMARK
+   ========================================================================== */
+
+.watermark {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.25;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  /* Smooth glide between positions (updated by RxJS timer every 10 s) */
+  transition: top 600ms ease, left 600ms ease;
+}
+
+/* ==========================================================================
+   CONTROLS BAR
+   ========================================================================== */
+
+.controls-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  /* Generous gradient so controls are readable over any video frame */
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.90) 0%,
+    rgba(0, 0, 0, 0.50) 65%,
+    transparent 100%);
+  /* Padding uses design-system token for horizontal consistency */
+  padding: 28px var(--space-4) 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Visibility transition */
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+.controls-bar--hidden {
+  opacity: 0;
+  transform: translateY(6px);
+  /* clicks fall through to the video while the bar is invisible */
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   PROGRESS SLIDER
+   WHY THIS APPROACH:
+   Setting background/background-clip on the <input> element itself does NOT
+   paint the visible track in WebKit (Chrome/Safari/Edge). Those engines render
+   the track exclusively via ::-webkit-slider-runnable-track, ignoring any
+   background set on the element. The old padding + background-clip trick made
+   the track invisible in those browsers.
+
+   FIX: the element is made 20px tall (large invisible hit area), transparent,
+   and the actual visual track lives entirely inside the pseudo-elements.
+   The --progress CSS custom property is inherited by pseudo-elements, so the
+   filled gradient still works via Angular's [style.--progress] binding.
+   ========================================================================== */
+
+.progress-row {
+  width: 100%;
+  /* Prevents the tall invisible element from pushing the layout */
+  display: flex;
+  align-items: center;
+}
+
+.progress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  /* Tall element = large click/touch target with no visible change */
+  height: 20px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Track — WebKit (Chrome, Safari, Edge) ─────────────────────────────── */
+.progress-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  /* Filled portion driven by --progress; rest is the dim rail */
+  background: linear-gradient(
+    to right,
+    var(--color-primary)       0%,
+    var(--color-primary)       var(--progress, 0%),
+    rgba(255, 255, 255, 0.22) var(--progress, 0%),
+    rgba(255, 255, 255, 0.22) 100%
+  );
+  transition: height 140ms ease;
+}
+
+.progress-slider:hover::-webkit-slider-runnable-track {
+  height: 7px;
+}
+
+/* ── Thumb — WebKit ────────────────────────────────────────────────────── */
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  /* Centre the thumb on the 4px track: -(14px - 4px) / 2 = -5px */
+  margin-top: -5px;
+  transition: transform 140ms ease, box-shadow 140ms ease, margin-top 140ms ease;
+}
+
+.progress-slider:hover::-webkit-slider-thumb {
+  /* Re-centre on the 7px hover track: -(14px - 7px) / 2 ≈ -3.5px */
+  margin-top: -3.5px;
+}
+
+.progress-slider:hover::-webkit-slider-thumb,
+.progress-slider:active::-webkit-slider-thumb {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.40);
+}
+
+/* ── Track — Firefox ───────────────────────────────────────────────────── */
+.progress-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.progress-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+/* ── Thumb — Firefox ───────────────────────────────────────────────────── */
+.progress-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   BOTTOM CONTROL ROW
+   ========================================================================== */
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Pushes volume + fullscreen to the right edge */
+.ctrl-spacer {
+  flex: 1;
+}
+
+/* ==========================================================================
+   ICON BUTTONS
+   Slightly larger than the rest of the app's icon buttons to match the
+   scale of the player context (38 px vs the sidebar's 28 px).
+   ========================================================================== */
+
+.ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.ctrl-btn:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.ctrl-btn:active {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.ctrl-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.ctrl-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   TIME DISPLAY
+   tabular-nums / tnum keep the width stable as digits change,
+   preventing the layout from shifting during playback.
+   ========================================================================== */
+
+.time-display {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+/* ==========================================================================
+   VOLUME SLIDER
+   Same fix as the progress slider: element is transparent + tall for hit
+   area; visual track lives in the pseudo-elements.
+   ========================================================================== */
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 20px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Track — WebKit ────────────────────────────────────────────────────── */
+.volume-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.85) var(--progress, 100%),
+    rgba(255, 255, 255, 0.22) var(--progress, 100%),
+    rgba(255, 255, 255, 0.22) 100%
+  );
+}
+
+/* ── Thumb — WebKit ────────────────────────────────────────────────────── */
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  /* Centre on the 3px track: -(12px - 3px) / 2 = -4.5px */
+  margin-top: -4.5px;
+  transition: transform 120ms ease;
+}
+
+.volume-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+/* ── Track — Firefox ───────────────────────────────────────────────────── */
+.volume-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.volume-slider::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* ── Thumb — Firefox ───────────────────────────────────────────────────── */
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}

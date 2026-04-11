@@ -20,9 +20,22 @@ public class GrupoController {
 
     private final GrupoService grupoService;
 
+    /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
     public ResponseEntity<List<Grupo>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(grupoService.obtenerGruposDelUsuario(userDetails.getUsername()));
+    }
+
+    /** Grupos Creados por Mí: grupos donde el usuario autenticado es el administrador/creador (contexto Propietario). */
+    @GetMapping("/creados")
+    public ResponseEntity<List<Grupo>> obtenerGruposCreados(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(grupoService.obtenerGruposCreados(userDetails.getUsername()));
+    }
+
+    /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
+    @GetMapping("/miembro")
+    public ResponseEntity<List<Grupo>> obtenerGruposComoMiembro(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(grupoService.obtenerGruposComoMiembro(userDetails.getUsername()));
     }
 
     @PostMapping

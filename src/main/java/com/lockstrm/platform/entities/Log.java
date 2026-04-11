@@ -27,6 +27,14 @@ public class Log {
     @Column(name = "ip_acceso", length = 45)
     private String ipAcceso;
 
+    /**
+     * Segundos de vídeo visualizados en esta sesión, actualizado por heartbeat.
+     * Es null en el registro de acceso inicial y se rellena con el primer heartbeat.
+     * ddl-auto=update añade la columna automáticamente al arrancar la aplicación.
+     */
+    @Column(name = "segundos_vistos")
+    private Integer segundosVistos;
+
     @PrePersist
     protected void onCreate() {
         if (this.fechaHora == null) {
