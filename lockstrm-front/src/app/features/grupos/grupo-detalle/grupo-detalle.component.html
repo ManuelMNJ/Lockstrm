@@ -127,7 +127,7 @@
       <ul class="members-list" *ngIf="miembros.length > 0" role="list">
         <li *ngFor="let m of miembros" class="member-item" role="listitem">
           <div class="member-avatar" aria-hidden="true">
-            {{ m.username?.charAt(0)?.toUpperCase() ?? '?' }}
+            {{ m.username.charAt(0).toUpperCase() }}
           </div>
           <div class="member-info">
             <span class="member-name">{{ m.username }}</span>

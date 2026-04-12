@@ -3,13 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { VideoService, Video } from '../../core/services/video.service';
-import { GrupoService, Grupo } from '../../core/services/grupo.service';
+import { GrupoService } from '../../core/services/grupo.service';
 import { AuthService } from '../../core/services/auth.service';
+import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, VideoDurationPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -45,12 +46,5 @@ export class DashboardComponent implements OnInit {
       .subscribe({
         next: (grupos) => { this.totalGrupos = grupos.length; },
       });
-  }
-
-  formatearDuracion(segundos: number | null | undefined): string {
-    if (segundos == null || segundos <= 0) return '—';
-    const m = Math.floor(segundos / 60);
-    const s = segundos % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 }

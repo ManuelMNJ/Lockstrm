@@ -95,41 +95,66 @@
       <a routerLink="/mi-espacio/videos" class="section-link">Ver todos</a>
     </div>
 
-    <div *ngIf="cargando" class="empty-state">
-      <p>Cargando...</p>
-    </div>
-
-    <div *ngIf="!cargando && videosRecientes.length === 0" class="empty-state">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="2" width="20" height="20" rx="2"/>
-        <line x1="2" y1="12" x2="22" y2="12"/>
-      </svg>
-      <p>Aún no has subido ningún vídeo.</p>
-      <a routerLink="/mi-espacio/videos" class="btn-primary">Subir el primero</a>
-    </div>
-
-    <div *ngIf="!cargando && videosRecientes.length > 0" class="recent-grid">
-      <div *ngFor="let v of videosRecientes" class="video-card">
-        <div class="video-card-thumb" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="23 7 16 12 23 17 23 7"/>
-            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-          </svg>
-        </div>
-        <div class="video-card-body">
-          <span class="video-card-title">{{ v.titulo }}</span>
-          <div class="video-card-meta">
-            <span>{{ formatearDuracion(v.duracion) }}</span>
-            <span *ngIf="v.fechaSubida">· {{ v.fechaSubida | date:'dd/MM/yyyy' }}</span>
-            <span *ngIf="v.grupo?.nombre || v.nombreGrupo" class="cell-badge">
-              {{ v.grupo?.nombre || v.nombreGrupo }}
-            </span>
+    @if (cargando) {
+      <div class="recent-skeleton">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="skeleton-card">
+            <div class="skeleton-thumb"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line skeleton-line--title"></div>
+              <div class="skeleton-line skeleton-line--meta"></div>
+            </div>
           </div>
-        </div>
+        }
       </div>
-    </div>
+    } @else if (videosRecientes.length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+        <p>Tu biblioteca está vacía</p>
+        <span class="empty-hint">Sube tu primer vídeo y aparecerá aquí.</span>
+        <a routerLink="/mi-espacio/videos" class="btn-primary empty-cta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="btn-icon">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Subir primer vídeo
+        </a>
+      </div>
+    } @else {
+      <div class="recent-grid">
+        @for (v of videosRecientes; track v.idVideo) {
+          <div class="video-card">
+            <div class="video-card-thumb" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+            <div class="video-card-body">
+              <span class="video-card-title">{{ v.titulo }}</span>
+              <div class="video-card-meta">
+                <span>{{ v.duracion | videoDuration }}</span>
+                @if (v.fechaSubida) {
+                  <span>· {{ v.fechaSubida | date:'dd/MM/yyyy' }}</span>
+                }
+                @if (v.grupo?.nombre) {
+                  <span class="cell-badge">{{ v.grupo!.nombre }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
 
   </section>
 

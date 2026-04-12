@@ -2,6 +2,7 @@ package com.lockstrm.platform.services;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.PermisosGrupo;
 import com.lockstrm.platform.entities.Usuario;
@@ -142,13 +143,35 @@ public class VideoService {
     }
 
     /** Mis Vídeos: vídeos subidos por el usuario autenticado (contexto Propietario). */
-    public List<Video> obtenerMisVideos(String emailUsuario) {
-        return videoRepository.findByPropietario_Email(emailUsuario);
+    public List<VideoDTO> obtenerMisVideos(String emailUsuario) {
+        return videoRepository.findByPropietario_Email(emailUsuario).stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     /** Vídeos Compartidos: vídeos accesibles vía permisos de grupo, excluyendo los propios (contexto Espectador). */
-    public List<Video> obtenerVideosCompartidos(String emailUsuario) {
-        return videoRepository.findVideosCompartidosConUsuario(emailUsuario);
+    public List<VideoDTO> obtenerVideosCompartidos(String emailUsuario) {
+        return videoRepository.findVideosCompartidosConUsuario(emailUsuario).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    /**
+     * Mapea una entidad {@link Video} al DTO de respuesta, resolviendo el {@code idGrupo}
+     * desde la tabla de permisos. Si el vídeo no tiene grupo asociado, el campo queda {@code null}.
+     */
+    private VideoDTO toDTO(Video video) {
+        List<PermisosGrupo> permisos = permisosGrupoRepository.findById_IdVideoId(video.getIdVideo());
+        Long idGrupo = permisos.isEmpty() ? null : permisos.get(0).getId().getIdGrupoId();
+        return new VideoDTO(
+                video.getIdVideo(),
+                video.getTitulo(),
+                video.getDuracion(),
+                video.getUrlCloudSecure(),
+                video.getCloudinaryId(),
+                video.getFechaSubida(),
+                idGrupo
+        );
     }
 
     @Transactional

@@ -1,6 +1,7 @@
 package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.HeartbeatRequest;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
@@ -68,19 +69,19 @@ public class VideoController {
 
     /** Lista todos los vídeos del usuario (propios). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
-    public ResponseEntity<List<Video>> listarVideos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<VideoDTO>> listarVideos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
     }
 
     /** Mis Vídeos: vídeos subidos por el usuario autenticado (contexto Propietario). */
     @GetMapping("/mios")
-    public ResponseEntity<List<Video>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<VideoDTO>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
     }
 
     /** Vídeos Compartidos: vídeos accesibles vía permisos de grupo (contexto Espectador). */
     @GetMapping("/compartidos")
-    public ResponseEntity<List<Video>> listarVideosCompartidos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<VideoDTO>> listarVideosCompartidos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerVideosCompartidos(userDetails.getUsername()));
     }
 

@@ -2,14 +2,13 @@ import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { VideoService, Video } from '../../core/services/video.service';
-import { AuthService } from '../../core/services/auth.service';
-import { environment } from '../../../environments/environment';
 import { VideoPlayerComponent } from '../videos/video-player/video-player.component';
+import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 
 @Component({
   selector: 'app-videos-compartidos',
   standalone: true,
-  imports: [CommonModule, VideoPlayerComponent],
+  imports: [CommonModule, VideoPlayerComponent, VideoDurationPipe],
   templateUrl: './videos-compartidos.component.html',
   styleUrl: './videos-compartidos.component.css',
 })
@@ -21,13 +20,32 @@ export class VideosCompartidosComponent implements OnInit {
 
   videoReproduciendose: Video | null = null;
 
+  // ── Paginación ─────────────────────────────────────────────────────────────
+  readonly PAGE_SIZE = 12;
+  currentPage = 1;
+
+  get paginatedVideos(): Video[] {
+    const start = (this.currentPage - 1) * this.PAGE_SIZE;
+    return this.videos.slice(start, start + this.PAGE_SIZE);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.videos.length / this.PAGE_SIZE));
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = Math.max(1, Math.min(page, this.totalPages));
+    this.cdr.detectChanges();
+  }
+
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
-  constructor(
-    private videoService: VideoService,
-    private authService: AuthService,
-  ) {}
+  constructor(protected videoService: VideoService) {}
 
   ngOnInit(): void {
     this.cargarVideos();
@@ -60,18 +78,6 @@ export class VideosCompartidosComponent implements OnInit {
   cerrarReproductor(): void {
     this.videoReproduciendose = null;
     this.cdr.detectChanges();
-  }
-
-  construirUrlStreaming(idVideo: number): string {
-    const token = this.authService.getToken() ?? '';
-    return `${environment.apiUrl}/api/videos/stream/${idVideo}?token=${token}`;
-  }
-
-  formatearDuracion(segundos: number | null | undefined): string {
-    if (segundos == null || segundos <= 0) return '—';
-    const m = Math.floor(segundos / 60);
-    const s = segundos % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   onHeartbeat(currentTime: number): void {

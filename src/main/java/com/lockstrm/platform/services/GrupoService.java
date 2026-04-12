@@ -60,6 +60,26 @@ public class GrupoService {
         return miembrosGrupoRepository.findGruposComoMiembroNoCreador(email);
     }
 
+    /**
+     * Devuelve el detalle de un único grupo.
+     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es creador ni miembro.
+     * Lanza {@link NoSuchElementException} (→ 404) si el grupo no existe.
+     */
+    @Transactional(readOnly = true)
+    public Grupo obtenerDetalle(Long idGrupo, String email) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        boolean esCreador = grupo.getCreador().getEmail().equals(email);
+        boolean esMiembro = miembrosGrupoRepository.existsByUsuario_EmailAndId_IdGrupoId(email, idGrupo);
+
+        if (!esCreador && !esMiembro) {
+            throw new AccessDeniedException("No tienes acceso a este grupo");
+        }
+
+        return grupo;
+    }
+
     public Grupo crearGrupo(String emailCreador, String nombre) {
         Usuario creador = userRepository.findByEmail(emailCreador)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

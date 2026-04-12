@@ -38,6 +38,21 @@ public class GrupoController {
         return ResponseEntity.ok(grupoService.obtenerGruposComoMiembro(userDetails.getUsername()));
     }
 
+    /** Detalle de un grupo. Solo accesible si el usuario es creador o miembro del grupo (403 en caso contrario). */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obtenerDetalle(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Grupo grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
+            return ResponseEntity.ok(grupo);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> crearGrupo(
             @AuthenticationPrincipal UserDetails userDetails,

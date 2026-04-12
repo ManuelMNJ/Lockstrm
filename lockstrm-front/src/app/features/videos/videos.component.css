@@ -400,15 +400,102 @@
 }
 
 .empty-state svg {
-  width: 32px;
-  height: 32px;
-  opacity: 0.4;
+  width: 40px;
+  height: 40px;
+  opacity: 0.3;
+  color: var(--color-primary);
 }
 
 .empty-state p {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
   text-align: center;
   margin: 0;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: var(--text-subtle);
+  text-align: center;
+}
+
+.empty-cta {
+  margin-top: var(--space-2);
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast);
+}
+
+.page-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-soft);
+  color: var(--text-main);
+}
+
+.page-btn--active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.page-btn--active:hover {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.page-info {
+  font-size: 11px;
+  color: var(--text-subtle);
+  margin-left: var(--space-2);
+  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -683,6 +770,152 @@
 .btn-view {
   cursor: pointer;
   font-family: inherit;
+}
+
+/* ── Botón editar ── */
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast);
+}
+
+.btn-edit:hover {
+  background-color: var(--color-primary-ghost);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--color-primary);
+}
+
+.btn-edit:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn-edit svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ==========================================================================
+   EDIT DIALOG
+   ========================================================================== */
+
+.edit-overlay {
+  z-index: 1100;
+}
+
+.edit-dialog {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-top: 3px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 4px 16px  rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  animation: modalIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.edit-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.edit-error {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-error);
+  background-color: rgba(239, 68, 68, 0.08);
+  color: var(--color-error);
+  margin: 0;
+}
+
+.edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-confirm-save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow       var(--transition-fast);
+}
+
+.btn-confirm-save:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-primary) 85%, black);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+}
+
+.btn-confirm-save:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-confirm-save:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn-confirm-save svg {
+  width: 13px;
+  height: 13px;
 }
 
 /* ── Select input ── */

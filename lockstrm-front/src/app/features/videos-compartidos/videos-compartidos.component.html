@@ -33,83 +33,129 @@
   </div>
 
   <!-- ================================================================
-    EMPTY STATE
+    VIDEO GRID  (incluye @empty para onboarding)
     ================================================================ -->
-  <div *ngIf="!cargando && videos.length === 0 && !listaError" class="empty-state">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-         aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-    <p>Aún no perteneces a ningún grupo con vídeos compartidos.</p>
-    <span class="empty-hint">Pide a un propietario que te añada a un grupo.</span>
-  </div>
+  @if (!cargando && !listaError) {
+    <div class="video-grid">
+      @for (v of paginatedVideos; track v.idVideo) {
+        <article
+          class="video-card"
+          (click)="abrirReproductor(v)"
+          role="button"
+          tabindex="0"
+          (keyup.enter)="abrirReproductor(v)"
+          (keyup.space)="abrirReproductor(v)"
+          [attr.aria-label]="'Reproducir: ' + v.titulo">
 
-  <!-- ================================================================
-    VIDEO GRID
-    ================================================================ -->
-  <div *ngIf="!cargando && videos.length > 0" class="video-grid">
+          <!-- Thumbnail -->
+          <div class="card-thumb" aria-hidden="true">
+            <svg class="thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            <div class="play-overlay">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            @if (v.duracion) {
+              <span class="duration-badge">{{ v.duracion | videoDuration }}</span>
+            }
+          </div>
 
-    <article
-      *ngFor="let v of videos"
-      class="video-card"
-      (click)="abrirReproductor(v)"
-      role="button"
-      tabindex="0"
-      (keyup.enter)="abrirReproductor(v)"
-      (keyup.space)="abrirReproductor(v)"
-      [attr.aria-label]="'Reproducir: ' + v.titulo">
+          <!-- Card body -->
+          <div class="card-body">
+            <h3 class="card-title">{{ v.titulo }}</h3>
 
-      <!-- Thumbnail -->
-      <div class="card-thumb" aria-hidden="true">
-        <svg class="thumb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="23 7 16 12 23 17 23 7"/>
-          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-        </svg>
-        <div class="play-overlay">
-          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-            <polygon points="5 3 19 12 5 21 5 3"/>
+            <!-- Contexto: quién lo compartió y desde qué grupo -->
+            <div class="card-context">
+              <span class="context-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="context-label">Compartido por</span>
+                <span class="context-value">
+                  {{ v.propietario?.username || 'Desconocido' }}
+                </span>
+              </span>
+              @if (v.grupo?.nombre) {
+                <span class="context-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  <span class="context-label">Grupo</span>
+                  <span class="context-value context-value--group">{{ v.grupo!.nombre }}</span>
+                </span>
+              }
+            </div>
+          </div>
+        </article>
+      } @empty {
+        <div class="empty-state" style="grid-column: 1 / -1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
+          <p>Aún no hay vídeos compartidos contigo</p>
+          <span class="empty-hint">Cuando alguien te añada a un grupo con vídeos, aparecerán aquí.</span>
         </div>
-        <span *ngIf="v.duracion" class="duration-badge">
-          {{ formatearDuracion(v.duracion) }}
+      }
+    </div>
+
+    <!-- Paginación -->
+    @if (totalPages > 1) {
+      <nav class="pagination" aria-label="Paginación de vídeos compartidos">
+        <button class="page-btn"
+                (click)="goToPage(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                aria-label="Página anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+
+        @for (page of pages; track page) {
+          <button class="page-btn"
+                  [class.page-btn--active]="currentPage === page"
+                  (click)="goToPage(page)"
+                  [attr.aria-label]="'Página ' + page"
+                  [attr.aria-current]="currentPage === page ? 'page' : null">
+            {{ page }}
+          </button>
+        }
+
+        <button class="page-btn"
+                (click)="goToPage(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                aria-label="Página siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+
+        <span class="page-info" aria-live="polite">
+          {{ currentPage }} / {{ totalPages }}
         </span>
-      </div>
-
-      <!-- Card body -->
-      <div class="card-body">
-        <h3 class="card-title">{{ v.titulo }}</h3>
-        <div class="card-meta">
-          <span class="meta-owner">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            {{ v.propietario?.username || v.nombrePropietario || v.ownerUsername || 'Desconocido' }}
-          </span>
-          <span *ngIf="v.grupo?.nombre || v.nombreGrupo || v.groupName" class="meta-group">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            {{ v.grupo?.nombre || v.nombreGrupo || v.groupName }}
-          </span>
-        </div>
-      </div>
-
-    </article>
-
-  </div>
+      </nav>
+    }
+  }
 
   <!-- ================================================================
     VIDEO PLAYER MODAL
@@ -119,12 +165,12 @@
        (click)="cerrarReproductor()"
        role="dialog"
        aria-modal="true"
-       [attr.aria-label]="'Reproductor: ' + videoReproduciendose?.titulo">
+       [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
 
     <div class="modal-container" (click)="$event.stopPropagation()">
 
       <div class="modal-header">
-        <span class="modal-title">{{ videoReproduciendose?.titulo }}</span>
+        <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
         <button class="modal-close"
                 (click)="cerrarReproductor()"
                 aria-label="Cerrar reproductor">
@@ -139,7 +185,7 @@
 
       <div class="modal-player">
         <app-video-player
-          [videoUrl]="construirUrlStreaming(videoReproduciendose!.idVideo)"
+          [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
           (heartbeat)="onHeartbeat($event)">
         </app-video-player>
       </div>
