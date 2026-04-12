@@ -9,11 +9,12 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoService } from '../../core/services/video.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
+import { InitialPipe } from '../../shared/pipes/initial.pipe';
 
 @Component({
   selector: 'app-grupos',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, DateLocalePipe],
+  imports: [CommonModule, FormsModule, A11yModule, DateLocalePipe, InitialPipe],
   templateUrl: './grupos.component.html',
   styleUrl: './grupos.component.css',
 })
@@ -86,12 +87,9 @@ export class GruposComponent implements OnInit {
         next: (videos) => {
           const countMap = new Map<number, number>();
           videos.forEach(v => {
-            const grupoNombre = v.grupo?.nombre;
-            if (grupoNombre) {
-              const grupo = grupos.find(g => g.nombre === grupoNombre);
-              if (grupo) {
-                countMap.set(grupo.idGrupo, (countMap.get(grupo.idGrupo) ?? 0) + 1);
-              }
+            const idGrupo = v.grupo?.idGrupo;
+            if (idGrupo) {
+              countMap.set(idGrupo, (countMap.get(idGrupo) ?? 0) + 1);
             }
           });
           this.videosPerGrupo = countMap;
@@ -163,7 +161,4 @@ export class GruposComponent implements OnInit {
     return this.videosPerGrupo.has(idGrupo) ? (this.videosPerGrupo.get(idGrupo) ?? null) : null;
   }
 
-  inicialGrupo(nombre: string): string {
-    return nombre?.charAt(0)?.toUpperCase() ?? '?';
-  }
 }

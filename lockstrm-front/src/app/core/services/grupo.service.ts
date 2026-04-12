@@ -38,6 +38,10 @@ export class GrupoService {
     return this.misGruposCache$;
   }
 
+  obtenerGrupoPorId(idGrupo: number): Observable<Grupo> {
+    return this.http.get<Grupo>(`${this.apiUrl}/${idGrupo}`);
+  }
+
   obtenerMiembros(idGrupo: number): Observable<Miembro[]> {
     return this.http.get<Miembro[]>(`${this.apiUrl}/${idGrupo}/miembros`);
   }

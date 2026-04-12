@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,13 +8,15 @@ import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { Paginator } from '../../shared/utils/paginator';
 
 @Component({
   selector: 'app-videos',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, VideoPlayerComponent, VideoDurationPipe],
   templateUrl: './videos.component.html',
-  styleUrl: './videos.component.css'
+  styleUrl: './videos.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VideosComponent implements OnInit {
 
@@ -45,25 +47,11 @@ export class VideosComponent implements OnInit {
   mensajeEdicion = '';
 
   // ── Paginación ─────────────────────────────────────────────────────────────
-  readonly PAGE_SIZE = 15;
-  currentPage = 1;
-
-  get paginatedVideos(): Video[] {
-    const start = (this.currentPage - 1) * this.PAGE_SIZE;
-    return this.videos.slice(start, start + this.PAGE_SIZE);
-  }
-
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.videos.length / this.PAGE_SIZE));
-  }
-
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
-  }
+  readonly paginator = new Paginator<Video>(15);
 
   goToPage(page: number): void {
-    this.currentPage = Math.max(1, Math.min(page, this.totalPages));
-    this.cdr.detectChanges();
+    this.paginator.goToPage(page);
+    this.cdr.markForCheck();
   }
 
   @ViewChild('archivoInput') archivoInput!: ElementRef<HTMLInputElement>;
@@ -83,7 +71,7 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: (grupos) => {
           this.misGrupos = grupos;
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         },
         error: (err) => console.error('[VideosComponent] Error al cargar grupos:', err)
       });
@@ -146,26 +134,25 @@ export class VideosComponent implements OnInit {
             : null;
 
           const nuevoVideo: Video = {
-            idVideo:        res.id_video,
-            titulo:         res.titulo,
-            duracion:       res.duracion ?? null,
-            urlCloudSecure: res.url,
-            cloudinaryId:   '',
-            fechaSubida:    new Date().toISOString(),
-            grupo:          grupo ? { nombre: grupo.nombre } : undefined,
+            idVideo:     res.id_video,
+            titulo:      res.titulo,
+            duracion:    res.duracion ?? null,
+            fechaSubida: new Date().toISOString(),
+            grupo:       grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
           };
 
           this.videos              = [nuevoVideo, ...this.videos];
+          this.paginator.setItems(this.videos);
           this.estadoSubida        = 'success';
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
           this.idGrupoSeleccionado = null;
           this.archivoInput.nativeElement.value = '';
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
 
           setTimeout(() => {
             this.estadoSubida = 'idle';
-            this.cdr.detectChanges();
+            this.cdr.markForCheck();
           }, 3000);
         },
         error: (err) => {
@@ -176,7 +163,7 @@ export class VideosComponent implements OnInit {
             statusText: err?.statusText,
             body:       err?.error,
           });
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       });
   }
@@ -185,12 +172,12 @@ export class VideosComponent implements OnInit {
 
   solicitarEliminacion(video: Video): void {
     this.videoAEliminar = video;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEliminacion(): void {
     this.videoAEliminar = null;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   confirmarEliminacion(): void {
@@ -199,7 +186,7 @@ export class VideosComponent implements OnInit {
 
     this.videoAEliminar = null;
     this.deletingIds = new Set(this.deletingIds).add(video.idVideo);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
 
     this.videoService.eliminarVideo(video.idVideo)
       .pipe(
@@ -207,13 +194,14 @@ export class VideosComponent implements OnInit {
         finalize(() => {
           this.deletingIds = new Set(this.deletingIds);
           this.deletingIds.delete(video.idVideo);
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         })
       )
       .subscribe({
         next: () => {
           this.videos = this.videos.filter(v => v.idVideo !== video.idVideo);
-          this.cdr.detectChanges();
+          this.paginator.setItems(this.videos);
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('[VideosComponent] Error al eliminar vídeo:', {
@@ -225,7 +213,7 @@ export class VideosComponent implements OnInit {
             err?.error?.error || err?.error?.mensaje ||
             `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`
           );
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       });
   }
@@ -234,10 +222,10 @@ export class VideosComponent implements OnInit {
     if (this.errorEliminacionTimer) clearTimeout(this.errorEliminacionTimer);
     this.errorEliminacion        = mensaje;
     this.errorEliminacionVisible = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
     this.errorEliminacionTimer = setTimeout(() => {
       this.errorEliminacionVisible = false;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     }, 6000);
   }
 
@@ -246,19 +234,16 @@ export class VideosComponent implements OnInit {
   iniciarEdicion(video: Video): void {
     this.videoEnEdicion = video;
     this.editTitulo     = video.titulo;
-    const grupoActual   = video.grupo
-      ? this.misGrupos.find(g => g.nombre === video.grupo!.nombre)
-      : null;
-    this.editIdGrupo    = grupoActual?.idGrupo ?? null;
+    this.editIdGrupo    = video.grupo?.idGrupo ?? null;
     this.estadoEdicion  = 'idle';
     this.mensajeEdicion = '';
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cancelarEdicion(): void {
     this.videoEnEdicion = null;
     this.estadoEdicion  = 'idle';
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   guardarEdicion(): void {
@@ -277,17 +262,18 @@ export class VideosComponent implements OnInit {
 
           this.videos = this.videos.map(v =>
             v.idVideo === video.idVideo
-              ? { ...v, titulo: this.editTitulo.trim(), grupo: grupoNuevo ? { nombre: grupoNuevo.nombre } : undefined }
+              ? { ...v, titulo: this.editTitulo.trim(), grupo: grupoNuevo ? { idGrupo: grupoNuevo.idGrupo, nombre: grupoNuevo.nombre } : undefined }
               : v
           );
+          this.paginator.setItems(this.videos);
           this.videoEnEdicion = null;
           this.estadoEdicion  = 'idle';
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.estadoEdicion  = 'error';
           this.mensajeEdicion = err?.error?.error || err?.error?.mensaje || 'No se pudo guardar el cambio.';
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       });
   }
@@ -301,32 +287,31 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: (datos) => {
           this.videos = datos;
-          this.cdr.detectChanges();
+          this.paginator.setItems(datos);
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
           console.error('[VideosComponent] Error al cargar videos:', err);
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       });
   }
 
   abrirReproductor(video: Video): void {
     this.videoReproduciendose = video;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   cerrarReproductor(): void {
     this.videoReproduciendose = null;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 
   onHeartbeat(currentTime: number): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-
-    const segundos = Math.floor(currentTime);
-    this.videoService.registrarHeartbeat(idVideo, segundos)
+    this.videoService.registrarHeartbeat(idVideo, currentTime)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),

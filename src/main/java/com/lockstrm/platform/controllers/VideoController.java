@@ -7,6 +7,7 @@ import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/videos")
 @RequiredArgsConstructor
@@ -55,14 +57,14 @@ public class VideoController {
             respuesta.put("duracion", guardado.getDuracion());
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
+            log.error("Error de I/O al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
             respuesta.put("status",  "error");
             respuesta.put("mensaje", "Error al leer el archivo: " + e.getMessage());
-            e.printStackTrace();
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
+            log.error("Error al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
             respuesta.put("status",  "error");
             respuesta.put("mensaje", e.getMessage() != null ? e.getMessage() : "Error interno al subir el vídeo");
-            e.printStackTrace();
             return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -85,26 +87,19 @@ public class VideoController {
         return ResponseEntity.ok(videoService.obtenerVideosCompartidos(userDetails.getUsername()));
     }
 
+    /**
+     * El manejo de AccessDeniedException → 403 y RuntimeException("no encontrado") → 404
+     * lo centraliza GlobalExceptionHandler. Aquí solo capturamos Exception genérico
+     * para las IOExceptions del proxy HTTP (errores de red hacia Cloudinary),
+     * que no son RuntimeException y no llegan al handler global.
+     */
     @GetMapping("/stream/{id}")
     public ResponseEntity<InputStreamResource> streamVideo(
             @PathVariable Long id,
             @RequestHeader(value = "Range", required = false) String rangeHeader,
             @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        try {
-            return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
-        } catch (AccessDeniedException e) {
-            // C-1: acceso denegado debe devolver 403, no 500
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (RuntimeException e) {
-            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            if (msg.contains("no encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    ) throws Exception {
+        return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
     }
 
     /**

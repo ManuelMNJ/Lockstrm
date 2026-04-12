@@ -12,6 +12,7 @@ import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,9 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VideoService {
@@ -138,40 +141,60 @@ public class VideoService {
                 .body(new InputStreamResource(con.getInputStream()));
     }
 
+    @Transactional(readOnly = true)
     public List<Video> obtenerPorEmailUsuario(String emailUsuario) {
         return videoRepository.findByPropietario_Email(emailUsuario);
     }
 
     /** Mis Vídeos: vídeos subidos por el usuario autenticado (contexto Propietario). */
+    @Transactional(readOnly = true)
     public List<VideoDTO> obtenerMisVideos(String emailUsuario) {
-        return videoRepository.findByPropietario_Email(emailUsuario).stream()
-                .map(this::toDTO)
-                .toList();
+        List<Video> videos = videoRepository.findByPropietario_Email(emailUsuario);
+        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
     /** Vídeos Compartidos: vídeos accesibles vía permisos de grupo, excluyendo los propios (contexto Espectador). */
+    @Transactional(readOnly = true)
     public List<VideoDTO> obtenerVideosCompartidos(String emailUsuario) {
-        return videoRepository.findVideosCompartidosConUsuario(emailUsuario).stream()
-                .map(this::toDTO)
-                .toList();
+        List<Video> videos = videoRepository.findVideosCompartidosConUsuario(emailUsuario);
+        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
+    /** Par (idGrupo, nombre) asociado a un vídeo; usado internamente para construir el DTO. */
+    private record GrupoRef(Long idGrupo, String nombre) {}
+
     /**
-     * Mapea una entidad {@link Video} al DTO de respuesta, resolviendo el {@code idGrupo}
-     * desde la tabla de permisos. Si el vídeo no tiene grupo asociado, el campo queda {@code null}.
+     * Mapea una entidad {@link Video} al DTO de respuesta usando el mapa pre-cargado de
+     * videoId → GrupoRef para evitar el N+1. Ver {@link #buildGrupoMap(List)}.
      */
-    private VideoDTO toDTO(Video video) {
-        List<PermisosGrupo> permisos = permisosGrupoRepository.findById_IdVideoId(video.getIdVideo());
-        Long idGrupo = permisos.isEmpty() ? null : permisos.get(0).getId().getIdGrupoId();
+    private VideoDTO toDTO(Video video, Map<Long, GrupoRef> grupoMap) {
+        GrupoRef ref = grupoMap.get(video.getIdVideo());
         return new VideoDTO(
                 video.getIdVideo(),
                 video.getTitulo(),
                 video.getDuracion(),
-                video.getUrlCloudSecure(),
-                video.getCloudinaryId(),
                 video.getFechaSubida(),
-                idGrupo
+                ref != null ? ref.idGrupo() : null,
+                ref != null ? ref.nombre()  : null
         );
+    }
+
+    /**
+     * Construye en una única query el mapa videoId → GrupoRef para una lista de vídeos,
+     * eliminando el N+1 que antes ejecutaba una query por vídeo en {@code toDTO}.
+     * El JOIN FETCH en el repositorio carga los nombres de grupo en el mismo round-trip.
+     */
+    private Map<Long, GrupoRef> buildGrupoMap(List<Video> videos) {
+        if (videos.isEmpty()) return Map.of();
+        List<Long> ids = videos.stream().map(Video::getIdVideo).toList();
+        return permisosGrupoRepository.findByVideoIds(ids).stream()
+                .collect(Collectors.toMap(
+                        pg -> pg.getId().getIdVideoId(),
+                        pg -> new GrupoRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
+                        (a, b) -> a   // si un vídeo está en varios grupos, toma el primero
+                ));
     }
 
     @Transactional
@@ -192,8 +215,7 @@ public class VideoService {
         try {
             cloudinary.uploader().destroy(cloudinaryIdParaBorrar, ObjectUtils.emptyMap());
         } catch (Exception e) {
-            System.err.println("[WARN] No se pudo borrar el asset de Cloudinary '"
-                    + cloudinaryIdParaBorrar + "': " + e.getMessage());
+            log.warn("No se pudo borrar el asset de Cloudinary '{}': {}", cloudinaryIdParaBorrar, e.getMessage());
         }
     }
 }

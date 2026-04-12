@@ -12,32 +12,33 @@
   <!-- ================================================================
     ERROR
     ================================================================ -->
-  <p *ngIf="listaError"
-     class="list-error"
-     role="alert"
-     aria-live="assertive">
-    {{ listaError }}
-  </p>
+  @if (listaError) {
+    <p class="list-error" role="alert" aria-live="assertive">{{ listaError }}</p>
+  }
 
   <!-- ================================================================
     LOADING SKELETON
     ================================================================ -->
-  <div *ngIf="cargando" class="skeleton-grid" aria-label="Cargando vídeos…">
-    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]">
-      <div class="skeleton-thumb"></div>
-      <div class="skeleton-body">
-        <div class="skeleton-line skeleton-line--title"></div>
-        <div class="skeleton-line skeleton-line--meta"></div>
-      </div>
+  @if (cargando) {
+    <div class="skeleton-grid" aria-label="Cargando vídeos…">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="skeleton-card">
+          <div class="skeleton-thumb"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line skeleton-line--title"></div>
+            <div class="skeleton-line skeleton-line--meta"></div>
+          </div>
+        </div>
+      }
     </div>
-  </div>
+  }
 
   <!-- ================================================================
     VIDEO GRID  (incluye @empty para onboarding)
     ================================================================ -->
   @if (!cargando && !listaError) {
     <div class="video-grid">
-      @for (v of paginatedVideos; track v.idVideo) {
+      @for (v of paginator.paginatedItems; track v.idVideo) {
         <article
           class="video-card"
           (click)="abrirReproductor(v)"
@@ -68,20 +69,8 @@
           <div class="card-body">
             <h3 class="card-title">{{ v.titulo }}</h3>
 
-            <!-- Contexto: quién lo compartió y desde qué grupo -->
+            <!-- Contexto: desde qué grupo -->
             <div class="card-context">
-              <span class="context-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     aria-hidden="true">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span class="context-label">Compartido por</span>
-                <span class="context-value">
-                  {{ v.propietario?.username || 'Desconocido' }}
-                </span>
-              </span>
               @if (v.grupo?.nombre) {
                 <span class="context-row">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -116,11 +105,11 @@
     </div>
 
     <!-- Paginación -->
-    @if (totalPages > 1) {
+    @if (paginator.totalPages > 1) {
       <nav class="pagination" aria-label="Paginación de vídeos compartidos">
         <button class="page-btn"
-                (click)="goToPage(currentPage - 1)"
-                [disabled]="currentPage === 1"
+                (click)="goToPage(paginator.page - 1)"
+                [disabled]="paginator.page === 1"
                 aria-label="Página anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -129,19 +118,19 @@
           </svg>
         </button>
 
-        @for (page of pages; track page) {
+        @for (page of paginator.pages; track page) {
           <button class="page-btn"
-                  [class.page-btn--active]="currentPage === page"
+                  [class.page-btn--active]="paginator.page === page"
                   (click)="goToPage(page)"
                   [attr.aria-label]="'Página ' + page"
-                  [attr.aria-current]="currentPage === page ? 'page' : null">
+                  [attr.aria-current]="paginator.page === page ? 'page' : null">
             {{ page }}
           </button>
         }
 
         <button class="page-btn"
-                (click)="goToPage(currentPage + 1)"
-                [disabled]="currentPage === totalPages"
+                (click)="goToPage(paginator.page + 1)"
+                [disabled]="paginator.page === paginator.totalPages"
                 aria-label="Página siguiente">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -151,7 +140,7 @@
         </button>
 
         <span class="page-info" aria-live="polite">
-          {{ currentPage }} / {{ totalPages }}
+          {{ paginator.page }} / {{ paginator.totalPages }}
         </span>
       </nav>
     }
@@ -160,37 +149,38 @@
   <!-- ================================================================
     VIDEO PLAYER MODAL
     ================================================================ -->
-  <div class="modal-overlay"
-       *ngIf="videoReproduciendose"
-       (click)="cerrarReproductor()"
-       role="dialog"
-       aria-modal="true"
-       [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+  @if (videoReproduciendose) {
+    <div class="modal-overlay"
+         (click)="cerrarReproductor()"
+         role="dialog"
+         aria-modal="true"
+         [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
 
-    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
 
-      <div class="modal-header">
-        <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
-        <button class="modal-close"
-                (click)="cerrarReproductor()"
-                aria-label="Cerrar reproductor">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <div class="modal-header">
+          <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+          <button class="modal-close"
+                  (click)="cerrarReproductor()"
+                  aria-label="Cerrar reproductor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="modal-player">
+          <app-video-player
+            [videoUrl]="videoService.buildStreamUrl(videoReproduciendose.idVideo)"
+            (heartbeat)="onHeartbeat($event)">
+          </app-video-player>
+        </div>
+
       </div>
-
-      <div class="modal-player">
-        <app-video-player
-          [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
-          (heartbeat)="onHeartbeat($event)">
-        </app-video-player>
-      </div>
-
     </div>
-  </div>
+  }
 
 </div>

@@ -16,40 +16,35 @@ export interface VideoUploadResponse {
 }
 
 // ── Interfaz canónica del frontend ────────────────────────────────────────────
-// El backend puede devolver propietario / nombrePropietario / ownerUsername
-// y grupo / nombreGrupo / groupName según el endpoint.
-// mapVideo() normaliza cualquier variante al formato único de abajo.
+// NOTA: urlCloudSecure y cloudinaryId se omiten deliberadamente.
+// La reproducción usa siempre el proxy /api/videos/stream/{id} (ver VideoStreamService).
 export interface Video {
   idVideo: number;
   titulo: string;
   duracion: number | null;
-  urlCloudSecure: string;
-  cloudinaryId: string;
   fechaSubida: string | null;
-  propietario?: { username: string };
-  grupo?: { nombre: string };
+  grupo?: { idGrupo?: number; nombre: string };
 }
 
-// Tipo interno que acepta cualquier forma que pueda llegar del backend
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type VideoRaw = any;
+/** Forma exacta que devuelve VideoDTO del backend. */
+interface VideoRaw {
+  idVideo:     number;
+  titulo:      string;
+  duracion:    number | null;
+  fechaSubida: string | null;
+  idGrupo:     number | null;
+  grupoNombre: string | null;
+}
 
 function mapVideo(raw: VideoRaw): Video {
   return {
-    idVideo:        raw.idVideo,
-    titulo:         raw.titulo,
-    duracion:       raw.duracion ?? null,
-    urlCloudSecure: raw.urlCloudSecure,
-    cloudinaryId:   raw.cloudinaryId ?? '',
-    fechaSubida:    raw.fechaSubida ?? raw.uploadDate ?? null,
-    propietario:
-      raw.propietario
-      ?? (raw.nombrePropietario ? { username: raw.nombrePropietario } : undefined)
-      ?? (raw.ownerUsername     ? { username: raw.ownerUsername }     : undefined),
-    grupo:
-      raw.grupo
-      ?? (raw.nombreGrupo ? { nombre: raw.nombreGrupo } : undefined)
-      ?? (raw.groupName   ? { nombre: raw.groupName }   : undefined),
+    idVideo:     raw.idVideo,
+    titulo:      raw.titulo,
+    duracion:    raw.duracion ?? null,
+    fechaSubida: raw.fechaSubida ?? null,
+    grupo:       (raw.idGrupo != null)
+                   ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
+                   : undefined,
   };
 }
 
@@ -132,8 +127,11 @@ export class VideoService {
     );
   }
 
-  /** POST /api/videos/{id}/heartbeat — registra los segundos vistos en tiempo real. */
-  registrarHeartbeat(idVideo: number, segundos: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { segundos });
+  /**
+   * POST /api/videos/{id}/heartbeat — registra los segundos vistos en tiempo real.
+   * currentTime se trunca a entero en el servicio para no duplicar Math.floor en cada componente.
+   */
+  registrarHeartbeat(idVideo: number, currentTime: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { currentTime: Math.floor(currentTime) });
   }
 }

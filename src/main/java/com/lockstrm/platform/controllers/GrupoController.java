@@ -83,4 +83,52 @@ public class GrupoController {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @DeleteMapping("/{idGrupo}/miembros/{idUsuario}")
+    public ResponseEntity<?> eliminarMiembro(
+            @PathVariable Long idGrupo,
+            @PathVariable Long idUsuario,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            grupoService.eliminarMiembro(idGrupo, idUsuario, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("mensaje", "Miembro eliminado correctamente"));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{idGrupo}")
+    public ResponseEntity<?> renombrarGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, String> body) {
+        String nombre = body.get("nombre");
+        if (nombre == null || nombre.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El nombre del grupo es obligatorio"));
+        }
+        try {
+            Grupo grupo = grupoService.renombrarGrupo(idGrupo, nombre, userDetails.getUsername());
+            return ResponseEntity.ok(grupo);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{idGrupo}")
+    public ResponseEntity<?> eliminarGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("mensaje", "Grupo eliminado correctamente"));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

@@ -752,7 +752,7 @@
 }
 
 .btn-confirm-delete:hover {
-  background-color: #dc2626;
+  background-color: var(--color-error-hover);
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
 }
 

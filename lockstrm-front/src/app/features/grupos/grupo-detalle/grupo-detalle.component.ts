@@ -3,12 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
+import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InitialPipe],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
 })
@@ -58,33 +60,22 @@ export class GrupoDetalleComponent implements OnInit {
     this.cargando   = true;
     this.errorCarga = '';
 
-    // Cargamos el grupo desde la lista de mis grupos (no hay endpoint GET /grupos/:id)
-    this.grupoService.obtenerMisGrupos()
+    forkJoin({
+      grupo:    this.grupoService.obtenerGrupoPorId(this.idGrupo),
+      miembros: this.grupoService.obtenerMiembros(this.idGrupo),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (grupos) => {
-          this.grupo = grupos.find(g => g.idGrupo === this.idGrupo) ?? null;
-          if (!this.grupo) {
-            this.errorCarga = 'Grupo no encontrado.';
-            this.cargando = false;
-            return;
-          }
-          this.nombreEditado = this.grupo.nombre;
-          this.cargarMiembros();
+        next: ({ grupo, miembros }) => {
+          this.grupo         = grupo;
+          this.nombreEditado = grupo.nombre;
+          this.miembros      = miembros;
+          this.cargando      = false;
         },
         error: () => {
-          this.errorCarga = 'No se pudo cargar el grupo.';
-          this.cargando = false;
+          this.errorCarga = 'No se pudo cargar la información del grupo.';
+          this.cargando   = false;
         },
-      });
-  }
-
-  private cargarMiembros(): void {
-    this.grupoService.obtenerMiembros(this.idGrupo)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (m) => { this.miembros = m; this.cargando = false; },
-        error: ()  => { this.errorCarga = 'No se pudieron cargar los miembros.'; this.cargando = false; },
       });
   }
 
@@ -103,7 +94,9 @@ export class GrupoDetalleComponent implements OnInit {
         next: () => {
           this.emailNuevoMiembro = '';
           this.estadoAnadir = 'success';
-          this.cargarMiembros();
+          this.grupoService.obtenerMiembros(this.idGrupo)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: (m) => { this.miembros = m; } });
           setTimeout(() => { this.estadoAnadir = 'idle'; }, 3000);
         },
         error: (err) => {
@@ -202,7 +195,4 @@ export class GrupoDetalleComponent implements OnInit {
     this.router.navigate(['/mi-espacio/grupos']);
   }
 
-  inicialGrupo(nombre: string): string {
-    return nombre?.charAt(0)?.toUpperCase() ?? '?';
-  }
 }

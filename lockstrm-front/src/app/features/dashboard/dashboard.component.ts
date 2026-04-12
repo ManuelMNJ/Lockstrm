@@ -20,6 +20,7 @@ export class DashboardComponent implements OnInit {
   totalGrupos  = 0;
   videosRecientes: Video[] = [];
   cargando = true;
+  gruposError = false;
 
   private destroyRef = inject(DestroyRef);
 
@@ -45,6 +46,10 @@ export class DashboardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupos) => { this.totalGrupos = grupos.length; },
+        error: () => {
+          this.cargando    = false;
+          this.gruposError = true;
+        },
       });
   }
 }

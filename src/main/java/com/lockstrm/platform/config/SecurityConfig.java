@@ -32,7 +32,11 @@ public class SecurityConfig {
                 // Login y registro tienen que ser públicos, obviamente nadie puede
                 // autenticarse con un token que todavía no existe.
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/", "/index.html", "/css/**", "/js/**").permitAll()
+                // El SW debe ser accesible antes de que el usuario esté autenticado:
+                // el navegador lo registra al arrancar la app, no durante el login.
+                .requestMatchers("/", "/index.html", "/css/**", "/js/**",
+                                 "/stream-proxy.sw.js", "/assets/**", "/favicon.ico",
+                                 "/*.js", "/*.css", "/*.mjs").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

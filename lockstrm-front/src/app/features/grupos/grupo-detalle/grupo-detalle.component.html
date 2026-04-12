@@ -15,7 +15,7 @@
     <div class="header-info" *ngIf="grupo && !cargando">
       <!-- Nombre editable -->
       <div class="nombre-wrap" *ngIf="!editandoNombre">
-        <div class="grupo-icon" aria-hidden="true">{{ inicialGrupo(grupo.nombre) }}</div>
+        <div class="grupo-icon" aria-hidden="true">{{ grupo.nombre | initial }}</div>
         <h2 class="page-title">{{ grupo.nombre }}</h2>
         <button class="btn-icon-action" (click)="activarEdicion()" title="Editar nombre" aria-label="Editar nombre del grupo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"

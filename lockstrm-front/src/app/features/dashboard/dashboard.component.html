@@ -64,8 +64,11 @@
         </svg>
       </div>
       <div class="stat-body">
-        <span class="stat-value">{{ totalGrupos }}</span>
+        <span class="stat-value">{{ gruposError ? '—' : totalGrupos }}</span>
         <span class="stat-label">Grupos creados</span>
+        @if (gruposError) {
+          <span class="stat-error" role="alert">No se pudieron cargar los grupos</span>
+        }
       </div>
     </div>
 

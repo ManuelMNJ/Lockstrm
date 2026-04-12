@@ -100,7 +100,7 @@
 
 .stat-icon--blue {
   background-color: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
+  color: var(--color-secondary-light);
 }
 
 .stat-icon--green {
@@ -129,6 +129,12 @@
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.stat-error {
+  font-size: 11px;
+  color: var(--color-error, #f87171);
+  margin-top: 2px;
 }
 
 /* ==========================================================================

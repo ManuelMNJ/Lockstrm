@@ -98,7 +98,6 @@
           <tr>
             <th scope="col" class="col-thumb">Miniatura</th>
             <th scope="col" class="col-title">Título</th>
-            <th scope="col" class="col-owner">Propietario</th>
             <th scope="col" class="col-group">Grupo</th>
             <th scope="col" class="col-date">Fecha</th>
             <th scope="col" class="col-duration">Duración</th>
@@ -107,7 +106,7 @@
         </thead>
 
         <tbody>
-          @for (v of paginatedVideos; track v.idVideo) {
+          @for (v of paginator.paginatedItems; track v.idVideo) {
             <tr class="table-row">
               <td class="col-thumb">
                 <div class="video-thumb" aria-hidden="true">
@@ -121,11 +120,7 @@
               <td class="col-title">
                 <span class="video-title">{{ v.titulo }}</span>
               </td>
-              <td class="col-owner">
-                <span class="cell-text">
-                  {{ v.propietario?.username || '—' }}
-                </span>
-              </td>
+
               <td class="col-group">
                 @if (v.grupo?.nombre) {
                   <span class="cell-badge">{{ v.grupo!.nombre }}</span>
@@ -202,11 +197,11 @@
     </div>
 
     <!-- Paginación -->
-    @if (totalPages > 1) {
+    @if (paginator.totalPages > 1) {
       <nav class="pagination" aria-label="Paginación de vídeos">
         <button class="page-btn"
-                (click)="goToPage(currentPage - 1)"
-                [disabled]="currentPage === 1"
+                (click)="goToPage(paginator.page - 1)"
+                [disabled]="paginator.page === 1"
                 aria-label="Página anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -215,19 +210,19 @@
           </svg>
         </button>
 
-        @for (page of pages; track page) {
+        @for (page of paginator.pages; track page) {
           <button class="page-btn"
-                  [class.page-btn--active]="currentPage === page"
+                  [class.page-btn--active]="paginator.page === page"
                   (click)="goToPage(page)"
                   [attr.aria-label]="'Página ' + page"
-                  [attr.aria-current]="currentPage === page ? 'page' : null">
+                  [attr.aria-current]="paginator.page === page ? 'page' : null">
             {{ page }}
           </button>
         }
 
         <button class="page-btn"
-                (click)="goToPage(currentPage + 1)"
-                [disabled]="currentPage === totalPages"
+                (click)="goToPage(paginator.page + 1)"
+                [disabled]="paginator.page === paginator.totalPages"
                 aria-label="Página siguiente">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -237,7 +232,7 @@
         </button>
 
         <span class="page-info" aria-live="polite">
-          {{ currentPage }} / {{ totalPages }}
+          {{ paginator.page }} / {{ paginator.totalPages }}
         </span>
       </nav>
     }

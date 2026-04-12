@@ -6,6 +6,7 @@ import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
+import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -22,9 +23,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class GrupoService {
 
-    private final GrupoRepository        grupoRepository;
-    private final UserRepository         userRepository;
+    private final GrupoRepository         grupoRepository;
+    private final UserRepository          userRepository;
     private final MiembrosGrupoRepository miembrosGrupoRepository;
+    private final PermisosGrupoRepository permisosGrupoRepository;
 
     /**
      * Devuelve todos los grupos a los que pertenece el usuario:
@@ -105,5 +107,58 @@ public class GrupoService {
         MiembrosGrupo miembro = new MiembrosGrupo();
         miembro.setId(miembroId);
         miembrosGrupoRepository.save(miembro);
+    }
+
+    /**
+     * Elimina un miembro del grupo. Solo el creador puede expulsar miembros.
+     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es el creador.
+     */
+    @Transactional
+    public void eliminarMiembro(Long idGrupo, Long idUsuario, String emailSolicitante) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
+            throw new AccessDeniedException("Solo el creador del grupo puede eliminar miembros");
+        }
+
+        miembrosGrupoRepository.deleteByGrupoIdAndUsuarioId(idGrupo, idUsuario);
+    }
+
+    /**
+     * Renombra un grupo. Solo el creador puede cambiar el nombre.
+     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es el creador.
+     */
+    @Transactional
+    public Grupo renombrarGrupo(Long idGrupo, String nuevoNombre, String emailSolicitante) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
+            throw new AccessDeniedException("Solo el creador del grupo puede cambiar su nombre");
+        }
+
+        grupo.setNombre(nuevoNombre.trim());
+        return grupoRepository.save(grupo);
+    }
+
+    /**
+     * Elimina un grupo y todas sus relaciones (miembros y permisos de vídeo).
+     * Solo el creador puede eliminar el grupo.
+     * Los vídeos asignados al grupo NO se eliminan; quedan como privados.
+     */
+    @Transactional
+    public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
+            throw new AccessDeniedException("Solo el creador del grupo puede eliminarlo");
+        }
+
+        // Eliminar relaciones antes que el grupo (FK constraints)
+        miembrosGrupoRepository.deleteByGrupoId(idGrupo);
+        permisosGrupoRepository.deleteByGrupoId(idGrupo);
+        grupoRepository.delete(grupo);
     }
 }

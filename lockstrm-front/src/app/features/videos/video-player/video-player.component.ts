@@ -15,11 +15,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent, interval, timer } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 
 @Component({
   selector: 'app-video-player',
   standalone: true,
-  imports: [],
+  imports: [VideoDurationPipe],
   templateUrl: './video-player.component.html',
   styleUrl: './video-player.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -324,12 +325,4 @@ export class VideoPlayerComponent implements OnInit {
     event.preventDefault();
   }
 
-  // ── Utility ─────────────────────────────────────────────────────────────────
-
-  formatTime(seconds: number): string {
-    const s   = Math.floor(seconds);
-    const min = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-  }
 }

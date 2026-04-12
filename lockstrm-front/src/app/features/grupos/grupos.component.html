@@ -52,7 +52,7 @@
              (keydown.space)="abrirDetalle(g)">
 
           <div class="grupo-card-icon" aria-hidden="true">
-            {{ inicialGrupo(g.nombre) }}
+            {{ g.nombre | initial }}
           </div>
 
           <div class="grupo-card-body">

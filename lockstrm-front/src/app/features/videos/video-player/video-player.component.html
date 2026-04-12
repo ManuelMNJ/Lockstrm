@@ -149,7 +149,7 @@
 
       <!-- Time display ───────────────────────────────────────────────── -->
       <span class="time-display" aria-live="off">
-        {{ formatTime(currentTime()) }} / {{ formatTime(duration()) }}
+        {{ currentTime() | videoDuration:true }} / {{ duration() | videoDuration:true }}
       </span>
 
       <!-- Spacer — pushes volume + fullscreen to the right ───────────── -->

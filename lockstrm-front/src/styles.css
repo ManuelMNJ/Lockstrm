@@ -32,6 +32,11 @@
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-error:   #EF4444;
+  --color-error-hover: #DC2626;
+
+  /* ── Secondary / Blue accent ── */
+  --color-secondary:       #3B82F6;
+  --color-secondary-light: #60A5FA;
 
   /* ── Layout ── */
   --sidebar-width: 240px;
