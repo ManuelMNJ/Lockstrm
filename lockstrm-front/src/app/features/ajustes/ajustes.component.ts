@@ -8,11 +8,12 @@ import {
   confirmarPasswordValidator,
   calcPwReqs,
 } from '../../core/validators/password.validator';
+import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 
 @Component({
   selector: 'app-ajustes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DateLocalePipe],
   templateUrl: './ajustes.component.html',
   styleUrl: './ajustes.component.css',
 })
@@ -101,15 +102,6 @@ export class AjustesComponent implements OnInit {
     this.modoOscuro = !this.modoOscuro;
     document.body.classList.toggle('light-mode', !this.modoOscuro);
     localStorage.setItem('lockstrm-theme', this.modoOscuro ? 'dark' : 'light');
-  }
-
-  // ── Helpers de presentación ─────────────────────────────────────────────────
-
-  formatearFecha(fecha: string | undefined): string {
-    if (!fecha) return '—';
-    return new Date(fecha).toLocaleDateString('es-ES', {
-      day: '2-digit', month: 'long', year: 'numeric'
-    });
   }
 
   rolLegible(rol: string | undefined): string {

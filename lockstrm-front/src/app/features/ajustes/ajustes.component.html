@@ -31,7 +31,7 @@
       </div>
       <div class="info-row">
         <span class="info-label">Miembro desde</span>
-        <span class="info-value">{{ formatearFecha(perfil.fechaRegistro) }}</span>
+        <span class="info-value">{{ perfil.fechaRegistro | dateLocale:'long' }}</span>
       </div>
       <div class="info-row">
         <span class="info-label">Rol</span>
