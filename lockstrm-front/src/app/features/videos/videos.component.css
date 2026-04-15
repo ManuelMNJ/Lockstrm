@@ -167,6 +167,34 @@
 }
 
 /* ==========================================================================
+   UPLOAD PROGRESS BAR
+   ========================================================================== */
+.upload-progress {
+  position: relative;
+  height: 6px;
+  background-color: var(--bg-surface-active);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 9999px;
+  transition: width 0.2s ease;
+  min-width: 4px;
+}
+
+.upload-progress-label {
+  position: absolute;
+  right: 0;
+  top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
    LIBRARY SECTION
    ========================================================================== */
 .library {
@@ -199,6 +227,54 @@
   padding: 2px 9px;
   letter-spacing: 0.01em;
 }
+
+/* ==========================================================================
+   SKELETON LOADER (tabla)
+   ========================================================================== */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton-table {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 120px 90px 80px 140px;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 13px 16px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-cell {
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-active) 25%,
+    var(--bg-surface-hover)  50%,
+    var(--bg-surface-active) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-cell--thumb  { width: 54px; height: 36px; border-radius: var(--radius-sm); }
+.skeleton-cell--title  { width: 70%; }
+.skeleton-cell--group  { width: 60px; }
+.skeleton-cell--date   { width: 72px; }
+.skeleton-cell--dur    { width: 40px; }
+.skeleton-cell--actions { width: 90px; margin-left: auto; }
 
 /* ==========================================================================
    DATA TABLE
@@ -957,6 +1033,12 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--color-error);
   color: var(--color-error);
+}
+
+.toast--success {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
 }
 
 .toast-icon {

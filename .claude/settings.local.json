@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(sort find:*)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.\\(yml|yaml|json|properties|xml\\)$\")"
     ]
   }
 }

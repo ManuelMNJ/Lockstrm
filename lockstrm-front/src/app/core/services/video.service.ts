@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -103,13 +103,20 @@ export class VideoService {
 
   // ── Escrituras (invalidan la caché al completar) ────────────────────────────
 
-  subirVideo(archivo: File, titulo: string, idGrupo?: number | null): Observable<VideoUploadResponse> {
+  subirVideo(archivo: File, titulo: string, idGrupo?: number | null): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
     formData.append('file',   archivo);
     formData.append('titulo', titulo);
     if (idGrupo != null) formData.append('idGrupo', idGrupo.toString());
-    return this.http.post<VideoUploadResponse>(`${this.apiUrl}/subir`, formData).pipe(
-      tap(() => { this.misVideosCache$ = null; }),
+    const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
+      reportProgress: true,
+    });
+    return this.http.request<VideoUploadResponse>(req).pipe(
+      tap(event => {
+        if (event.type === HttpEventType.Response) {
+          this.misVideosCache$ = null;
+        }
+      }),
     );
   }
 

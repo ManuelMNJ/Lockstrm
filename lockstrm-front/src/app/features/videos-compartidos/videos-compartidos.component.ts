@@ -32,7 +32,7 @@ export class VideosCompartidosComponent implements OnInit {
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
-  constructor(private videoService: VideoService) {}
+  constructor(protected videoService: VideoService) {}
 
   ngOnInit(): void {
     this.cargarVideos();

@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { HttpEventType } from '@angular/common/http';
+import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
@@ -13,7 +15,7 @@ import { Paginator } from '../../shared/utils/paginator';
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoDurationPipe],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,8 +29,11 @@ export class VideosComponent implements OnInit {
   idGrupoSeleccionado: number | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
+  progreso = 0;
   mensajeError = '';
-  listaError   = '';
+
+  cargando = true;
+  listaError = '';
 
   deletingIds = new Set<number>();
 
@@ -45,6 +50,9 @@ export class VideosComponent implements OnInit {
   editIdGrupo: number | null = null;
   estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
   mensajeEdicion = '';
+
+  exitoEdicionVisible = false;
+  private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ── Paginación ─────────────────────────────────────────────────────────────
   readonly paginator = new Paginator<Video>(15);
@@ -63,6 +71,13 @@ export class VideosComponent implements OnInit {
     protected videoService: VideoService,
     private  grupoService:  GrupoService,
   ) {}
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.videoEnEdicion)    { this.cancelarEdicion();    return; }
+    if (this.videoAEliminar)    { this.cancelarEliminacion(); return; }
+    if (this.videoReproduciendose) { this.cerrarReproductor(); }
+  }
 
   ngOnInit(): void {
     this.cargarVideos();
@@ -118,6 +133,7 @@ export class VideosComponent implements OnInit {
     }
 
     this.estadoSubida = 'uploading';
+    this.progreso     = 0;
     this.mensajeError = '';
 
     this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado)
@@ -125,10 +141,21 @@ export class VideosComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
           if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
+          this.progreso = 0;
+          this.cdr.markForCheck();
         })
       )
       .subscribe({
-        next: (res) => {
+        next: (event) => {
+          if (event.type === HttpEventType.UploadProgress && event.total) {
+            this.progreso = Math.round(100 * event.loaded / event.total);
+            this.cdr.markForCheck();
+            return;
+          }
+
+          if (event.type !== HttpEventType.Response) return;
+
+          const res = event.body!;
           const grupo = this.idGrupoSeleccionado
             ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
             : null;
@@ -144,6 +171,7 @@ export class VideosComponent implements OnInit {
           this.videos              = [nuevoVideo, ...this.videos];
           this.paginator.setItems(this.videos);
           this.estadoSubida        = 'success';
+          this.progreso            = 0;
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
           this.idGrupoSeleccionado = null;
@@ -157,6 +185,7 @@ export class VideosComponent implements OnInit {
         },
         error: (err) => {
           this.estadoSubida = 'error';
+          this.progreso     = 0;
           this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
           console.error('[VideosComponent] Error en subida:', {
             status:     err?.status,
@@ -218,6 +247,16 @@ export class VideosComponent implements OnInit {
       });
   }
 
+  private mostrarExitoEdicion(): void {
+    if (this.exitoEdicionTimer) clearTimeout(this.exitoEdicionTimer);
+    this.exitoEdicionVisible = true;
+    this.cdr.markForCheck();
+    this.exitoEdicionTimer = setTimeout(() => {
+      this.exitoEdicionVisible = false;
+      this.cdr.markForCheck();
+    }, 3500);
+  }
+
   private mostrarErrorEliminacion(mensaje: string): void {
     if (this.errorEliminacionTimer) clearTimeout(this.errorEliminacionTimer);
     this.errorEliminacion        = mensaje;
@@ -268,6 +307,7 @@ export class VideosComponent implements OnInit {
           this.paginator.setItems(this.videos);
           this.videoEnEdicion = null;
           this.estadoEdicion  = 'idle';
+          this.mostrarExitoEdicion();
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -282,16 +322,19 @@ export class VideosComponent implements OnInit {
 
   cargarVideos(): void {
     this.listaError = '';
+    this.cargando   = true;
     this.videoService.obtenerMisVideos()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (datos) => {
-          this.videos = datos;
+          this.videos   = datos;
           this.paginator.setItems(datos);
+          this.cargando = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
+          this.cargando   = false;
           console.error('[VideosComponent] Error al cargar videos:', err);
           this.cdr.markForCheck();
         }

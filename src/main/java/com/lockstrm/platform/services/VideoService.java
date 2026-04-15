@@ -198,6 +198,39 @@ public class VideoService {
     }
 
     @Transactional
+    public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, Long idGrupo) {
+        Video video = videoRepository.findById(idVideo)
+                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
+
+        if (!video.getPropietario().getEmail().equals(emailUsuario)) {
+            throw new AccessDeniedException("No tienes permiso para editar este vídeo");
+        }
+
+        video.setTitulo(titulo);
+        videoRepository.save(video);
+
+        // Reasignar grupo: eliminar la asociación actual y crear la nueva si procede
+        permisosGrupoRepository.deleteByVideoId(idVideo);
+
+        String grupoNombre = null;
+        if (idGrupo != null) {
+            Grupo grupo = grupoRepository.findById(idGrupo)
+                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            permisosGrupoRepository.save(new PermisosGrupo(idVideo, grupo.getIdGrupo()));
+            grupoNombre = grupo.getNombre();
+        }
+
+        return new VideoDTO(
+                video.getIdVideo(),
+                video.getTitulo(),
+                video.getDuracion(),
+                video.getFechaSubida(),
+                idGrupo,
+                grupoNombre
+        );
+    }
+
+    @Transactional
     public void eliminarVideo(Long idVideo, String userEmail) {
         Video video = videoRepository.findById(idVideo)
                 .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
