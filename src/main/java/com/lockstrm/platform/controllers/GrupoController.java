@@ -2,6 +2,7 @@ package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.GrupoStatsDTO;
 import com.lockstrm.platform.dto.MiembroDTO;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +80,20 @@ public class GrupoController {
         try {
             List<MiembroDTO> miembros = grupoService.obtenerMiembros(idGrupo, userDetails.getUsername());
             return ResponseEntity.ok(miembros);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{idGrupo}/videos")
+    public ResponseEntity<?> obtenerVideosDeGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            List<VideoDTO> videos = grupoService.obtenerVideosDeGrupo(idGrupo, userDetails.getUsername());
+            return ResponseEntity.ok(videos);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (NoSuchElementException e) {

@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Video } from '../../../core/services/video.service';
@@ -25,6 +25,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   cargando = true;
   errorCarga = '';
+  errorDatos: string | null = null;
 
   // Añadir miembro
   emailNuevoMiembro = '';
@@ -67,27 +68,36 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   private cargarDatos(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.idGrupo    = id;
     this.cargando   = true;
     this.errorCarga = '';
+    this.errorDatos = null;
 
     forkJoin({
-      grupo:       this.grupoService.obtenerGrupoPorId(this.idGrupo),
-      miembros:    this.grupoService.obtenerMiembros(this.idGrupo),
-      videosGrupo: this.grupoService.obtenerVideosDeGrupo(this.idGrupo),
+      grupo: this.grupoService.obtenerGrupoPorId(id).pipe(
+        catchError(err => {
+          this.errorDatos = err?.error?.error || err?.message || 'No se pudo cargar el grupo';
+          return of(null as unknown as Grupo);
+        }),
+      ),
+      miembros:    this.grupoService.obtenerMiembros(id).pipe(catchError(() => of([] as Miembro[]))),
+      videosGrupo: this.grupoService.obtenerVideosDeGrupo(id).pipe(catchError(() => of([] as Video[]))),
     })
       .pipe(
-        takeUntilDestroyed(this.destroyRef),
         finalize(() => { this.cargando = false; }),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: ({ grupo, miembros, videosGrupo }) => {
           this.grupo         = grupo;
-          this.nombreEditado = grupo.nombre;
+          this.nombreEditado = grupo?.nombre ?? '';
           this.miembros      = miembros;
           this.videosGrupo   = videosGrupo;
         },
-        error: () => {
+        error: (err) => {
           this.errorCarga = 'No se pudo cargar la información del grupo.';
+          this.errorDatos = err?.message || 'Error desconocido';
         },
       });
   }

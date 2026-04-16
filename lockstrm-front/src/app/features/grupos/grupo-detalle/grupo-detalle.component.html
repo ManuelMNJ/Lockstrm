@@ -103,19 +103,15 @@
     </div>
   </div>
 
-  <!-- ── Error carga ── -->
-  <p *ngIf="errorCarga" class="feedback-msg feedback-msg--error" role="alert">{{ errorCarga }}</p>
-
-  <!-- ── Loading ── -->
-  <div *ngIf="cargando" class="loading-state">
-    <div class="loading-spinner" aria-hidden="true"></div>
-    <p>Cargando grupo…</p>
-  </div>
-
   <!-- ================================================================
     DASHBOARD GRID
     ================================================================ -->
-  <div *ngIf="!cargando && grupo" class="dash-grid">
+  @if (cargando) {
+    <p>Cargando...</p>
+  } @else if (errorDatos) {
+    <div class="error-box">{{ errorDatos }}</div>
+  } @else if (grupo) {
+  <div class="dash-grid">
 
     <!-- ── LEFT COLUMN: Members Management ── -->
     <section class="dash-card" aria-labelledby="members-card-title">
@@ -257,6 +253,9 @@
     </section>
 
   </div>
+  } @else {
+    <p>Grupo no encontrado</p>
+  }
 
 </div>
 
