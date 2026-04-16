@@ -42,21 +42,32 @@
             class="form-input form-select"
             [(ngModel)]="idGrupoSeleccionado">
             <option [ngValue]="null">Ningún grupo (Privado)</option>
-            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+            @for (g of misGrupos; track g.idGrupo) {
+              <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+            }
           </select>
         </div>
 
       </div>
       <div class="upload-actions">
         <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true" class="btn-icon">
-            <polyline points="16 16 12 12 8 16"/>
-            <line x1="12" y1="12" x2="12" y2="21"/>
-            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-          </svg>
-          {{ estadoSubida === 'uploading' ? 'Subiendo…' : 'Subir vídeo' }}
+          @if (estadoSubida === 'uploading') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" class="btn-icon btn-icon--spin">
+              <path d="M21 12a9 9 0 1 1-6.22-8.56"/>
+            </svg>
+            Subiendo…
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" class="btn-icon">
+              <polyline points="16 16 12 12 8 16"/>
+              <line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+            Subir vídeo
+          }
         </button>
       </div>
 
@@ -66,18 +77,16 @@
           <span class="upload-progress-label">{{ progreso }}%</span>
         </div>
       }
-      <p *ngIf="estadoSubida === 'success'"
-         class="upload-message"
-         role="status"
-         aria-live="polite">
-        Vídeo subido correctamente.
-      </p>
-      <p *ngIf="estadoSubida === 'error'"
-         class="upload-message upload-message--error"
-         role="alert"
-         aria-live="assertive">
-        {{ mensajeError }}
-      </p>
+      @if (estadoSubida === 'success') {
+        <p class="upload-message" role="status" aria-live="polite">
+          Vídeo subido correctamente.
+        </p>
+      }
+      @if (estadoSubida === 'error') {
+        <p class="upload-message upload-message--error" role="alert" aria-live="assertive">
+          {{ mensajeError }}
+        </p>
+      }
 
     </div>
   </section>
@@ -100,12 +109,11 @@
       }
     </div>
 
-    <p *ngIf="listaError"
-       class="upload-message upload-message--error"
-       role="alert"
-       aria-live="assertive">
-      {{ listaError }}
-    </p>
+    @if (listaError) {
+      <p class="upload-message upload-message--error" role="alert" aria-live="assertive">
+        {{ listaError }}
+      </p>
+    }
 
     @if (cargando) {
       <div class="skeleton-table" aria-label="Cargando biblioteca…">
@@ -276,8 +284,8 @@
   <!-- ================================================================
     VIDEO PLAYER MODAL
     ================================================================ -->
+  @if (videoReproduciendose) {
   <div class="modal-overlay"
-       *ngIf="videoReproduciendose"
        (click)="cerrarReproductor()"
        role="dialog"
        aria-modal="true"
@@ -308,12 +316,13 @@
 
     </div>
   </div>
+  }
 
   <!-- ================================================================
     EDIT MODAL
     ================================================================ -->
+  @if (videoEnEdicion) {
   <div class="modal-overlay edit-overlay"
-       *ngIf="videoEnEdicion"
        (click)="cancelarEdicion()"
        role="dialog"
        aria-modal="true"
@@ -357,15 +366,15 @@
             class="form-input form-select"
             [(ngModel)]="editIdGrupo">
             <option [ngValue]="null">Sin grupo (Privado)</option>
-            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+            @for (g of misGrupos; track g.idGrupo) {
+              <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+            }
           </select>
         </div>
 
-        <p *ngIf="estadoEdicion === 'error'"
-           class="edit-error"
-           role="alert">
-          {{ mensajeEdicion }}
-        </p>
+        @if (estadoEdicion === 'error') {
+          <p class="edit-error" role="alert">{{ mensajeEdicion }}</p>
+        }
 
       </div>
 
@@ -376,23 +385,26 @@
         <button class="btn-confirm-save"
                 (click)="guardarEdicion()"
                 [disabled]="estadoEdicion === 'saving' || !editTitulo.trim()">
-          <svg *ngIf="estadoEdicion !== 'saving'" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"
-               stroke-linejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+          @if (estadoEdicion !== 'saving') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          }
           {{ estadoEdicion === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>
 
     </div>
   </div>
+  }
 
   <!-- ================================================================
     DELETE CONFIRMATION MODAL
     ================================================================ -->
+  @if (videoAEliminar) {
   <div class="modal-overlay confirm-overlay"
-       *ngIf="videoAEliminar"
        (click)="cancelarEliminacion()"
        role="alertdialog"
        aria-modal="true"
@@ -440,37 +452,36 @@
 
     </div>
   </div>
+  }
 
   <!-- ================================================================
     TOAST — Vídeo editado correctamente
     ================================================================ -->
-  <div class="toast toast--success"
-       *ngIf="exitoEdicionVisible"
-       role="status"
-       aria-live="polite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-         class="toast-icon" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-    <span>Vídeo actualizado correctamente.</span>
-  </div>
+  @if (exitoEdicionVisible) {
+    <div class="toast toast--success" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="toast-icon" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span>Vídeo actualizado correctamente.</span>
+    </div>
+  }
 
   <!-- ================================================================
     TOAST — Error al eliminar vídeo
     ================================================================ -->
-  <div class="toast toast--error"
-       *ngIf="errorEliminacionVisible"
-       role="alert"
-       aria-live="assertive">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-         class="toast-icon" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/>
-      <line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    <span>{{ errorEliminacion }}</span>
-  </div>
+  @if (errorEliminacionVisible) {
+    <div class="toast toast--error" role="alert" aria-live="assertive">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           class="toast-icon" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>{{ errorEliminacion }}</span>
+    </div>
+  }
 
 </div>

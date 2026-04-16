@@ -31,6 +31,16 @@ export class AuthService {
 
   // ── Auth operations ──────────────────────────────────────────────────────
 
+  registro(nombre: string, apellidos: string, email: string, password: string): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/registro`, { nombre, apellidos, email, password });
+  }
+
+  checkEmailDisponible(email: string): Observable<{ disponible: boolean }> {
+    return this.http.get<{ disponible: boolean }>(
+      `${this.apiUrl}/check-email?email=${encodeURIComponent(email)}`
+    );
+  }
+
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
       tap(res => {

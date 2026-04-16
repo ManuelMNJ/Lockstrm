@@ -5,12 +5,11 @@ import {
   ReactiveFormsModule, FormBuilder, FormGroup, Validators,
   AbstractControl, AsyncValidatorFn, ValidationErrors
 } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { debounceTime, switchMap, map, catchError, first } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
+import { Observable, of, timer } from 'rxjs';
+import { switchMap, map, catchError, first } from 'rxjs/operators';
 import { passwordFortalezaValidator, calcPwReqs } from '../../../core/validators/password.validator';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-registro',
@@ -21,7 +20,6 @@ import { passwordFortalezaValidator, calcPwReqs } from '../../../core/validators
 })
 export class RegistroComponent {
 
-  private readonly apiUrl = `${environment.apiUrl}/api/auth`;
   private destroyRef                = inject(DestroyRef);
 
   form: FormGroup;
@@ -31,7 +29,7 @@ export class RegistroComponent {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private authService: AuthService,
     private router: Router
   ) {
     this.form = this.fb.group({
@@ -48,13 +46,8 @@ export class RegistroComponent {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
       const value = (control.value ?? '').trim();
       if (!value || !/.+@.+\..+/.test(value)) return of(null);
-      return of(value).pipe(
-        debounceTime(500),
-        switchMap(email =>
-          this.http.get<{ disponible: boolean }>(
-            `${this.apiUrl}/check-email?email=${encodeURIComponent(email)}`
-          )
-        ),
+      return timer(500).pipe(
+        switchMap(() => this.authService.checkEmailDisponible(value)),
         map(res => res.disponible ? null : { emailTomado: true }),
         catchError(() => of(null)),
         first(),
@@ -83,7 +76,8 @@ export class RegistroComponent {
     this.cargando    = true;
     this.errorGlobal = '';
 
-    this.http.post(`${this.apiUrl}/registro`, this.form.value)
+    const { nombre, apellidos, email, password } = this.form.value;
+    this.authService.registro(nombre, apellidos, email, password)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

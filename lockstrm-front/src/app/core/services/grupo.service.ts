@@ -8,12 +8,20 @@ export interface Grupo {
   idGrupo: number;
   nombre: string;
   fechaCreacion?: string;
+  idCreador?: number;
 }
 
 export interface Miembro {
   idUsuario: number;
   username: string;
   email: string;
+}
+
+export interface GrupoStats {
+  idGrupo: number;
+  nombre: string;
+  idCreador: number;
+  totalMiembros: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -28,6 +36,10 @@ export class GrupoService {
   constructor(private http: HttpClient) {}
 
   // ── Lectura ─────────────────────────────────────────────────────────────────
+
+  obtenerGrupoStats(): Observable<GrupoStats[]> {
+    return this.http.get<GrupoStats[]>(`${this.apiUrl}/stats`);
+  }
 
   obtenerMisGrupos(): Observable<Grupo[]> {
     if (!this.misGruposCache$) {

@@ -105,10 +105,11 @@ export class VideoPlayerComponent implements OnInit {
   constructor() {
     this.userIdentifier = this.resolveUserIdentifier();
 
-    // Clean up both timers when the component is destroyed.
     this.destroyRef.onDestroy(() => {
       if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
       if (this.clickFlashTimer)  clearTimeout(this.clickFlashTimer);
+      this.videoRef?.nativeElement?.pause();
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     });
   }
 

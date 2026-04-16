@@ -3,11 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
 import { A11yModule } from '@angular/cdk/a11y';
-import { GrupoService, Grupo } from '../../core/services/grupo.service';
-import { VideoService } from '../../core/services/video.service';
+import { GrupoService, Grupo, GrupoStats } from '../../core/services/grupo.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 import { InitialPipe } from '../../shared/pipes/initial.pipe';
 
@@ -29,10 +26,7 @@ export class GruposComponent implements OnInit {
   estadoCreacion: 'idle' | 'loading' | 'error' = 'idle';
   errorCreacion = '';
 
-  // ── Estadísticas de tarjetas ───────────────────────────────────────────────
-  miembrosPerGrupo = new Map<number, number>();
-  videosPerGrupo   = new Map<number, number>();
-  cargandoStats    = false;
+  statsMap = new Map<number, GrupoStats>();
 
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
@@ -40,11 +34,9 @@ export class GruposComponent implements OnInit {
 
   constructor(
     private grupoService: GrupoService,
-    private videoService: VideoService,
     private router: Router,
   ) {}
 
-  // ── Escape para cerrar modal ───────────────────────────────────────────────
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     if (this.modalAbierto) this.cerrarModal();
@@ -67,54 +59,22 @@ export class GruposComponent implements OnInit {
         next: (g) => {
           this.grupos   = g;
           this.cargando = false;
-          this.cargarEstadisticas(g);
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la lista de grupos.';
           this.cargando   = false;
         },
       });
-  }
 
-  private cargarEstadisticas(grupos: Grupo[]): void {
-    if (!grupos.length) return;
-    this.cargandoStats = true;
-
-    // Contar vídeos por grupo (un solo request, beneficia del shareReplay del servicio)
-    this.videoService.obtenerMisVideos()
+    this.grupoService.obtenerGrupoStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (videos) => {
-          const countMap = new Map<number, number>();
-          videos.forEach(v => {
-            const idGrupo = v.grupo?.idGrupo;
-            if (idGrupo) {
-              countMap.set(idGrupo, (countMap.get(idGrupo) ?? 0) + 1);
-            }
-          });
-          this.videosPerGrupo = countMap;
+        next: (stats) => {
+          const map = new Map<number, GrupoStats>();
+          stats.forEach(s => map.set(s.idGrupo, s));
+          this.statsMap = map;
         },
         error: () => { /* stats opcionales */ },
-      });
-
-    // Contar miembros por grupo en paralelo
-    const requests = grupos.map(g =>
-      this.grupoService.obtenerMiembros(g.idGrupo).pipe(
-        map(miembros => ({ idGrupo: g.idGrupo, count: miembros.length })),
-        catchError(() => of({ idGrupo: g.idGrupo, count: 0 })),
-      )
-    );
-
-    forkJoin(requests)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (results) => {
-          const countMap = new Map<number, number>();
-          results.forEach(r => countMap.set(r.idGrupo, r.count));
-          this.miembrosPerGrupo = countMap;
-          this.cargandoStats    = false;
-        },
-        error: () => { this.cargandoStats = false; },
       });
   }
 
@@ -142,8 +102,13 @@ export class GruposComponent implements OnInit {
       .subscribe({
         next: (grupo) => {
           this.grupos = [...this.grupos, grupo];
-          this.miembrosPerGrupo = new Map(this.miembrosPerGrupo).set(grupo.idGrupo, 1);
-          this.videosPerGrupo   = new Map(this.videosPerGrupo).set(grupo.idGrupo, 0);
+          const newStats: GrupoStats = {
+            idGrupo: grupo.idGrupo,
+            nombre: grupo.nombre,
+            idCreador: grupo.idCreador!,
+            totalMiembros: 0,
+          };
+          this.statsMap = new Map(this.statsMap).set(grupo.idGrupo, newStats);
           this.cerrarModal();
         },
         error: (err) => {
@@ -152,13 +117,4 @@ export class GruposComponent implements OnInit {
         },
       });
   }
-
-  getMiembros(idGrupo: number): number | null {
-    return this.miembrosPerGrupo.has(idGrupo) ? (this.miembrosPerGrupo.get(idGrupo) ?? null) : null;
-  }
-
-  getVideos(idGrupo: number): number | null {
-    return this.videosPerGrupo.has(idGrupo) ? (this.videosPerGrupo.get(idGrupo) ?? null) : null;
-  }
-
 }
