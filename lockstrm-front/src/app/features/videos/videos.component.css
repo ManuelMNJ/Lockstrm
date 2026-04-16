@@ -204,6 +204,53 @@
 }
 
 /* ==========================================================================
+   UPLOAD PROCESSING STATE
+   ========================================================================== */
+.upload-processing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-ghost);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.upload-spinner {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+.upload-spinner-track {
+  stroke: rgba(124, 58, 237, 0.2);
+}
+
+.upload-spinner-arc {
+  stroke: var(--color-primary);
+  animation: spinner-dash 1.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinner-dash {
+  0%   { stroke-dasharray: 1 200;   stroke-dashoffset: 0;    }
+  50%  { stroke-dasharray: 100 200; stroke-dashoffset: -30px; }
+  100% { stroke-dasharray: 100 200; stroke-dashoffset: -126px; }
+}
+
+.upload-processing-msg {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
    LIBRARY SECTION
    ========================================================================== */
 .library {

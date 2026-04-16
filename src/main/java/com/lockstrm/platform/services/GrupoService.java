@@ -1,14 +1,18 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.GrupoStatsDTO;
+import com.lockstrm.platform.dto.MiembroDTO;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
+import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,7 @@ public class GrupoService {
     private final UserRepository          userRepository;
     private final MiembrosGrupoRepository miembrosGrupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final VideoRepository         videoRepository;
 
     /**
      * Devuelve todos los grupos a los que pertenece el usuario:
@@ -84,8 +89,49 @@ public class GrupoService {
     }
 
     @Transactional(readOnly = true)
+    public List<MiembroDTO> obtenerMiembros(Long idGrupo, String emailSolicitante) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        boolean esCreador = grupo.getCreador() != null &&
+                grupo.getCreador().getEmail().equals(emailSolicitante);
+        boolean esMiembro = miembrosGrupoRepository.existsByUsuario_EmailAndId_IdGrupoId(emailSolicitante, idGrupo);
+
+        if (!esCreador && !esMiembro) {
+            throw new AccessDeniedException("No tienes acceso a este grupo");
+        }
+
+        List<MiembroDTO> miembros = miembrosGrupoRepository.findMiembrosByGrupoId(idGrupo);
+        return miembros != null ? miembros : List.of();
+    }
+
+    @Transactional(readOnly = true)
     public List<GrupoStatsDTO> obtenerGrupoStats(String email) {
         return grupoRepository.findGrupoStatsForUser(email);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VideoDTO> obtenerVideosDeGrupo(Long idGrupo, String emailSolicitante) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+
+        boolean esCreador = grupo.getCreador() != null &&
+                grupo.getCreador().getEmail().equals(emailSolicitante);
+        boolean esMiembro = miembrosGrupoRepository.existsByUsuario_EmailAndId_IdGrupoId(emailSolicitante, idGrupo);
+
+        if (!esCreador && !esMiembro) {
+            throw new AccessDeniedException("No tienes acceso a este grupo");
+        }
+
+        return videoRepository.findByGrupoId(idGrupo).stream()
+                .map(v -> new VideoDTO(
+                        v.getIdVideo(),
+                        v.getTitulo(),
+                        v.getDuracion(),
+                        v.getFechaSubida(),
+                        idGrupo,
+                        grupo.getNombre()))
+                .toList();
     }
 
     public Grupo crearGrupo(String emailCreador, String nombre) {

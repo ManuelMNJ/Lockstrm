@@ -101,7 +101,7 @@ export class GruposComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupo) => {
-          this.grupos = [...this.grupos, grupo];
+          this.grupos = [grupo, ...this.grupos];
           const newStats: GrupoStats = {
             idGrupo: grupo.idGrupo,
             nombre: grupo.nombre,
@@ -109,11 +109,13 @@ export class GruposComponent implements OnInit {
             totalMiembros: 0,
           };
           this.statsMap = new Map(this.statsMap).set(grupo.idGrupo, newStats);
+          this.estadoCreacion = 'idle';
           this.cerrarModal();
         },
         error: (err) => {
-          this.estadoCreacion = 'error';
+          this.estadoCreacion = 'idle';
           this.errorCreacion  = err?.error?.error || 'Error al crear el grupo.';
+          this.cerrarModal();
         },
       });
   }

@@ -29,6 +29,7 @@ export class VideosComponent implements OnInit {
   idGrupoSeleccionado: number | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
+  faseSubida: 'inactiva' | 'subiendo' | 'procesando' = 'inactiva';
   progreso = 0;
   mensajeError = '';
 
@@ -133,6 +134,7 @@ export class VideosComponent implements OnInit {
     }
 
     this.estadoSubida = 'uploading';
+    this.faseSubida   = 'subiendo';
     this.progreso     = 0;
     this.mensajeError = '';
 
@@ -141,6 +143,7 @@ export class VideosComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         catchError((err) => {
           this.estadoSubida = 'error';
+          this.faseSubida   = 'inactiva';
           this.progreso     = 0;
           this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
           console.error('[VideosComponent] Error en subida:', {
@@ -153,6 +156,7 @@ export class VideosComponent implements OnInit {
         }),
         finalize(() => {
           if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
+          if (this.faseSubida !== 'inactiva') this.faseSubida = 'inactiva';
           this.progreso = 0;
           this.cdr.markForCheck();
         })
@@ -161,6 +165,9 @@ export class VideosComponent implements OnInit {
         next: (event) => {
           if (event.type === HttpEventType.UploadProgress && event.total) {
             this.progreso = Math.round(100 * event.loaded / event.total);
+            if (this.progreso >= 100) {
+              this.faseSubida = 'procesando';
+            }
             this.cdr.markForCheck();
             return;
           }
@@ -168,12 +175,22 @@ export class VideosComponent implements OnInit {
           if (event.type !== HttpEventType.Response) return;
 
           const res = event.body!;
+          console.log('[VideosComponent] Upload response:', res);
+
+          if (!res?.idVideo) {
+            console.error('[VideosComponent] La respuesta no contiene idVideo:', res);
+            this.estadoSubida = 'error';
+            this.mensajeError = 'El servidor no devolvió el ID del vídeo.';
+            this.cdr.markForCheck();
+            return;
+          }
+
           const grupo = this.idGrupoSeleccionado
             ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
             : null;
 
           const nuevoVideo: Video = {
-            idVideo:     res.id_video,
+            idVideo:     res.idVideo,
             titulo:      res.titulo,
             duracion:    res.duracion ?? null,
             fechaSubida: new Date().toISOString(),
@@ -183,6 +200,7 @@ export class VideosComponent implements OnInit {
           this.videos              = [nuevoVideo, ...this.videos];
           this.paginator.setItems(this.videos);
           this.estadoSubida        = 'success';
+          this.faseSubida          = 'inactiva';
           this.progreso            = 0;
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;

@@ -4,8 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { Video } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 
 @Component({
@@ -19,6 +21,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   grupo: Grupo | null = null;
   miembros: Miembro[] = [];
+  videosGrupo: Video[] = [];
 
   cargando = true;
   errorCarga = '';
@@ -68,20 +71,23 @@ export class GrupoDetalleComponent implements OnInit {
     this.errorCarga = '';
 
     forkJoin({
-      grupo:    this.grupoService.obtenerGrupoPorId(this.idGrupo),
-      miembros: this.grupoService.obtenerMiembros(this.idGrupo),
+      grupo:       this.grupoService.obtenerGrupoPorId(this.idGrupo),
+      miembros:    this.grupoService.obtenerMiembros(this.idGrupo),
+      videosGrupo: this.grupoService.obtenerVideosDeGrupo(this.idGrupo),
     })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => { this.cargando = false; }),
+      )
       .subscribe({
-        next: ({ grupo, miembros }) => {
+        next: ({ grupo, miembros, videosGrupo }) => {
           this.grupo         = grupo;
           this.nombreEditado = grupo.nombre;
           this.miembros      = miembros;
-          this.cargando      = false;
+          this.videosGrupo   = videosGrupo;
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la información del grupo.';
-          this.cargando   = false;
         },
       });
   }

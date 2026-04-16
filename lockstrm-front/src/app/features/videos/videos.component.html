@@ -71,10 +71,20 @@
         </button>
       </div>
 
-      @if (estadoSubida === 'uploading') {
+      @if (faseSubida === 'subiendo') {
         <div class="upload-progress" role="status" aria-label="Progreso de subida">
           <div class="upload-progress-bar" [style.width.%]="progreso"></div>
           <span class="upload-progress-label">{{ progreso }}%</span>
+        </div>
+      }
+      @if (faseSubida === 'procesando') {
+        <div class="upload-processing" role="status" aria-live="polite">
+          <svg class="upload-spinner" viewBox="0 0 50 50" aria-hidden="true">
+            <circle class="upload-spinner-track" cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
+            <circle class="upload-spinner-arc" cx="25" cy="25" r="20" fill="none" stroke-width="4"
+                    stroke-dasharray="80 126" stroke-linecap="round"/>
+          </svg>
+          <span class="upload-processing-msg">Procesando vídeo en la nube… Por favor, no cierres esta ventana.</span>
         </div>
       }
       @if (estadoSubida === 'success') {
