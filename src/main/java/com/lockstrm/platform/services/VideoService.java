@@ -45,7 +45,7 @@ public class VideoService {
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024; // 100 MB
 
     @Transactional
-    public Video subirVideo(MultipartFile file, String emailUsuario, String titulo, Long idGrupo) throws IOException {
+    public VideoDTO subirVideo(MultipartFile file, String emailUsuario, String titulo, Long idGrupo) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (100 MB)");
         }
@@ -84,13 +84,22 @@ public class VideoService {
 
         Video guardado = videoRepository.save(nuevoVideo);
 
+        String grupoNombre = null;
         if (idGrupo != null) {
             Grupo grupo = grupoRepository.findById(idGrupo)
                     .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
             permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
+            grupoNombre = grupo.getNombre();
         }
 
-        return guardado;
+        return new VideoDTO(
+                guardado.getIdVideo(),
+                guardado.getTitulo(),
+                guardado.getDuracion(),
+                guardado.getFechaSubida(),
+                idGrupo,
+                grupoNombre
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 
 @Component({
@@ -42,6 +43,11 @@ export class GrupoDetalleComponent implements OnInit {
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
 
+  get esCreador(): boolean {
+    const userId = this.authService.currentUser()?.id;
+    return !!userId && this.grupo?.idCreador === userId;
+  }
+
   private idGrupo!: number;
   private destroyRef = inject(DestroyRef);
 
@@ -49,6 +55,7 @@ export class GrupoDetalleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private grupoService: GrupoService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {

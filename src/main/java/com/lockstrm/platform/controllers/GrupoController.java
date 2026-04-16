@@ -1,5 +1,6 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.GrupoStatsDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,11 @@ import java.util.NoSuchElementException;
 public class GrupoController {
 
     private final GrupoService grupoService;
+
+    @GetMapping("/stats")
+    public ResponseEntity<List<GrupoStatsDTO>> obtenerGrupoStats(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(grupoService.obtenerGrupoStats(userDetails.getUsername()));
+    }
 
     /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
     @GetMapping

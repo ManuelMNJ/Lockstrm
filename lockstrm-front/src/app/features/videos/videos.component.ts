@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { EMPTY, catchError, finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
@@ -139,6 +139,18 @@ export class VideosComponent implements OnInit {
     this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
+        catchError((err) => {
+          this.estadoSubida = 'error';
+          this.progreso     = 0;
+          this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
+          console.error('[VideosComponent] Error en subida:', {
+            status:     err?.status,
+            statusText: err?.statusText,
+            body:       err?.error,
+          });
+          this.cdr.markForCheck();
+          return EMPTY;
+        }),
         finalize(() => {
           if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
           this.progreso = 0;
@@ -183,17 +195,6 @@ export class VideosComponent implements OnInit {
             this.cdr.markForCheck();
           }, 3000);
         },
-        error: (err) => {
-          this.estadoSubida = 'error';
-          this.progreso     = 0;
-          this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
-          console.error('[VideosComponent] Error en subida:', {
-            status:     err?.status,
-            statusText: err?.statusText,
-            body:       err?.error,
-          });
-          this.cdr.markForCheck();
-        }
       });
   }
 

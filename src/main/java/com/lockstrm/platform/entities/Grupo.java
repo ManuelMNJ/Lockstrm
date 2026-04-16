@@ -25,6 +25,11 @@ public class Grupo {
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
+    /** Expuesto en JSON para que el frontend pueda comparar con el usuario autenticado. */
+    public Long getIdCreador() {
+        return creador != null ? creador.getIdUsuario() : null;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (this.fechaCreacion == null) {

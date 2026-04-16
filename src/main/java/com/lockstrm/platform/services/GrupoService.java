@@ -1,5 +1,6 @@
 package com.lockstrm.platform.services;
 
+import com.lockstrm.platform.dto.GrupoStatsDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
@@ -80,6 +81,11 @@ public class GrupoService {
         }
 
         return grupo;
+    }
+
+    @Transactional(readOnly = true)
+    public List<GrupoStatsDTO> obtenerGrupoStats(String email) {
+        return grupoRepository.findGrupoStatsForUser(email);
     }
 
     public Grupo crearGrupo(String emailCreador, String nombre) {

@@ -131,6 +131,15 @@
   gap: var(--space-3);
 }
 
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-icon--spin {
+  animation: btn-spin 0.7s linear infinite;
+  transform-origin: center;
+}
+
 /* Disabled state for .btn-primary used within this component */
 .btn-primary:disabled {
   opacity: 0.45;
