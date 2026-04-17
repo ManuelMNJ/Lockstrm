@@ -45,7 +45,7 @@ public class VideoService {
     private static final long MAX_FILE_SIZE = 100L * 1024 * 1024; // 100 MB
 
     @Transactional
-    public Video subirVideo(MultipartFile file, String emailUsuario, String titulo, Long idGrupo) throws IOException {
+    public Video subirVideo(MultipartFile file, String emailUsuario, String titulo, Long idGrupo, String miniaturaUrl) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (100 MB)");
         }
@@ -79,6 +79,7 @@ public class VideoService {
         nuevoVideo.setDuracion(duracion);
         nuevoVideo.setUrlCloudSecure(urlSegura);
         nuevoVideo.setCloudinaryId(publicId);
+        nuevoVideo.setMiniaturaUrl(miniaturaUrl);
         nuevoVideo.setFechaSubida(LocalDateTime.now());
         nuevoVideo.setPropietario(autor);
 
@@ -177,7 +178,8 @@ public class VideoService {
                 video.getDuracion(),
                 video.getFechaSubida(),
                 ref != null ? ref.idGrupo() : null,
-                ref != null ? ref.nombre()  : null
+                ref != null ? ref.nombre()  : null,
+                video.getMiniaturaUrl()
         );
     }
 
@@ -226,7 +228,8 @@ public class VideoService {
                 video.getDuracion(),
                 video.getFechaSubida(),
                 idGrupo,
-                grupoNombre
+                grupoNombre,
+                video.getMiniaturaUrl()
         );
     }
 

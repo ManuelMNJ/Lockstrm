@@ -18,6 +18,8 @@ public class Video {
     private Integer duracion;
     private String urlCloudSecure;
     private String cloudinaryId;
+    @Column(columnDefinition = "LONGTEXT")
+    private String miniaturaUrl;
     private LocalDateTime fechaSubida;
 
     @ManyToOne

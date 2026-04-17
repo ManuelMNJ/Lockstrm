@@ -18,5 +18,6 @@ public record VideoDTO(
         Integer duracion,
         LocalDateTime fechaSubida,
         Long idGrupo,
-        String grupoNombre
+        String grupoNombre,
+        String miniaturaUrl
 ) {}

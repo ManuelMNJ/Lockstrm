@@ -264,6 +264,15 @@
   height: 16px;
 }
 
+.video-thumb-img {
+  width: 54px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  display: block;
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
    VIDEO SELECT
    ========================================================================== */

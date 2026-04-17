@@ -7,44 +7,48 @@ import { VideoStreamService } from './video-stream.service';
 
 // ── Respuesta del endpoint de subida ──────────────────────────────────────────
 export interface VideoUploadResponse {
-  id_video: number;
-  titulo: string;
-  url: string;
-  duracion: number;
-  status: string;
-  mensaje: string;
+  id_video:     number;
+  titulo:       string;
+  url:          string;
+  duracion:     number;
+  status:       string;
+  mensaje:      string;
+  miniaturaUrl: string | null;
 }
 
 // ── Interfaz canónica del frontend ────────────────────────────────────────────
 // NOTA: urlCloudSecure y cloudinaryId se omiten deliberadamente.
 // La reproducción usa siempre el proxy /api/videos/stream/{id} (ver VideoStreamService).
 export interface Video {
-  idVideo: number;
-  titulo: string;
-  duracion: number | null;
-  fechaSubida: string | null;
-  grupo?: { idGrupo?: number; nombre: string };
+  idVideo:      number;
+  titulo:       string;
+  duracion:     number | null;
+  fechaSubida:  string | null;
+  grupo?:       { idGrupo?: number; nombre: string };
+  miniaturaUrl: string | null;
 }
 
 /** Forma exacta que devuelve VideoDTO del backend. */
 interface VideoRaw {
-  idVideo:     number;
-  titulo:      string;
-  duracion:    number | null;
-  fechaSubida: string | null;
-  idGrupo:     number | null;
-  grupoNombre: string | null;
+  idVideo:      number;
+  titulo:       string;
+  duracion:     number | null;
+  fechaSubida:  string | null;
+  idGrupo:      number | null;
+  grupoNombre:  string | null;
+  miniaturaUrl: string | null;
 }
 
 function mapVideo(raw: VideoRaw): Video {
   return {
-    idVideo:     raw.idVideo,
-    titulo:      raw.titulo,
-    duracion:    raw.duracion ?? null,
-    fechaSubida: raw.fechaSubida ?? null,
-    grupo:       (raw.idGrupo != null)
-                   ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
-                   : undefined,
+    idVideo:      raw.idVideo,
+    titulo:       raw.titulo,
+    duracion:     raw.duracion ?? null,
+    fechaSubida:  raw.fechaSubida ?? null,
+    grupo:        (raw.idGrupo != null)
+                    ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
+                    : undefined,
+    miniaturaUrl: raw.miniaturaUrl ?? null,
   };
 }
 
@@ -103,11 +107,12 @@ export class VideoService {
 
   // ── Escrituras (invalidan la caché al completar) ────────────────────────────
 
-  subirVideo(archivo: File, titulo: string, idGrupo?: number | null): Observable<HttpEvent<VideoUploadResponse>> {
+  subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
     formData.append('file',   archivo);
     formData.append('titulo', titulo);
-    if (idGrupo != null) formData.append('idGrupo', idGrupo.toString());
+    if (idGrupo     != null) formData.append('idGrupo',      idGrupo.toString());
+    if (miniaturaUrl != null) formData.append('miniaturaUrl', miniaturaUrl);
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
       reportProgress: true,
     });

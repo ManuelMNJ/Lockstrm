@@ -27,6 +27,8 @@ export class VideosComponent implements OnInit {
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
   idGrupoSeleccionado: number | null = null;
+  miniaturaDataUrl: string | null = null;
+  private objectUrl: string | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
   progreso = 0;
@@ -126,10 +128,51 @@ export class VideosComponent implements OnInit {
     }
 
     this.archivoSeleccionado = file;
+    this.miniaturaDataUrl    = null;
     if (this.estadoSubida === 'error') {
       this.estadoSubida = 'idle';
       this.mensajeError = '';
     }
+
+    if (file) this.generarMiniatura(file);
+  }
+
+  private generarMiniatura(file: File): void {
+    if (this.objectUrl) {
+      URL.revokeObjectURL(this.objectUrl);
+    }
+    this.objectUrl = URL.createObjectURL(file);
+
+    const video = document.createElement('video');
+    video.preload     = 'metadata';
+    video.muted       = true;
+    video.playsInline = true;
+
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(2, video.duration * 0.1);
+    };
+
+    video.onseeked = () => {
+      const canvas    = document.createElement('canvas');
+      canvas.width    = 320;
+      canvas.height   = 180;
+      const ctx       = canvas.getContext('2d')!;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      this.miniaturaDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      video.src = '';
+      URL.revokeObjectURL(this.objectUrl!);
+      this.objectUrl = null;
+      this.cdr.markForCheck();
+    };
+
+    video.onerror = () => {
+      if (this.objectUrl) {
+        URL.revokeObjectURL(this.objectUrl);
+        this.objectUrl = null;
+      }
+    };
+
+    video.src = this.objectUrl;
   }
 
   subir(): void {
@@ -154,7 +197,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -179,11 +222,12 @@ export class VideosComponent implements OnInit {
             : null;
 
           const nuevoVideo: Video = {
-            idVideo:     res.id_video,
-            titulo:      res.titulo,
-            duracion:    res.duracion ?? null,
-            fechaSubida: new Date().toISOString(),
-            grupo:       grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
+            idVideo:      res.id_video,
+            titulo:       res.titulo,
+            duracion:     res.duracion ?? null,
+            fechaSubida:  new Date().toISOString(),
+            grupo:        grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
+            miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
           };
 
           this.videos              = [nuevoVideo, ...this.videos];
@@ -193,6 +237,7 @@ export class VideosComponent implements OnInit {
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
           this.idGrupoSeleccionado = null;
+          this.miniaturaDataUrl    = null;
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 

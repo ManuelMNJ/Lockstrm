@@ -36,7 +36,8 @@ public class VideoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo,
-            @RequestParam(value = "idGrupo", required = false) Long idGrupo
+            @RequestParam(value = "idGrupo", required = false) Long idGrupo,
+            @RequestParam(value = "miniaturaUrl", required = false) String miniaturaUrl
     ) {
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("video/")) {
@@ -48,13 +49,14 @@ public class VideoController {
 
         Map<String, Object> respuesta = new HashMap<>();
         try {
-            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo);
-            respuesta.put("status",   "exito");
-            respuesta.put("mensaje",  "Video subido correctamente");
-            respuesta.put("id_video", guardado.getIdVideo());
-            respuesta.put("titulo",   guardado.getTitulo());
-            respuesta.put("url",      guardado.getUrlCloudSecure());
-            respuesta.put("duracion", guardado.getDuracion());
+            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl);
+            respuesta.put("status",       "exito");
+            respuesta.put("mensaje",      "Video subido correctamente");
+            respuesta.put("id_video",     guardado.getIdVideo());
+            respuesta.put("titulo",       guardado.getTitulo());
+            respuesta.put("url",          guardado.getUrlCloudSecure());
+            respuesta.put("duracion",     guardado.getDuracion());
+            respuesta.put("miniaturaUrl", guardado.getMiniaturaUrl());
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
             log.error("Error de I/O al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
