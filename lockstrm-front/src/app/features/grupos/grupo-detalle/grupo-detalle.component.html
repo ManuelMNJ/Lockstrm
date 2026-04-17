@@ -4,302 +4,265 @@
   <div class="dash-header">
     <div class="dash-header__left">
       <button class="btn-back" (click)="volver()" aria-label="Volver a grupos">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true">
-          <polyline points="15 18 9 12 15 6" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
         </svg>
         Grupos
       </button>
     </div>
 
-    @if (cargando) {
-    <div class="dash-header__center sk-hdr-center">
-      <div class="sk-item sk-avatar-block"></div>
-      <div class="sk-hdr-meta">
-        <div class="sk-item sk-name-block"></div>
-        <div class="sk-row-chips">
-          <div class="sk-item sk-chip-block"></div>
-          <div class="sk-item sk-chip-block"></div>
-          <div class="sk-item sk-chip-block"></div>
-        </div>
-      </div>
-    </div>
-    <div class="dash-header__right">
-      <div class="sk-item sk-btn-block"></div>
-    </div>
-    } @else if (grupo) {
-    <div class="dash-header__center">
-      <div class="grupo-avatar" aria-hidden="true">{{ grupo.nombre | initial }}</div>
-      <div class="grupo-meta">
-        <div class="grupo-meta__name" *ngIf="!editandoNombre">
-          <h1 class="group-name">{{ grupo.nombre }}</h1>
-          @if (grupo.esCreador) {
-          <button class="btn-icon-action" (click)="activarEdicion()" title="Editar nombre"
-            aria-label="Editar nombre del grupo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" aria-hidden="true">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </button>
+    @if (!cargando && grupo) {
+      <div class="dash-header__center">
+        <div class="grupo-avatar" aria-hidden="true">{{ grupo.nombre | initial }}</div>
+        <div class="grupo-meta">
+          <div class="grupo-meta__name" *ngIf="!editandoNombre">
+            <h1 class="group-name">{{ grupo.nombre }}</h1>
+            @if (esCreador) {
+              <button class="btn-icon-action" (click)="activarEdicion()" title="Editar nombre" aria-label="Editar nombre del grupo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            }
+          </div>
+          @if (esCreador) {
+            <div class="nombre-edit-row" *ngIf="editandoNombre">
+              <input class="form-input nombre-input" type="text" [(ngModel)]="nombreEditado"
+                     placeholder="Nombre del grupo" autocomplete="off"
+                     (keydown.enter)="guardarNombre()" (keydown.escape)="cancelarEdicion()">
+              <button class="btn-save" (click)="guardarNombre()"
+                      [disabled]="estadoRenombrar === 'loading' || !nombreEditado.trim()">
+                {{ estadoRenombrar === 'loading' ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+            </div>
+            <p *ngIf="estadoRenombrar === 'error'" class="feedback-msg feedback-msg--error" role="alert">
+              {{ errorRenombrar }}
+            </p>
           }
-        </div>
-        @if (grupo.esCreador) {
-        <div class="nombre-edit-row" *ngIf="editandoNombre">
-          <input class="form-input nombre-input" type="text" [(ngModel)]="nombreEditado" placeholder="Nombre del grupo"
-            autocomplete="off" (keydown.enter)="guardarNombre()" (keydown.escape)="cancelarEdicion()">
-          <button class="btn-save" (click)="guardarNombre()"
-            [disabled]="estadoRenombrar === 'loading' || !nombreEditado.trim()">
-            {{ estadoRenombrar === 'loading' ? 'Guardando…' : 'Guardar' }}
-          </button>
-          <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
-        </div>
-        <p *ngIf="estadoRenombrar === 'error'" class="feedback-msg feedback-msg--error" role="alert">
-          {{ errorRenombrar }}
-        </p>
-        }
-        <div class="grupo-chips">
-          <span class="chip chip--role">{{ grupo.esCreador ? 'Creador' : 'Miembro' }}</span>
-          <span class="chip chip--count">{{ miembros.length }} {{ miembros.length === 1 ? 'miembro' : 'miembros'
-            }}</span>
-          <span class="chip chip--videos">{{ videosGrupo.length }} {{ videosGrupo.length === 1 ? 'vídeo' : 'vídeos'
-            }}</span>
+          <div class="grupo-chips">
+            <span class="chip chip--role">{{ esCreador ? 'Creador' : 'Miembro' }}</span>
+            <span class="chip chip--count">{{ miembros.length }} {{ miembros.length === 1 ? 'miembro' : 'miembros' }}</span>
+            <span class="chip chip--videos">{{ videosGrupo.length }} {{ videosGrupo.length === 1 ? 'vídeo' : 'vídeos' }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="dash-header__right">
-      @if (grupo.esCreador) {
-      <button class="btn-danger" (click)="eliminarGrupo()" [disabled]="estadoEliminarGrupo === 'loading'">
-        {{ estadoEliminarGrupo === 'loading' ? 'Eliminando…' : 'Eliminar grupo' }}
-      </button>
-      @if (errorEliminarGrupo) {
-        <p class="feedback-msg feedback-msg--error" role="alert" style="margin-top:6px;font-size:11px">{{ errorEliminarGrupo }}</p>
-      }
-      }
-    </div>
+      <div class="dash-header__right">
+        @if (esCreador) {
+          <button class="btn-danger" (click)="solicitarEliminarGrupo()"
+                  [disabled]="estadoEliminarGrupo === 'loading'">
+            Eliminar grupo
+          </button>
+        }
+      </div>
     }
   </div>
 
   <!-- LOADING / ERROR -->
   @if (cargando) {
-  <div class="sk-detalle-grid" aria-label="Cargando detalles del grupo…" aria-busy="true">
-    <div class="sk-card">
-      <div class="sk-card-hdr">
-        <div class="sk-card-title-row">
-          <div class="sk-item sk-card-icon"></div>
-          <div class="sk-item sk-card-title-block"></div>
-        </div>
-        <div class="sk-item sk-badge-block"></div>
-      </div>
-      <div class="sk-card-body">
-        @for (i of [1,2,3,4]; track i) {
-          <div class="sk-list-row">
-            <div class="sk-item sk-list-avatar"></div>
-            <div class="sk-list-info">
-              <div class="sk-item sk-list-name"></div>
-              <div class="sk-item sk-list-sub"></div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-    <div class="sk-card">
-      <div class="sk-card-hdr">
-        <div class="sk-card-title-row">
-          <div class="sk-item sk-card-icon"></div>
-          <div class="sk-item sk-card-title-block"></div>
-        </div>
-        <div class="sk-item sk-badge-block"></div>
-      </div>
-      <div class="sk-card-body">
-        @for (i of [1,2,3,4]; track i) {
-          <div class="sk-list-row">
-            <div class="sk-item sk-list-thumb"></div>
-            <div class="sk-list-info">
-              <div class="sk-item sk-list-name"></div>
-              <div class="sk-item sk-list-sub"></div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  </div>
+    <p class="estado-carga">Cargando...</p>
   } @else if (errorDatos) {
-  <div class="error-box">{{ errorDatos }}</div>
+    <div class="error-box">{{ errorDatos }}</div>
   }
 
   <!-- MAIN CONTENT -->
   @if (!cargando && grupo) {
-  <div class="dash-grid">
+    <div class="dash-grid">
 
-    <!-- Miembros -->
-    <section class="dash-card" aria-labelledby="members-card-title">
-      <div class="dash-card__header">
-        <div class="dash-card__title-row">
-          <div class="dash-card__icon dash-card__icon--members" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+      <!-- Miembros -->
+      <section class="dash-card" aria-labelledby="members-card-title">
+        <div class="dash-card__header">
+          <div class="dash-card__title-row">
+            <div class="dash-card__icon dash-card__icon--members" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h2 class="dash-card__title" id="members-card-title">Miembros</h2>
           </div>
-          <h2 class="dash-card__title" id="members-card-title">Miembros</h2>
+          <span class="count-badge">{{ miembros.length }}</span>
         </div>
-        <span class="count-badge">{{ miembros.length }}</span>
-      </div>
 
-      @if (grupo.esCreador) {
-      <div class="add-member-form">
-        <p class="form-label">Añadir miembro por email</p>
-        <div class="add-row">
-          <input class="form-input add-input" type="email" [(ngModel)]="emailNuevoMiembro"
-            placeholder="correo@ejemplo.com" autocomplete="off" (keydown.enter)="aniadirMiembro()">
-          <button class="btn-primary" (click)="aniadirMiembro()"
-            [disabled]="estadoAnadir === 'loading' || !emailNuevoMiembro.trim()">
-            {{ estadoAnadir === 'loading' ? 'Añadiendo…' : 'Añadir Miembro' }}
-          </button>
-        </div>
-        <p *ngIf="estadoAnadir === 'success'" class="feedback-msg" role="status">
-          Miembro añadido correctamente.
-        </p>
-        <p *ngIf="estadoAnadir === 'error'" class="feedback-msg feedback-msg--error" role="alert">
-          {{ errorAnadir }}
-        </p>
-      </div>
-      <div class="card-divider"></div>
-      }
-
-      <p *ngIf="errorEliminarMiembro" class="feedback-msg feedback-msg--error" role="alert">
-        {{ errorEliminarMiembro }}
-      </p>
-
-      <div *ngIf="miembros.length === 0" class="empty-state">
-        <p>Este grupo aún no tiene miembros.</p>
-      </div>
-
-      <ul class="members-list" *ngIf="miembros.length > 0" role="list">
-        <li *ngFor="let m of miembros" class="member-item" role="listitem">
-          <div class="member-avatar" aria-hidden="true">
-            {{ m.username.charAt(0).toUpperCase() }}
+        @if (esCreador) {
+          <div class="add-member-form">
+            <p class="form-label">Añadir miembro por email</p>
+            <div class="add-row">
+              <input class="form-input add-input" type="email"
+                     [(ngModel)]="emailNuevoMiembro"
+                     placeholder="correo@ejemplo.com"
+                     autocomplete="off"
+                     (keydown.enter)="aniadirMiembro()">
+              <button class="btn-primary" (click)="aniadirMiembro()"
+                      [disabled]="estadoAnadir === 'loading' || !emailNuevoMiembro.trim()">
+                {{ estadoAnadir === 'loading' ? 'Añadiendo…' : 'Añadir Miembro' }}
+              </button>
+            </div>
+            <p *ngIf="estadoAnadir === 'success'" class="feedback-msg" role="status">
+              Miembro añadido correctamente.
+            </p>
+            <p *ngIf="estadoAnadir === 'error'" class="feedback-msg feedback-msg--error" role="alert">
+              {{ errorAnadir }}
+            </p>
           </div>
-          <div class="member-info">
-            <span class="member-name">{{ m.username }}</span>
-            <span class="member-email">{{ m.email }}</span>
-          </div>
-          @if (grupo.esCreador) {
-          <button class="btn-remove" (click)="eliminarMiembro(m)" [disabled]="eliminandoMiembros.has(m.idUsuario)"
-            [attr.aria-label]="'Eliminar ' + m.username + ' del grupo'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-              stroke-linejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-          }
-        </li>
-      </ul>
-    </section>
-
-    <!-- Vídeos del grupo -->
-    <section class="dash-card" aria-labelledby="videos-card-title">
-      <div class="dash-card__header">
-        <div class="dash-card__title-row">
-          <div class="dash-card__icon dash-card__icon--videos" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <polygon points="23 7 16 12 23 17 23 7" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-          </div>
-          <h2 class="dash-card__title" id="videos-card-title">Vídeos del grupo</h2>
-        </div>
-        <span class="count-badge count-badge--videos">{{ videosGrupo.length }}</span>
-      </div>
-
-      @if (grupo.esCreador) {
-      <div class="add-member-form">
-        @if (!mostrarSelectorVideo) {
-        <button class="btn-secondary" (click)="abrirSelectorVideo()">Añadir vídeo existente</button>
-        } @else {
-        <p class="form-label">Selecciona un vídeo</p>
-        <div class="add-row">
-          <select class="form-input add-input" [(ngModel)]="videoSeleccionadoId">
-            <option [ngValue]="null" disabled>-- Elige un vídeo --</option>
-            <option *ngFor="let v of videosDisponibles" [ngValue]="v.idVideo">{{ v.titulo }}</option>
-          </select>
-          <button class="btn-primary" (click)="confirmarAniadirVideo()"
-            [disabled]="estadoAniadirVideo === 'loading' || !videoSeleccionadoId">
-            {{ estadoAniadirVideo === 'loading' ? 'Añadiendo…' : 'Confirmar' }}
-          </button>
-          <button class="btn-secondary" (click)="cerrarSelectorVideo()">Cancelar</button>
-        </div>
-        <p *ngIf="videosDisponibles.length === 0" class="feedback-msg" role="status">
-          No tienes vídeos disponibles para añadir a este grupo.
-        </p>
-        <p *ngIf="estadoAniadirVideo === 'error'" class="feedback-msg feedback-msg--error" role="alert">
-          {{ errorAniadirVideo }}
-        </p>
+          <div class="card-divider"></div>
         }
-      </div>
-      <div class="card-divider"></div>
-      }
 
-      <div *ngIf="videosGrupo.length === 0" class="empty-state">
-        <p>No hay vídeos asignados a este grupo todavía.</p>
-      </div>
+        <p *ngIf="errorEliminarMiembro" class="feedback-msg feedback-msg--error" role="alert">
+          {{ errorEliminarMiembro }}
+        </p>
 
-      <div class="videos-list" *ngIf="videosGrupo.length > 0" role="list">
-        <app-video-card
-          *ngFor="let v of videosGrupo; let i = index"
-          [video]="v"
-          [index]="i + 1"
-          [canRemove]="grupo.esCreador"
-          (cardClicked)="verVideo(v.idVideo)"
-          (removeClicked)="quitarVideo(v)">
-        </app-video-card>
-      </div>
-    </section>
+        <div *ngIf="miembros.length === 0" class="empty-state">
+          <p>Este grupo aún no tiene miembros.</p>
+        </div>
 
-  </div>
+        <ul class="members-list" *ngIf="miembros.length > 0" role="list">
+          <li *ngFor="let m of miembros" class="member-item" role="listitem">
+            <div class="member-avatar" aria-hidden="true">
+              {{ m.username.charAt(0).toUpperCase() }}
+            </div>
+            <div class="member-info">
+              <span class="member-name">{{ m.username }}</span>
+              <span class="member-email">{{ m.email }}</span>
+            </div>
+            @if (esCreador) {
+              <button class="btn-remove"
+                      (click)="eliminarMiembro(m)"
+                      [disabled]="eliminandoMiembros.has(m.idUsuario)"
+                      [attr.aria-label]="'Eliminar ' + m.username + ' del grupo'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            }
+          </li>
+        </ul>
+      </section>
+
+      <!-- Vídeos del grupo -->
+      <section class="dash-card" aria-labelledby="videos-card-title">
+        <div class="dash-card__header">
+          <div class="dash-card__title-row">
+            <div class="dash-card__icon dash-card__icon--videos" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+            <h2 class="dash-card__title" id="videos-card-title">Vídeos del grupo</h2>
+          </div>
+          <span class="count-badge count-badge--videos">{{ videosGrupo.length }}</span>
+        </div>
+
+        @if (esCreador) {
+          <div class="add-member-form">
+            @if (!mostrarSelectorVideo) {
+              <button class="btn-secondary" (click)="abrirSelectorVideo()">Añadir vídeo existente</button>
+            } @else {
+              <p class="form-label">Selecciona un vídeo</p>
+              <div class="add-row">
+                <select class="form-input add-input" [(ngModel)]="videoSeleccionadoId">
+                  <option [ngValue]="null" disabled>-- Elige un vídeo --</option>
+                  <option *ngFor="let v of videosDisponibles" [ngValue]="v.idVideo">{{ v.titulo }}</option>
+                </select>
+                <button class="btn-primary"
+                        (click)="confirmarAniadirVideo()"
+                        [disabled]="estadoAniadirVideo === 'loading' || !videoSeleccionadoId">
+                  {{ estadoAniadirVideo === 'loading' ? 'Añadiendo…' : 'Confirmar' }}
+                </button>
+                <button class="btn-secondary" (click)="cerrarSelectorVideo()">Cancelar</button>
+              </div>
+              <p *ngIf="videosDisponibles.length === 0" class="feedback-msg" role="status">
+                No tienes vídeos disponibles para añadir a este grupo.
+              </p>
+              <p *ngIf="estadoAniadirVideo === 'error'" class="feedback-msg feedback-msg--error" role="alert">
+                {{ errorAniadirVideo }}
+              </p>
+            }
+          </div>
+          <div class="card-divider"></div>
+        }
+
+        <div *ngIf="videosGrupo.length === 0" class="empty-state">
+          <p>No hay vídeos asignados a este grupo todavía.</p>
+        </div>
+
+        <ul class="videos-list" *ngIf="videosGrupo.length > 0" role="list">
+          <li *ngFor="let v of videosGrupo; let i = index" class="video-item" role="listitem">
+            <div class="video-thumb" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <div class="video-info">
+              <span class="video-title">{{ v.titulo }}</span>
+              <span class="video-meta">
+                {{ v.duracion != null ? (v.duracion | number:'1.0-0') + ' s' : 'Sin duración' }}
+              </span>
+            </div>
+            <div class="video-index" aria-hidden="true">#{{ i + 1 }}</div>
+            @if (esCreador) {
+              <button class="btn-remove"
+                      (click)="confirm('¿Quitar este vídeo del grupo?') && quitarVideo(v.idVideo)"
+                      [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/>
+                  <path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            }
+          </li>
+        </ul>
+      </section>
+
+    </div>
   }
 
 </div>
 
-<!-- MODAL — Reproductor de vídeo -->
-@if (videoReproduciendose) {
+<!-- MODAL — Confirmar eliminación de grupo -->
 <div class="modal-overlay"
-     (click)="cerrarReproductor()"
-     role="dialog"
+     *ngIf="confirmandoEliminarGrupo"
+     (click)="cancelarEliminarGrupo()"
+     role="alertdialog"
      aria-modal="true"
-     [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+     aria-labelledby="del-grupo-title"
+     aria-describedby="del-grupo-desc">
 
-  <div class="modal-container" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
-      <button class="modal-close"
-              (click)="cerrarReproductor()"
-              aria-label="Cerrar reproductor">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
+  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+    <div class="confirm-body">
+      <h3 class="confirm-title" id="del-grupo-title">Eliminar grupo</h3>
+      <p class="confirm-group-name">{{ grupo?.nombre }}</p>
+      <p class="confirm-desc" id="del-grupo-desc">
+        Se eliminarán todos los permisos de acceso asociados a este grupo.
+        Los vídeos <strong>no se borran</strong>, pero dejarán de ser accesibles para los miembros.
+        <strong>Esta acción no se puede deshacer.</strong>
+      </p>
+      <p *ngIf="estadoEliminarGrupo === 'error'" class="feedback-msg feedback-msg--error" role="alert">
+        {{ errorEliminarGrupo }}
+      </p>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" (click)="cancelarEliminarGrupo()">Cancelar</button>
+      <button class="btn-confirm-delete" (click)="confirmarEliminarGrupo()"
+              [disabled]="estadoEliminarGrupo === 'loading'">
+        {{ estadoEliminarGrupo === 'loading' ? 'Eliminando…' : 'Eliminar grupo' }}
       </button>
     </div>
-
-    <div class="modal-player">
-      <app-video-player
-        [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
-        (heartbeat)="onHeartbeat($event)">
-      </app-video-player>
-    </div>
-
   </div>
 </div>
-}
-

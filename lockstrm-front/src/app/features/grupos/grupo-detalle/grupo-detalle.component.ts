@@ -9,14 +9,11 @@ import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.servi
 import { AuthService } from '../../../core/services/auth.service';
 import { Video, VideoService } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
-import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
-import { ModalService } from '../../../shared/services/modal.service';
-import { VideoCardComponent } from '../../../shared/components/video-card/video-card.component';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialPipe, VideoPlayerComponent, VideoCardComponent],
+  imports: [CommonModule, FormsModule, InitialPipe],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
 })
@@ -46,11 +43,9 @@ export class GrupoDetalleComponent implements OnInit {
   errorEliminarMiembro = '';
 
   // Eliminar grupo
+  confirmandoEliminarGrupo = false;
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
-
-  // Reproducir vídeo
-  videoReproduciendose: Video | null = null;
 
   // Añadir vídeo existente
   mostrarSelectorVideo = false;
@@ -60,20 +55,20 @@ export class GrupoDetalleComponent implements OnInit {
   errorAniadirVideo = '';
 
   get esCreador(): boolean {
-    return !!this.grupo?.esCreador;
+    const userId = this.authService.currentUser()?.id;
+    return !!userId && this.grupo?.idCreador === userId;
   }
 
   private idGrupo!: number;
   private destroyRef = inject(DestroyRef);
 
   constructor(
-    private route:        ActivatedRoute,
-    private router:       Router,
+    private route: ActivatedRoute,
+    private router: Router,
     private grupoService: GrupoService,
-    private authService:  AuthService,
-    protected videoService: VideoService,
-    private cdr:          ChangeDetectorRef,
-    private modalService: ModalService,
+    private authService: AuthService,
+    private videoService: VideoService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -123,20 +118,13 @@ export class GrupoDetalleComponent implements OnInit {
     this.errorAnadir  = '';
 
     this.grupoService.aniadirMiembro(this.idGrupo, email)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => {
-          this.estadoAnadir = this.estadoAnadir === 'loading' ? 'idle' : this.estadoAnadir;
-          this.cdr.detectChanges();
-        }),
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (miembro) => {
-          this.miembros.push(miembro);
+          this.miembros = [miembro, ...this.miembros];
           this.emailNuevoMiembro = '';
           this.estadoAnadir = 'success';
-          this.cdr.detectChanges();
-          setTimeout(() => { this.estadoAnadir = 'idle'; this.cdr.detectChanges(); }, 3000);
+          setTimeout(() => { this.estadoAnadir = 'idle'; }, 3000);
         },
         error: (err) => {
           this.estadoAnadir = 'error';
@@ -204,26 +192,26 @@ export class GrupoDetalleComponent implements OnInit {
 
   // ── Eliminar grupo ────────────────────────────────────────────────────────
 
-  async eliminarGrupo(): Promise<void> {
-    const ok = await this.modalService.confirm(
-      'Eliminar grupo',
-      `¿Eliminar "${this.grupo!.nombre}"? Se eliminarán todos los permisos asociados. Los vídeos no se borran, pero dejarán de ser accesibles para los miembros. Esta acción no se puede deshacer.`,
-      'Eliminar grupo',
-    );
-    if (!ok) return;
+  solicitarEliminarGrupo(): void {
+    this.confirmandoEliminarGrupo = true;
+    this.estadoEliminarGrupo      = 'idle';
+    this.errorEliminarGrupo       = '';
+  }
 
+  cancelarEliminarGrupo(): void {
+    this.confirmandoEliminarGrupo = false;
+  }
+
+  confirmarEliminarGrupo(): void {
     this.estadoEliminarGrupo = 'loading';
-    this.errorEliminarGrupo  = '';
-    this.cdr.detectChanges();
 
     this.grupoService.eliminarGrupo(this.idGrupo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next:  () => this.router.navigate(['/mi-espacio/grupos']),
+        next: () => this.router.navigate(['/mi-espacio/grupos']),
         error: (err) => {
           this.estadoEliminarGrupo = 'error';
           this.errorEliminarGrupo  = err?.error?.error || 'No se pudo eliminar el grupo.';
-          this.cdr.detectChanges();
         },
       });
   }
@@ -282,45 +270,18 @@ export class GrupoDetalleComponent implements OnInit {
 
   // ── Quitar vídeo del grupo ────────────────────────────────────────────────
 
-  async quitarVideo(video: Video): Promise<void> {
-    const ok = await this.modalService.confirm(
-      'Quitar vídeo del grupo',
-      `El vídeo "${video.titulo}" dejará de estar asociado a este grupo. El vídeo no se eliminará.`,
-      'Quitar vídeo',
-    );
-    if (!ok) return;
+  quitarVideo(idVideo: number): void {
+    const video = this.videosGrupo.find(v => v.idVideo === idVideo);
+    if (!video) return;
 
-    this.videoService.editarVideo(video.idVideo, video.titulo, null)
+    this.videoService.editarVideo(idVideo, video.titulo, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.videosGrupo = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
+          this.videosGrupo = this.videosGrupo.filter(v => v.idVideo !== idVideo);
           this.cdr.detectChanges();
         },
       });
-  }
-
-  // ── Reproducir vídeo ─────────────────────────────────────────────────────
-
-  verVideo(idVideo: number): void {
-    const video = this.videosGrupo.find(v => v.idVideo === idVideo);
-    if (video) {
-      this.videoReproduciendose = video;
-      this.cdr.detectChanges();
-    }
-  }
-
-  cerrarReproductor(): void {
-    this.videoReproduciendose = null;
-    this.cdr.detectChanges();
-  }
-
-  onHeartbeat(currentTime: number): void {
-    const idVideo = this.videoReproduciendose?.idVideo;
-    if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, currentTime)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ error: (err) => console.warn('[Heartbeat] Error:', err?.status) });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
