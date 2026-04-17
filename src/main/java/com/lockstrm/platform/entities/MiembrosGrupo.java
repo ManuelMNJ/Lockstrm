@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+// CRITICAL: DO NOT REMOVE @JoinColumn ANNOTATIONS DURING REFACTORING. DB SCHEMA DEPENDS ON EXACT NAMING.
 @Entity
 @Table(name = "miembros_grupo")
 @Data
