@@ -2,9 +2,11 @@ package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.HeartbeatRequest;
 import com.lockstrm.platform.dto.VideoDTO;
+import com.lockstrm.platform.dto.VideoVistaEstadisticaDto;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
+import com.lockstrm.platform.services.VideoVistaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +32,15 @@ public class VideoController {
 
     private final VideoService videoService;
     private final LogService   logService;
+    private final VideoVistaService videoVistaService;
 
     @PostMapping("/subir")
     public ResponseEntity<Map<String, Object>> subirVideo(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo,
-            @RequestParam(value = "idGrupo", required = false) Long idGrupo
+            @RequestParam(value = "idGrupo", required = false) Long idGrupo,
+            @RequestParam(value = "miniaturaUrl", required = false) String miniaturaUrl
     ) {
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("video/")) {
@@ -48,13 +52,14 @@ public class VideoController {
 
         Map<String, Object> respuesta = new HashMap<>();
         try {
-            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo);
-            respuesta.put("status",   "exito");
-            respuesta.put("mensaje",  "Video subido correctamente");
-            respuesta.put("id_video", guardado.getIdVideo());
-            respuesta.put("titulo",   guardado.getTitulo());
-            respuesta.put("url",      guardado.getUrlCloudSecure());
-            respuesta.put("duracion", guardado.getDuracion());
+            Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl);
+            respuesta.put("status",       "exito");
+            respuesta.put("mensaje",      "Video subido correctamente");
+            respuesta.put("id_video",     guardado.getIdVideo());
+            respuesta.put("titulo",       guardado.getTitulo());
+            respuesta.put("url",          guardado.getUrlCloudSecure());
+            respuesta.put("duracion",     guardado.getDuracion());
+            respuesta.put("miniaturaUrl", guardado.getMiniaturaUrl());
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
             log.error("Error de I/O al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
@@ -141,6 +146,36 @@ public class VideoController {
         try {
             VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(), titulo, idGrupo);
             return ResponseEntity.ok(dto);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            HttpStatus status = msg.contains("no encontrado") ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            return ResponseEntity.status(status).body(Map.of("error", msg));
+        }
+    }
+
+    @PostMapping("/{id}/ver")
+    public ResponseEntity<Void> registrarVista(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            videoVistaService.incrementarVista(id, userDetails.getUsername());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            HttpStatus status = msg.contains("no encontrado") ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            return ResponseEntity.status(status).build();
+        }
+    }
+
+    @GetMapping("/{id}/estadisticas")
+    public ResponseEntity<?> obtenerEstadisticas(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            List<VideoVistaEstadisticaDto> stats = videoVistaService.obtenerEstadisticas(id, userDetails.getUsername());
+            return ResponseEntity.ok(stats);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {

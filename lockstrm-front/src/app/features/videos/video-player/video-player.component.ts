@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent, interval, timer } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { VideoService } from '../../../core/services/video.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 
 @Component({
@@ -32,6 +33,8 @@ export class VideoPlayerComponent implements OnInit {
   /** Streaming URL already containing the JWT token as a query param. */
   @Input({ required: true }) videoUrl!: string;
 
+  @Input() idVideo?: number;
+
   /**
    * Emits the video's currentTime (seconds) every 30 s while playing.
    * The parent component is responsible for sending this to the backend.
@@ -45,8 +48,9 @@ export class VideoPlayerComponent implements OnInit {
 
   // ── DI ──────────────────────────────────────────────────────────────────────
 
-  private readonly authService = inject(AuthService);
-  private readonly destroyRef  = inject(DestroyRef);
+  private readonly authService  = inject(AuthService);
+  private readonly videoService = inject(VideoService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   // ── State signals ───────────────────────────────────────────────────────────
 
@@ -116,6 +120,11 @@ export class VideoPlayerComponent implements OnInit {
     this.initHeartbeat();
     this.initWatermark();
     this.initFullscreenListener();
+    if (this.idVideo != null) {
+      this.videoService.registrarVista(this.idVideo)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ error: () => {} });
+    }
   }
 
   // ── Private init helpers ────────────────────────────────────────────────────

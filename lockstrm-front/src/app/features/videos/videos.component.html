@@ -47,6 +47,12 @@
         </div>
 
       </div>
+      @if (miniaturaDataUrl) {
+        <div class="thumbnail-preview" aria-label="Vista previa de miniatura">
+          <img [src]="miniaturaDataUrl" alt="Miniatura generada" class="thumbnail-preview__img">
+        </div>
+      }
+
       <div class="upload-actions">
         <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -141,13 +147,17 @@
           @for (v of paginator.paginatedItems; track v.idVideo) {
             <tr class="table-row">
               <td class="col-thumb">
-                <div class="video-thumb" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="23 7 16 12 23 17 23 7"/>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                  </svg>
-                </div>
+                @if (v.miniaturaUrl) {
+                  <img [src]="v.miniaturaUrl" [alt]="'Miniatura de ' + v.titulo" class="video-thumb-img">
+                } @else {
+                  <div class="video-thumb" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7"/>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                  </div>
+                }
               </td>
               <td class="col-title">
                 <span class="video-title">{{ v.titulo }}</span>
@@ -302,6 +312,7 @@
       <div class="modal-player">
         <app-video-player
           [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
+          [idVideo]="videoReproduciendose!.idVideo"
           (heartbeat)="onHeartbeat($event)">
         </app-video-player>
       </div>

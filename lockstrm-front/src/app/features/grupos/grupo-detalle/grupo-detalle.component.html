@@ -80,12 +80,12 @@
 
   <div *ngIf="!cargando && grupo" class="detalle-body">
 
-    <div class="detalle-columns">
+    <div class="detalle-columns" [class.detalle-columns--guest]="!esCreador">
 
       <!-- ============================================================
         COLUMNA IZQUIERDA — MIEMBROS
         ============================================================ -->
-      <div class="detalle-col">
+      <div class="detalle-col" [class.detalle-col--sidebar]="!esCreador">
 
         <!-- Añadir miembro — solo creador -->
         @if (esCreador) {
@@ -166,7 +166,7 @@
       <!-- ============================================================
         COLUMNA DERECHA — VÍDEOS DEL GRUPO
         ============================================================ -->
-      <div class="detalle-col">
+      <div class="detalle-col" [class.detalle-col--main]="!esCreador">
 
         <section class="section-card" aria-labelledby="videos-title">
           <h3 class="section-title" id="videos-title">
@@ -211,34 +211,52 @@
             <p>Este grupo aún no tiene vídeos.</p>
           </div>
 
-          <ul class="members-list" *ngIf="videosGrupo.length > 0" role="list">
-            <li *ngFor="let v of videosGrupo" class="member-item" role="listitem"
-                (click)="verVideo(v.idVideo)" style="cursor: pointer">
-              <div class="video-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="23 7 16 12 23 17 23 7"/>
-                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                </svg>
+          <div class="videos-grid" *ngIf="videosGrupo.length > 0" role="list">
+            <div *ngFor="let v of videosGrupo" class="video-card" role="listitem"
+                 (click)="verVideo(v)">
+              <div class="video-card-thumb">
+                @if (v.miniaturaUrl) {
+                  <img [src]="v.miniaturaUrl"
+                       [alt]="'Miniatura de ' + v.titulo"
+                       class="video-card-img">
+                } @else {
+                  <div class="video-card-placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7"/>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                  </div>
+                }
+                @if (esCreador) {
+                  <button class="btn-remove video-card-remove"
+                          (click)="$event.stopPropagation(); quitarVideoDelGrupo(v)"
+                          [disabled]="quitandoVideos.has(v.idVideo)"
+                          [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                  <button class="btn-stats video-card-stats"
+                          (click)="$event.stopPropagation(); abrirStats(v)"
+                          [attr.aria-label]="'Estadísticas de ' + v.titulo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="20" x2="18" y2="10"/>
+                      <line x1="12" y1="20" x2="12" y2="4"/>
+                      <line x1="6"  y1="20" x2="6"  y2="14"/>
+                    </svg>
+                  </button>
+                }
               </div>
-              <div class="member-info">
-                <span class="member-name">{{ v.titulo }}</span>
-                <span class="member-email">{{ v.duracion | videoDuration }}</span>
+              <div class="video-card-footer">
+                <span class="video-card-title">{{ v.titulo }}</span>
+                <span class="video-card-duration">{{ v.duracion | videoDuration }}</span>
               </div>
-              @if (esCreador) {
-                <button class="btn-remove"
-                        (click)="$event.stopPropagation(); quitarVideoDelGrupo(v)"
-                        [disabled]="quitandoVideos.has(v.idVideo)"
-                        [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              }
-            </li>
-          </ul>
+            </div>
+          </div>
         </section>
 
       </div><!-- /detalle-col videos -->
@@ -247,6 +265,120 @@
 
   </div>
 
+</div>
+
+<!-- ================================================================
+  MODAL — Reproductor de vídeo
+  ================================================================ -->
+<div class="modal-overlay"
+     *ngIf="videoReproduciendose"
+     (click)="cerrarReproductor()"
+     role="dialog"
+     aria-modal="true"
+     [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+      <button class="modal-close"
+              (click)="cerrarReproductor()"
+              aria-label="Cerrar reproductor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-player">
+      <app-video-player
+        [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
+        [idVideo]="videoReproduciendose!.idVideo"
+        (heartbeat)="onHeartbeat($event)">
+      </app-video-player>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================================================================
+  MODAL — Estadísticas de vistas
+  ================================================================ -->
+<div class="modal-overlay"
+     *ngIf="videoStats"
+     (click)="cerrarStats()"
+     role="dialog"
+     aria-modal="true"
+     [attr.aria-label]="'Estadísticas: ' + videoStats.titulo">
+
+  <div class="stats-dialog" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <span class="modal-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="stats-header-icon">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        {{ videoStats.titulo }}
+      </span>
+      <button class="modal-close" (click)="cerrarStats()" aria-label="Cerrar estadísticas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6"  y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="stats-body">
+
+      <div *ngIf="cargandoStats" class="empty-state"><p>Cargando estadísticas…</p></div>
+
+      <p *ngIf="errorStats" class="feedback-msg feedback-msg--error" role="alert">{{ errorStats }}</p>
+
+      <div *ngIf="!cargandoStats && !errorStats && estadisticas.length === 0" class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <p>Ningún miembro ha visto este vídeo todavía.</p>
+      </div>
+
+      <table *ngIf="!cargandoStats && estadisticas.length > 0" class="stats-table" aria-label="Estadísticas de vistas">
+        <thead>
+          <tr>
+            <th>Miembro</th>
+            <th class="stats-col-views">Vistas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of estadisticas">
+            <td>
+              <div class="stats-member">
+                <div class="member-avatar stats-avatar" aria-hidden="true">{{ s.nombre.charAt(0).toUpperCase() }}</div>
+                <div class="member-info">
+                  <span class="member-name">{{ s.nombre }}</span>
+                  <span class="member-email">{{ s.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="stats-col-views">
+              <span class="stats-badge">{{ s.contador }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
 </div>
 
 <!-- ================================================================
