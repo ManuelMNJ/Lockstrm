@@ -1,23 +1,34 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, finalize } from 'rxjs';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
+import { VideoService, Video } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
+import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialPipe],
+  imports: [CommonModule, FormsModule, InitialPipe, VideoDurationPipe],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
 })
 export class GrupoDetalleComponent implements OnInit {
 
   grupo: Grupo | null = null;
+  esCreador = false;
   miembros: Miembro[] = [];
+
+  // Vídeos del grupo
+  videosGrupo: Video[] = [];
+  misVideosDisponibles: Video[] = [];
+  idVideoAAnadir: number | null = null;
+  estadoAnadirVideo: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  errorAnadirVideo = '';
+  quitandoVideos = new Set<number>();
 
   cargando = true;
   errorCarga = '';
@@ -49,7 +60,23 @@ export class GrupoDetalleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private grupoService: GrupoService,
+    private videoService: VideoService,
+    private cdr: ChangeDetectorRef,
   ) {}
+
+  private extractErrorMessage(err: any, defaultMsg: string): string {
+    return err?.error?.error || err?.error?.mensaje || defaultMsg;
+  }
+
+  private addEliminando(idUsuario: number): void {
+    this.eliminandoMiembros = new Set(this.eliminandoMiembros).add(idUsuario);
+  }
+
+  private removeEliminando(idUsuario: number): void {
+    const next = new Set(this.eliminandoMiembros);
+    next.delete(idUsuario);
+    this.eliminandoMiembros = next;
+  }
 
   ngOnInit(): void {
     this.idGrupo = Number(this.route.snapshot.paramMap.get('id'));
@@ -61,20 +88,106 @@ export class GrupoDetalleComponent implements OnInit {
     this.errorCarga = '';
 
     forkJoin({
-      grupo:    this.grupoService.obtenerGrupoPorId(this.idGrupo),
-      miembros: this.grupoService.obtenerMiembros(this.idGrupo),
+      grupo:   this.grupoService.obtenerGrupoPorId(this.idGrupo),
+      creados: this.grupoService.obtenerGruposCreados(),
     })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => { this.cargando = false; this.cdr.detectChanges(); }),
+      )
       .subscribe({
-        next: ({ grupo, miembros }) => {
+        next: ({ grupo, creados }) => {
           this.grupo         = grupo;
           this.nombreEditado = grupo.nombre;
-          this.miembros      = miembros;
-          this.cargando      = false;
+          this.esCreador     = creados.some(g => g.idGrupo === this.idGrupo);
+          this.cdr.detectChanges();
+          this.cargarMiembros();
+          this.cargarVideos();
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la información del grupo.';
-          this.cargando   = false;
+        },
+      });
+  }
+
+  private cargarMiembros(): void {
+    this.grupoService.obtenerMiembros(this.idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (miembros) => { this.miembros = miembros; this.cdr.detectChanges(); },
+        error: () => {},
+      });
+  }
+
+  private cargarVideos(): void {
+    const videos$ = this.esCreador
+      ? this.videoService.obtenerMisVideos()
+      : this.videoService.obtenerVideosCompartidos();
+
+    videos$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (videos) => {
+          this.videosGrupo          = videos.filter(v => v.grupo?.idGrupo === this.idGrupo);
+          this.misVideosDisponibles = this.esCreador
+            ? videos.filter(v => !v.grupo || v.grupo.idGrupo !== this.idGrupo)
+            : [];
+          this.cdr.detectChanges();
+        },
+        error: () => {},
+      });
+  }
+
+  // ── Añadir vídeo existente ────────────────────────────────────────────────
+
+  aniadirVideoExistente(): void {
+    if (this.idVideoAAnadir == null) return;
+    const video = this.misVideosDisponibles.find(v => v.idVideo === this.idVideoAAnadir);
+    if (!video) return;
+
+    this.estadoAnadirVideo = 'loading';
+    this.errorAnadirVideo  = '';
+    this.cdr.detectChanges();
+
+    this.videoService.editarVideo(video.idVideo, video.titulo, this.idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.idVideoAAnadir    = null;
+          this.estadoAnadirVideo = 'success';
+          this.cdr.detectChanges();
+          this.cargarVideos();
+          setTimeout(() => { this.estadoAnadirVideo = 'idle'; this.cdr.detectChanges(); }, 3000);
+        },
+        error: (err) => {
+          this.estadoAnadirVideo = 'error';
+          this.errorAnadirVideo  = this.extractErrorMessage(err, 'No se pudo añadir el vídeo.');
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  // ── Quitar vídeo del grupo ────────────────────────────────────────────────
+
+  quitarVideoDelGrupo(video: Video): void {
+    this.quitandoVideos = new Set(this.quitandoVideos).add(video.idVideo);
+
+    this.videoService.editarVideo(video.idVideo, video.titulo, null)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          const next = new Set(this.quitandoVideos);
+          next.delete(video.idVideo);
+          this.quitandoVideos = next;
+          this.videosGrupo          = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
+          this.misVideosDisponibles = [...this.misVideosDisponibles, { ...video, grupo: undefined }];
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          const next = new Set(this.quitandoVideos);
+          next.delete(video.idVideo);
+          this.quitandoVideos = next;
+          this.cdr.detectChanges();
         },
       });
   }
@@ -87,6 +200,7 @@ export class GrupoDetalleComponent implements OnInit {
 
     this.estadoAnadir = 'loading';
     this.errorAnadir  = '';
+    this.cdr.detectChanges();
 
     this.grupoService.aniadirMiembro(this.idGrupo, email)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -94,14 +208,14 @@ export class GrupoDetalleComponent implements OnInit {
         next: () => {
           this.emailNuevoMiembro = '';
           this.estadoAnadir = 'success';
-          this.grupoService.obtenerMiembros(this.idGrupo)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: (m) => { this.miembros = m; } });
-          setTimeout(() => { this.estadoAnadir = 'idle'; }, 3000);
+          this.cdr.detectChanges();
+          this.cargarMiembros();
+          setTimeout(() => { this.estadoAnadir = 'idle'; this.cdr.detectChanges(); }, 3000);
         },
         error: (err) => {
           this.estadoAnadir = 'error';
-          this.errorAnadir  = err?.error?.error || err?.error?.mensaje || 'No se pudo añadir el miembro.';
+          this.errorAnadir  = this.extractErrorMessage(err, 'No se pudo añadir el miembro.');
+          this.cdr.detectChanges();
         },
       });
   }
@@ -109,21 +223,22 @@ export class GrupoDetalleComponent implements OnInit {
   // ── Eliminar miembro ──────────────────────────────────────────────────────
 
   eliminarMiembro(miembro: Miembro): void {
-    this.eliminandoMiembros = new Set(this.eliminandoMiembros).add(miembro.idUsuario);
+    this.addEliminando(miembro.idUsuario);
     this.errorEliminarMiembro = '';
+    this.cdr.detectChanges();
 
     this.grupoService.eliminarMiembro(this.idGrupo, miembro.idUsuario)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.miembros = this.miembros.filter(m => m.idUsuario !== miembro.idUsuario);
-          this.eliminandoMiembros = new Set(this.eliminandoMiembros);
-          this.eliminandoMiembros.delete(miembro.idUsuario);
+          this.removeEliminando(miembro.idUsuario);
+          this.cdr.detectChanges();
         },
         error: (err) => {
-          this.eliminandoMiembros = new Set(this.eliminandoMiembros);
-          this.eliminandoMiembros.delete(miembro.idUsuario);
-          this.errorEliminarMiembro = err?.error?.error || 'No se pudo eliminar el miembro.';
+          this.removeEliminando(miembro.idUsuario);
+          this.errorEliminarMiembro = this.extractErrorMessage(err, 'No se pudo eliminar el miembro.');
+          this.cdr.detectChanges();
         },
       });
   }
@@ -143,22 +258,30 @@ export class GrupoDetalleComponent implements OnInit {
 
   guardarNombre(): void {
     const nombre = this.nombreEditado.trim();
-    if (!nombre || nombre === this.grupo?.nombre) { this.editandoNombre = false; return; }
+    if (!nombre || nombre === this.grupo?.nombre) {
+      this.editandoNombre = false;
+      this.cdr.detectChanges();
+      return;
+    }
 
     this.estadoRenombrar = 'loading';
     this.errorRenombrar  = '';
+    this.cdr.detectChanges();
 
     this.grupoService.renombrarGrupo(this.idGrupo, nombre)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (g) => {
-          this.grupo = g;
+          this.grupo           = g;
+          this.nombreEditado   = g.nombre;
           this.editandoNombre  = false;
           this.estadoRenombrar = 'idle';
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.estadoRenombrar = 'error';
-          this.errorRenombrar  = err?.error?.error || 'No se pudo actualizar el nombre.';
+          this.errorRenombrar  = this.extractErrorMessage(err, 'No se pudo actualizar el nombre.');
+          this.cdr.detectChanges();
         },
       });
   }
@@ -177,6 +300,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   confirmarEliminarGrupo(): void {
     this.estadoEliminarGrupo = 'loading';
+    this.cdr.detectChanges();
 
     this.grupoService.eliminarGrupo(this.idGrupo)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -184,12 +308,17 @@ export class GrupoDetalleComponent implements OnInit {
         next: () => this.router.navigate(['/mi-espacio/grupos']),
         error: (err) => {
           this.estadoEliminarGrupo = 'error';
-          this.errorEliminarGrupo  = err?.error?.error || 'No se pudo eliminar el grupo.';
+          this.errorEliminarGrupo  = this.extractErrorMessage(err, 'No se pudo eliminar el grupo.');
+          this.cdr.detectChanges();
         },
       });
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  verVideo(idVideo: number): void {
+    this.router.navigate(['/mi-espacio/videos', idVideo]);
+  }
 
   volver(): void {
     this.router.navigate(['/mi-espacio/grupos']);

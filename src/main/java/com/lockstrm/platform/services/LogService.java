@@ -127,9 +127,9 @@ public class LogService {
 
             boolean esMiembro = permisos.stream()
                     .anyMatch(p -> miembrosGrupoRepository
-                            .existsByUsuario_EmailAndId_IdGrupoId(
+                            .countMiembroByEmailAndGrupo(
                                     emailUsuario,
-                                    p.getId().getIdGrupoId()));
+                                    p.getId().getIdGrupoId()) > 0);
 
             if (!esMiembro) {
                 throw new AccessDeniedException("Acceso denegado al video");

@@ -225,6 +225,53 @@
   gap: var(--space-5);
 }
 
+.detalle-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.detalle-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (max-width: 768px) {
+  .detalle-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   VIDEO ICON (inside member-item reuse)
+   ========================================================================== */
+.video-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.video-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ==========================================================================
+   VIDEO SELECT
+   ========================================================================== */
+.video-select {
+  flex: 1;
+  min-width: 0;
+}
+
 /* ==========================================================================
    SECTION CARDS
    ========================================================================== */

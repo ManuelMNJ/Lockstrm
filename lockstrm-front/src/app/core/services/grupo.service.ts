@@ -21,9 +21,9 @@ export class GrupoService {
 
   private readonly apiUrl = `${environment.apiUrl}/api/grupos`;
 
-  // ── Caché reactiva (shareReplay) ────────────────────────────────────────────
-  // Se invalida tras crearGrupo, renombrarGrupo y eliminarGrupo.
-  private misGruposCache$: Observable<Grupo[]> | null = null;
+  private misGruposCache$:          Observable<Grupo[]> | null = null;
+  private gruposCreadosCache$:      Observable<Grupo[]> | null = null;
+  private gruposMiembroCache$:      Observable<Grupo[]> | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -31,11 +31,23 @@ export class GrupoService {
 
   obtenerMisGrupos(): Observable<Grupo[]> {
     if (!this.misGruposCache$) {
-      this.misGruposCache$ = this.http.get<Grupo[]>(this.apiUrl).pipe(
-        shareReplay(1),
-      );
+      this.misGruposCache$ = this.http.get<Grupo[]>(this.apiUrl).pipe(shareReplay(1));
     }
     return this.misGruposCache$;
+  }
+
+  obtenerGruposCreados(): Observable<Grupo[]> {
+    if (!this.gruposCreadosCache$) {
+      this.gruposCreadosCache$ = this.http.get<Grupo[]>(`${this.apiUrl}/creados`).pipe(shareReplay(1));
+    }
+    return this.gruposCreadosCache$;
+  }
+
+  obtenerGruposComoMiembro(): Observable<Grupo[]> {
+    if (!this.gruposMiembroCache$) {
+      this.gruposMiembroCache$ = this.http.get<Grupo[]>(`${this.apiUrl}/miembro`).pipe(shareReplay(1));
+    }
+    return this.gruposMiembroCache$;
   }
 
   obtenerGrupoPorId(idGrupo: number): Observable<Grupo> {
@@ -50,7 +62,7 @@ export class GrupoService {
 
   crearGrupo(nombre: string): Observable<Grupo> {
     return this.http.post<Grupo>(this.apiUrl, { nombre }).pipe(
-      tap(() => { this.misGruposCache$ = null; }),
+      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
     );
   }
 
@@ -64,13 +76,13 @@ export class GrupoService {
 
   eliminarGrupo(idGrupo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}`).pipe(
-      tap(() => { this.misGruposCache$ = null; }),
+      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
     );
   }
 
   renombrarGrupo(idGrupo: number, nombre: string): Observable<Grupo> {
     return this.http.put<Grupo>(`${this.apiUrl}/${idGrupo}`, { nombre }).pipe(
-      tap(() => { this.misGruposCache$ = null; }),
+      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
     );
   }
 }

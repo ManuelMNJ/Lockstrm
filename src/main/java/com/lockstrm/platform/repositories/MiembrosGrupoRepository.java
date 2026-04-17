@@ -3,6 +3,7 @@ package com.lockstrm.platform.repositories;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
+import com.lockstrm.platform.entities.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,8 @@ import java.util.List;
 @Repository
 public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, MiembrosGrupoId> {
 
-    boolean existsByUsuario_EmailAndId_IdGrupoId(String email, Long idGrupoId);
+    @Query("SELECT COUNT(mg) FROM MiembrosGrupo mg WHERE mg.usuario.email = :email AND mg.id.idGrupoId = :idGrupo")
+    long countMiembroByEmailAndGrupo(@Param("email") String email, @Param("idGrupo") Long idGrupo);
 
     @Query("SELECT mg.grupo FROM MiembrosGrupo mg WHERE mg.usuario.email = :email")
     List<Grupo> findGruposByUsuarioEmail(@Param("email") String email);
@@ -36,4 +38,8 @@ public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, Mi
     @Modifying
     @Query("DELETE FROM MiembrosGrupo mg WHERE mg.id.idGrupoId = :idGrupo AND mg.id.idUsuarioId = :idUsuario")
     void deleteByGrupoIdAndUsuarioId(@Param("idGrupo") Long idGrupo, @Param("idUsuario") Long idUsuario);
+
+    /** Lista los usuarios miembros de un grupo. */
+    @Query("SELECT mg.usuario FROM MiembrosGrupo mg WHERE mg.id.idGrupoId = :idGrupo")
+    List<Usuario> findUsuariosByGrupoId(@Param("idGrupo") Long idGrupo);
 }

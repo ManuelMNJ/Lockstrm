@@ -1,5 +1,6 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.MiembroDto;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,20 @@ public class GrupoController {
         return ResponseEntity.status(201).body(grupo);
     }
 
+    @GetMapping("/{idGrupo}/miembros")
+    public ResponseEntity<?> obtenerMiembros(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            List<MiembroDto> miembros = grupoService.obtenerMiembros(idGrupo, userDetails.getUsername());
+            return ResponseEntity.ok(miembros);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{idGrupo}/miembros")
     public ResponseEntity<?> aniadirMiembro(
             @PathVariable Long idGrupo,
@@ -81,6 +96,8 @@ public class GrupoController {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

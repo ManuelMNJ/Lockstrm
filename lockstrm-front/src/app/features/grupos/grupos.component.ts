@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,7 +20,8 @@ import { InitialPipe } from '../../shared/pipes/initial.pipe';
 })
 export class GruposComponent implements OnInit {
 
-  grupos: Grupo[] = [];
+  misGrupos: Grupo[]          = [];
+  compartidosConmigo: Grupo[] = [];
   cargando = true;
   errorCarga = '';
 
@@ -37,6 +38,7 @@ export class GruposComponent implements OnInit {
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
   private destroyRef = inject(DestroyRef);
+  private cdr        = inject(ChangeDetectorRef);
 
   constructor(
     private grupoService: GrupoService,
@@ -61,13 +63,18 @@ export class GruposComponent implements OnInit {
   cargarGrupos(): void {
     this.cargando   = true;
     this.errorCarga = '';
-    this.grupoService.obtenerMisGrupos()
+    forkJoin({
+      creados: this.grupoService.obtenerGruposCreados(),
+      miembro: this.grupoService.obtenerGruposComoMiembro(),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (g) => {
-          this.grupos   = g;
-          this.cargando = false;
-          this.cargarEstadisticas(g);
+        next: ({ creados, miembro }) => {
+          this.misGrupos          = creados;
+          this.compartidosConmigo = miembro;
+          this.cargando           = false;
+          this.cdr.detectChanges();
+          this.cargarEstadisticas([...creados, ...miembro]);
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la lista de grupos.';
@@ -80,7 +87,6 @@ export class GruposComponent implements OnInit {
     if (!grupos.length) return;
     this.cargandoStats = true;
 
-    // Contar vídeos por grupo (un solo request, beneficia del shareReplay del servicio)
     this.videoService.obtenerMisVideos()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -97,7 +103,6 @@ export class GruposComponent implements OnInit {
         error: () => { /* stats opcionales */ },
       });
 
-    // Contar miembros por grupo en paralelo
     const requests = grupos.map(g =>
       this.grupoService.obtenerMiembros(g.idGrupo).pipe(
         map(miembros => ({ idGrupo: g.idGrupo, count: miembros.length })),
@@ -141,7 +146,7 @@ export class GruposComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupo) => {
-          this.grupos = [...this.grupos, grupo];
+          this.misGrupos        = [...this.misGrupos, grupo];
           this.miembrosPerGrupo = new Map(this.miembrosPerGrupo).set(grupo.idGrupo, 1);
           this.videosPerGrupo   = new Map(this.videosPerGrupo).set(grupo.idGrupo, 0);
           this.cerrarModal();

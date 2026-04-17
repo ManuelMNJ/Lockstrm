@@ -72,6 +72,24 @@ export class VideosComponent implements OnInit {
     private  grupoService:  GrupoService,
   ) {}
 
+  private refresh(): void {
+    this.cdr.markForCheck();
+  }
+
+  private extractErrorMessage(err: any, defaultMsg: string): string {
+    return err?.error?.error || err?.error?.mensaje || defaultMsg;
+  }
+
+  private scheduleStateReset(property: string, value: any, delay: number): void {
+    const timer = setTimeout(() => {
+      (this as any)[property] = value;
+      this.refresh();
+      clearTimeout(timer);
+    }, delay);
+    if (property === 'estadoSubida') this.exitoEdicionTimer = timer as any;
+    if (property === 'errorEliminacionVisible') this.errorEliminacionTimer = timer as any;
+  }
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.videoEnEdicion)    { this.cancelarEdicion();    return; }
@@ -186,13 +204,13 @@ export class VideosComponent implements OnInit {
         error: (err) => {
           this.estadoSubida = 'error';
           this.progreso     = 0;
-          this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
+          this.mensajeError = this.extractErrorMessage(err, 'Error al subir. Comprueba la consola.');
           console.error('[VideosComponent] Error en subida:', {
             status:     err?.status,
             statusText: err?.statusText,
             body:       err?.error,
           });
-          this.cdr.markForCheck();
+          this.refresh();
         }
       });
   }
@@ -239,10 +257,9 @@ export class VideosComponent implements OnInit {
             body:       err?.error,
           });
           this.mostrarErrorEliminacion(
-            err?.error?.error || err?.error?.mensaje ||
-            `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`
+            this.extractErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
           );
-          this.cdr.markForCheck();
+          this.refresh();
         }
       });
   }
@@ -250,21 +267,21 @@ export class VideosComponent implements OnInit {
   private mostrarExitoEdicion(): void {
     if (this.exitoEdicionTimer) clearTimeout(this.exitoEdicionTimer);
     this.exitoEdicionVisible = true;
-    this.cdr.markForCheck();
+    this.refresh();
     this.exitoEdicionTimer = setTimeout(() => {
       this.exitoEdicionVisible = false;
-      this.cdr.markForCheck();
+      this.refresh();
     }, 3500);
   }
 
   private mostrarErrorEliminacion(mensaje: string): void {
     if (this.errorEliminacionTimer) clearTimeout(this.errorEliminacionTimer);
-    this.errorEliminacion        = mensaje;
+    this.errorEliminacion = mensaje;
     this.errorEliminacionVisible = true;
-    this.cdr.markForCheck();
+    this.refresh();
     this.errorEliminacionTimer = setTimeout(() => {
       this.errorEliminacionVisible = false;
-      this.cdr.markForCheck();
+      this.refresh();
     }, 6000);
   }
 
@@ -312,8 +329,8 @@ export class VideosComponent implements OnInit {
         },
         error: (err) => {
           this.estadoEdicion  = 'error';
-          this.mensajeEdicion = err?.error?.error || err?.error?.mensaje || 'No se pudo guardar el cambio.';
-          this.cdr.markForCheck();
+          this.mensajeEdicion = this.extractErrorMessage(err, 'No se pudo guardar el cambio.');
+          this.refresh();
         }
       });
   }
@@ -336,7 +353,7 @@ export class VideosComponent implements OnInit {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
           this.cargando   = false;
           console.error('[VideosComponent] Error al cargar videos:', err);
-          this.cdr.markForCheck();
+          this.refresh();
         }
       });
   }

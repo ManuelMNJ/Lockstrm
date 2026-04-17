@@ -40,13 +40,13 @@ export class AuthService {
     );
   }
 
-  /**
-   * Destruye la sesión, limpia el signal y redirige a la Homepage pública.
-   */
   logout(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
-    this._currentUser.set(null);    // signal → null → navbar vuelve a estado guest
-    this.router.navigate(['/']);
+    localStorage.clear();
+    sessionStorage.clear();
+    this._currentUser.set(null);
+    this.router.navigate(['/login']).then(() => {
+      window.location.reload();
+    });
   }
 
   // ── Accessors (retrocompatibles con guards e interceptores) ──────────────
