@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { shareReplay, tap } from 'rxjs/operators';
+import { map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { Video } from './video.service';
 
 export interface Grupo {
   idGrupo: number;
   nombre: string;
   fechaCreacion?: string;
   idCreador?: number;
+  esCreador?: boolean;
 }
 
 export interface Miembro {
@@ -58,6 +60,20 @@ export class GrupoService {
     return this.http.get<Miembro[]>(`${this.apiUrl}/${idGrupo}/miembros`);
   }
 
+  obtenerVideosDeGrupo(idGrupo: number): Observable<Video[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${idGrupo}/videos`).pipe(
+      map(arr => arr.map(raw => ({
+        idVideo:     raw.idVideo,
+        titulo:      raw.titulo,
+        duracion:    raw.duracion ?? null,
+        fechaSubida: raw.fechaSubida ?? null,
+        grupo:       (raw.idGrupo != null)
+                       ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
+                       : undefined,
+      } as Video))),
+    );
+  }
+
   // ── Escrituras (invalidan la caché al completar) ────────────────────────────
 
   crearGrupo(nombre: string): Observable<Grupo> {
@@ -66,8 +82,8 @@ export class GrupoService {
     );
   }
 
-  aniadirMiembro(idGrupo: number, email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idGrupo}/miembros`, { email });
+  aniadirMiembro(idGrupo: number, email: string): Observable<Miembro> {
+    return this.http.post<Miembro>(`${this.apiUrl}/${idGrupo}/miembros`, { email });
   }
 
   eliminarMiembro(idGrupo: number, idUsuario: number): Observable<void> {

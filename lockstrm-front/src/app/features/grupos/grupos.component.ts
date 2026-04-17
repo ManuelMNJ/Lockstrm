@@ -1,12 +1,14 @@
-import { Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { A11yModule } from '@angular/cdk/a11y';
 import { GrupoService, Grupo, GrupoStats } from '../../core/services/grupo.service';
+import { AuthService } from '../../core/services/auth.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 import { InitialPipe } from '../../shared/pipes/initial.pipe';
+import { ModalService } from '../../shared/services/modal.service';
 
 @Component({
   selector: 'app-grupos',
@@ -17,7 +19,8 @@ import { InitialPipe } from '../../shared/pipes/initial.pipe';
 })
 export class GruposComponent implements OnInit {
 
-  grupos: Grupo[] = [];
+  gruposCreados: Grupo[] = [];
+  gruposInvitado: Grupo[] = [];
   cargando = true;
   errorCarga = '';
 
@@ -33,9 +36,16 @@ export class GruposComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   constructor(
-    private grupoService: GrupoService,
-    private router: Router,
+    private grupoService:  GrupoService,
+    private router:        Router,
+    private authService:   AuthService,
+    private cdr:           ChangeDetectorRef,
+    private modalService:  ModalService,
   ) {}
+
+  get currentUserId(): number | undefined {
+    return this.authService.getUser()?.id;
+  }
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
@@ -56,13 +66,16 @@ export class GruposComponent implements OnInit {
     this.grupoService.obtenerMisGrupos()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (g) => {
-          this.grupos   = g;
+        next: (grupos) => {
+          this.gruposCreados  = grupos.filter(g => g.esCreador === true);
+          this.gruposInvitado = grupos.filter(g => g.esCreador !== true);
           this.cargando = false;
+          this.cdr.detectChanges();
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la lista de grupos.';
           this.cargando   = false;
+          this.cdr.detectChanges();
         },
       });
 
@@ -73,8 +86,30 @@ export class GruposComponent implements OnInit {
           const map = new Map<number, GrupoStats>();
           stats.forEach(s => map.set(s.idGrupo, s));
           this.statsMap = map;
+          this.cdr.detectChanges();
         },
         error: () => { /* stats opcionales */ },
+      });
+  }
+
+  async eliminarGrupo(idGrupo: number): Promise<void> {
+    const ok = await this.modalService.confirm(
+      'Eliminar grupo',
+      '¿Estás seguro de que quieres borrar este grupo? Esta acción no se puede deshacer.',
+      'Eliminar',
+    );
+    if (!ok) return;
+
+    this.grupoService.eliminarGrupo(idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.gruposCreados  = this.gruposCreados.filter(g => g.idGrupo !== idGrupo);
+          this.gruposInvitado = this.gruposInvitado.filter(g => g.idGrupo !== idGrupo);
+          this.statsMap.delete(idGrupo);
+          this.cdr.detectChanges();
+        },
+        error: () => {},
       });
   }
 
@@ -101,7 +136,8 @@ export class GruposComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupo) => {
-          this.grupos = [...this.grupos, grupo];
+          const grupoCreado: Grupo = { ...grupo, esCreador: true };
+          this.gruposCreados = [grupoCreado, ...this.gruposCreados];
           const newStats: GrupoStats = {
             idGrupo: grupo.idGrupo,
             nombre: grupo.nombre,
@@ -109,11 +145,15 @@ export class GruposComponent implements OnInit {
             totalMiembros: 0,
           };
           this.statsMap = new Map(this.statsMap).set(grupo.idGrupo, newStats);
+          this.estadoCreacion = 'idle';
           this.cerrarModal();
+          this.cdr.detectChanges();
         },
         error: (err) => {
-          this.estadoCreacion = 'error';
+          this.estadoCreacion = 'idle';
           this.errorCreacion  = err?.error?.error || 'Error al crear el grupo.';
+          this.cerrarModal();
+          this.cdr.detectChanges();
         },
       });
   }

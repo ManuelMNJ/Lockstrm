@@ -1,0 +1,25 @@
+# Compilación y binarios
+target/
+*.jar
+*.war
+*.class
+
+# Entornos Virtuales e IDEs
+.idea/
+.settings/
+.vscode/
+.classpath
+.project
+.springBeans
+
+# Logs y bases de datos locales
+*.log
+*.sql
+*.db
+
+# Archivos de caché del entorno
+.sts4-cache
+.apt_generated
+
+# Evitar que lea las variables de entorno reales
+.env

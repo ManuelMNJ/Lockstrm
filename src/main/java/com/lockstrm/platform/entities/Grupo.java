@@ -12,6 +12,7 @@ public class Grupo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_grupo")
     private Long idGrupo;
 
     @Column(nullable = false, length = 100)

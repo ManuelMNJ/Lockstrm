@@ -7,7 +7,7 @@ import { VideoStreamService } from './video-stream.service';
 
 // ── Respuesta del endpoint de subida ──────────────────────────────────────────
 export interface VideoUploadResponse {
-  id_video: number;
+  idVideo: number;
   titulo: string;
   url: string;
   duracion: number;

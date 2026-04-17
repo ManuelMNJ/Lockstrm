@@ -19,12 +19,12 @@ public class MiembrosGrupo implements Serializable {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario_id", insertable = false, updatable = false)
+    @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
     private Usuario usuario;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_grupo_id", insertable = false, updatable = false)
+    @JoinColumn(name = "id_grupo", insertable = false, updatable = false)
     private Grupo grupo;
 
     @Column(name = "fecha_union")

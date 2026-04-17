@@ -71,10 +71,20 @@
         </button>
       </div>
 
-      @if (estadoSubida === 'uploading') {
+      @if (faseSubida === 'subiendo') {
         <div class="upload-progress" role="status" aria-label="Progreso de subida">
           <div class="upload-progress-bar" [style.width.%]="progreso"></div>
           <span class="upload-progress-label">{{ progreso }}%</span>
+        </div>
+      }
+      @if (faseSubida === 'procesando') {
+        <div class="upload-processing" role="status" aria-live="polite">
+          <svg class="upload-spinner" viewBox="0 0 50 50" aria-hidden="true">
+            <circle class="upload-spinner-track" cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
+            <circle class="upload-spinner-arc" cx="25" cy="25" r="20" fill="none" stroke-width="4"
+                    stroke-dasharray="80 126" stroke-linecap="round"/>
+          </svg>
+          <span class="upload-processing-msg">Procesando vídeo en la nube… Por favor, no cierres esta ventana.</span>
         </div>
       }
       @if (estadoSubida === 'success') {
@@ -100,8 +110,8 @@
       <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
       @if (!cargando) {
         <span class="section-badge">
-          @if (paginator.totalPages > 1) {
-            {{ paginator.paginatedItems.length }} de {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
+          @if (totalPaginas > 1) {
+            {{ videosPaginados.length }} de {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
           } @else {
             {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
           }
@@ -116,9 +126,17 @@
     }
 
     @if (cargando) {
-      <div class="skeleton-table" aria-label="Cargando biblioteca…">
+      <div class="skeleton-table" aria-label="Cargando biblioteca…" aria-busy="true">
+        <div class="skeleton-row skeleton-row--head">
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--thumb"></div>
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--title"></div>
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--group"></div>
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--date"></div>
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--dur"></div>
+          <div class="skeleton-cell skeleton-cell--h skeleton-cell--actions"></div>
+        </div>
         @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="skeleton-row">
+          <div class="skeleton-row" [style.--sk-delay]="(i - 1) * 80 + 'ms'">
             <div class="skeleton-cell skeleton-cell--thumb"></div>
             <div class="skeleton-cell skeleton-cell--title"></div>
             <div class="skeleton-cell skeleton-cell--group"></div>
@@ -137,16 +155,32 @@
         <thead>
           <tr>
             <th scope="col" class="col-thumb">Miniatura</th>
-            <th scope="col" class="col-title">Título</th>
-            <th scope="col" class="col-group">Grupo</th>
-            <th scope="col" class="col-date">Fecha</th>
-            <th scope="col" class="col-duration">Duración</th>
+            <th scope="col" class="col-title th-sortable" (click)="ordenarTabla('titulo')"
+                [class.th-active]="columnaOrden === 'titulo'" style="cursor:pointer">
+              Título
+              @if (columnaOrden === 'titulo') { <span class="sort-icon">{{ ordenAscendente ? '⬆' : '⬇' }}</span> }
+            </th>
+            <th scope="col" class="col-group th-sortable" (click)="ordenarTabla('grupo')"
+                [class.th-active]="columnaOrden === 'grupo'" style="cursor:pointer">
+              Grupo
+              @if (columnaOrden === 'grupo') { <span class="sort-icon">{{ ordenAscendente ? '⬆' : '⬇' }}</span> }
+            </th>
+            <th scope="col" class="col-date th-sortable" (click)="ordenarTabla('fecha')"
+                [class.th-active]="columnaOrden === 'fecha'" style="cursor:pointer">
+              Fecha
+              @if (columnaOrden === 'fecha') { <span class="sort-icon">{{ ordenAscendente ? '⬆' : '⬇' }}</span> }
+            </th>
+            <th scope="col" class="col-duration th-sortable" (click)="ordenarTabla('duracion')"
+                [class.th-active]="columnaOrden === 'duracion'" style="cursor:pointer">
+              Duración
+              @if (columnaOrden === 'duracion') { <span class="sort-icon">{{ ordenAscendente ? '⬆' : '⬇' }}</span> }
+            </th>
             <th scope="col" class="col-actions">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
-          @for (v of paginator.paginatedItems; track v.idVideo) {
+          @for (v of videosPaginados; track v.idVideo) {
             <tr class="table-row">
               <td class="col-thumb">
                 <div class="video-thumb" aria-hidden="true">
@@ -195,7 +229,7 @@
                     </svg>
                   </button>
                   <button class="btn-delete"
-                          (click)="solicitarEliminacion(v)"
+                          (click)="eliminarVideo(v)"
                           [disabled]="deletingIds.has(v.idVideo)"
                           [attr.aria-label]="'Eliminar vídeo: ' + v.titulo"
                           title="Eliminar vídeo">
@@ -237,43 +271,35 @@
     </div>
 
     <!-- Paginación -->
-    @if (paginator.totalPages > 1) {
+    @if (totalPaginas > 1) {
       <nav class="pagination" aria-label="Paginación de vídeos">
-        <button class="page-btn"
-                (click)="goToPage(paginator.page - 1)"
-                [disabled]="paginator.page === 1"
+        <button class="page-btn page-btn--nav"
+                (click)="anterior()"
+                [disabled]="paginaActual === 1"
                 aria-label="Página anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                aria-hidden="true">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
+          Anterior
         </button>
 
-        @for (page of paginator.pages; track page) {
-          <button class="page-btn"
-                  [class.page-btn--active]="paginator.page === page"
-                  (click)="goToPage(page)"
-                  [attr.aria-label]="'Página ' + page"
-                  [attr.aria-current]="paginator.page === page ? 'page' : null">
-            {{ page }}
-          </button>
-        }
+        <span class="page-info" aria-live="polite">
+          Página {{ paginaActual }} de {{ totalPaginas }}
+        </span>
 
-        <button class="page-btn"
-                (click)="goToPage(paginator.page + 1)"
-                [disabled]="paginator.page === paginator.totalPages"
+        <button class="page-btn page-btn--nav"
+                (click)="siguiente()"
+                [disabled]="paginaActual === totalPaginas"
                 aria-label="Página siguiente">
+          Siguiente
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                aria-hidden="true">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
-
-        <span class="page-info" aria-live="polite">
-          {{ paginator.page }} / {{ paginator.totalPages }}
-        </span>
       </nav>
     }
 
@@ -393,60 +419,6 @@
             </svg>
           }
           {{ estadoEdicion === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
-        </button>
-      </div>
-
-    </div>
-  </div>
-  }
-
-  <!-- ================================================================
-    DELETE CONFIRMATION MODAL
-    ================================================================ -->
-  @if (videoAEliminar) {
-  <div class="modal-overlay confirm-overlay"
-       (click)="cancelarEliminacion()"
-       role="alertdialog"
-       aria-modal="true"
-       aria-labelledby="confirm-title"
-       aria-describedby="confirm-desc">
-
-    <div class="confirm-dialog" (click)="$event.stopPropagation()">
-
-      <div class="confirm-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6"/>
-          <path d="M14 11v6"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      </div>
-
-      <div class="confirm-body">
-        <h3 class="confirm-title" id="confirm-title">Eliminar vídeo</h3>
-        <p class="confirm-video-name">{{ videoAEliminar.titulo }}</p>
-        <p class="confirm-desc" id="confirm-desc">
-          Esta acción eliminará el archivo de la nube, todos los permisos
-          asociados y el historial de reproducción.
-          <strong>No se puede deshacer.</strong>
-        </p>
-      </div>
-
-      <div class="confirm-actions">
-        <button class="btn-confirm-cancel" (click)="cancelarEliminacion()">
-          Cancelar
-        </button>
-        <button class="btn-confirm-delete" (click)="confirmarEliminacion()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          </svg>
-          Eliminar permanentemente
         </button>
       </div>
 

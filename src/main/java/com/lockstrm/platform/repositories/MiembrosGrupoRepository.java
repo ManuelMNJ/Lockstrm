@@ -1,5 +1,6 @@
 package com.lockstrm.platform.repositories;
 
+import com.lockstrm.platform.dto.MiembroDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
@@ -26,6 +27,11 @@ public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, Mi
            "WHERE mg.usuario.email = :email " +
            "AND mg.grupo.creador.email <> :email")
     List<Grupo> findGruposComoMiembroNoCreador(@Param("email") String email);
+
+    /** Devuelve todos los miembros de un grupo como DTOs. Retorna lista vacía si no hay miembros. */
+    @Query("SELECT new com.lockstrm.platform.dto.MiembroDTO(mg.usuario.idUsuario, mg.usuario.nombre, mg.usuario.email) " +
+           "FROM MiembrosGrupo mg WHERE mg.id.idGrupoId = :idGrupo AND mg.usuario IS NOT NULL")
+    List<MiembroDTO> findMiembrosByGrupoId(@Param("idGrupo") Long idGrupo);
 
     /** Elimina todos los miembros de un grupo (usado al borrar el grupo). */
     @Modifying
