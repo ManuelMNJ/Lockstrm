@@ -213,7 +213,7 @@
 
           <ul class="members-list" *ngIf="videosGrupo.length > 0" role="list">
             <li *ngFor="let v of videosGrupo" class="member-item" role="listitem"
-                (click)="verVideo(v.idVideo)" style="cursor: pointer">
+                (click)="verVideo(v)" style="cursor: pointer">
               <div class="video-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -247,6 +247,42 @@
 
   </div>
 
+</div>
+
+<!-- ================================================================
+  MODAL — Reproductor de vídeo
+  ================================================================ -->
+<div class="modal-overlay"
+     *ngIf="videoReproduciendose"
+     (click)="cerrarReproductor()"
+     role="dialog"
+     aria-modal="true"
+     [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+
+  <div class="modal-container" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+      <button class="modal-close"
+              (click)="cerrarReproductor()"
+              aria-label="Cerrar reproductor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-player">
+      <app-video-player
+        [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
+        (heartbeat)="onHeartbeat($event)">
+      </app-video-player>
+    </div>
+
+  </div>
 </div>
 
 <!-- ================================================================

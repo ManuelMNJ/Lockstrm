@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +8,12 @@ import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.servi
 import { VideoService, Video } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
+import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialPipe, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, InitialPipe, VideoDurationPipe, VideoPlayerComponent],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
 })
@@ -29,6 +30,7 @@ export class GrupoDetalleComponent implements OnInit {
   estadoAnadirVideo: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorAnadirVideo = '';
   quitandoVideos = new Set<number>();
+  videoReproduciendose: Video | null = null;
 
   cargando = true;
   errorCarga = '';
@@ -60,7 +62,7 @@ export class GrupoDetalleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private grupoService: GrupoService,
-    private videoService: VideoService,
+    protected videoService: VideoService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -316,8 +318,27 @@ export class GrupoDetalleComponent implements OnInit {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  verVideo(idVideo: number): void {
-    this.router.navigate(['/mi-espacio/videos', idVideo]);
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.videoReproduciendose) { this.cerrarReproductor(); }
+  }
+
+  verVideo(video: Video): void {
+    this.videoReproduciendose = video;
+    this.cdr.detectChanges();
+  }
+
+  cerrarReproductor(): void {
+    this.videoReproduciendose = null;
+    this.cdr.detectChanges();
+  }
+
+  onHeartbeat(currentTime: number): void {
+    const idVideo = this.videoReproduciendose?.idVideo;
+    if (!idVideo) return;
+    this.videoService.registrarHeartbeat(idVideo, currentTime)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ error: () => {} });
   }
 
   volver(): void {
