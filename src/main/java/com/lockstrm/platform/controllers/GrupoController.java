@@ -21,9 +21,14 @@ public class GrupoController {
 
     private final GrupoService grupoService;
 
-    /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
+    @GetMapping("/stats")
+    public ResponseEntity<List<GrupoStatsDTO>> obtenerGrupoStats(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(grupoService.obtenerGrupoStats(userDetails.getUsername()));
+    }
+
+    /** Lista todos los grupos del usuario (propios + miembro) con el campo esCreador. */
     @GetMapping
-    public ResponseEntity<List<Grupo>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<GrupoDTO>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(grupoService.obtenerGruposDelUsuario(userDetails.getUsername()));
     }
 
@@ -45,7 +50,7 @@ public class GrupoController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Grupo grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
+            GrupoDTO grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
             return ResponseEntity.ok(grupo);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
@@ -90,8 +95,8 @@ public class GrupoController {
             return ResponseEntity.badRequest().body(Map.of("error", "El email del nuevo miembro es obligatorio"));
         }
         try {
-            grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
-            return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
+            MiembroDTO miembro = grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
+            return ResponseEntity.status(201).body(miembro);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (NoSuchElementException e) {

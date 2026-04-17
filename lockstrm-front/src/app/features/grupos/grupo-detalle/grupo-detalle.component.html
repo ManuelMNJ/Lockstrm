@@ -246,52 +246,42 @@
     </div><!-- /detalle-columns -->
 
   </div>
+  }
 
 </div>
 
-<!-- ================================================================
-  MODAL — Confirmar eliminación de grupo
-  ================================================================ -->
+<!-- MODAL — Reproductor de vídeo -->
+@if (videoReproduciendose) {
 <div class="modal-overlay"
-     *ngIf="confirmandoEliminarGrupo"
-     (click)="cancelarEliminarGrupo()"
-     role="alertdialog"
+     (click)="cerrarReproductor()"
+     role="dialog"
      aria-modal="true"
-     aria-labelledby="del-grupo-title"
-     aria-describedby="del-grupo-desc">
+     [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
 
-  <div class="confirm-dialog" (click)="$event.stopPropagation()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
 
-    <div class="confirm-icon-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-    </div>
-
-    <div class="confirm-body">
-      <h3 class="confirm-title" id="del-grupo-title">Eliminar grupo</h3>
-      <p class="confirm-group-name">{{ grupo?.nombre }}</p>
-      <p class="confirm-desc" id="del-grupo-desc">
-        Se eliminarán todos los permisos de acceso asociados a este grupo.
-        Los vídeos <strong>no se borran</strong>, pero dejarán de ser accesibles para los miembros.
-        <strong>Esta acción no se puede deshacer.</strong>
-      </p>
-      <p *ngIf="estadoEliminarGrupo === 'error'" class="feedback-msg feedback-msg--error" role="alert">
-        {{ errorEliminarGrupo }}
-      </p>
-    </div>
-
-    <div class="confirm-actions">
-      <button class="btn-confirm-cancel" (click)="cancelarEliminarGrupo()">Cancelar</button>
-      <button class="btn-confirm-delete"
-              (click)="confirmarEliminarGrupo()"
-              [disabled]="estadoEliminarGrupo === 'loading'">
-        {{ estadoEliminarGrupo === 'loading' ? 'Eliminando…' : 'Eliminar grupo' }}
+    <div class="modal-header">
+      <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+      <button class="modal-close"
+              (click)="cerrarReproductor()"
+              aria-label="Cerrar reproductor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
+    </div>
+
+    <div class="modal-player">
+      <app-video-player
+        [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
+        (heartbeat)="onHeartbeat($event)">
+      </app-video-player>
     </div>
 
   </div>
 </div>
+}
+
