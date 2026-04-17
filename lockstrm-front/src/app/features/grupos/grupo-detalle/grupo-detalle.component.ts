@@ -22,6 +22,7 @@ export class GrupoDetalleComponent implements OnInit {
   grupo: Grupo | null = null;
   esCreador = false;
   miembros: Miembro[] = [];
+  videosGrupo: Video[] = [];
 
   // Vídeos del grupo
   videosGrupo: Video[] = [];
@@ -34,6 +35,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   cargando = true;
   errorCarga = '';
+  errorDatos: string | null = null;
 
   // Añadir miembro
   emailNuevoMiembro = '';
@@ -93,7 +95,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   private cargarDatos(): void {
     this.cargando   = true;
-    this.errorCarga = '';
+    this.errorDatos = null;
 
     forkJoin({
       grupo:   this.grupoService.obtenerGrupoPorId(this.idGrupo),
@@ -213,7 +215,8 @@ export class GrupoDetalleComponent implements OnInit {
     this.grupoService.aniadirMiembro(this.idGrupo, email)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (miembro) => {
+          this.miembros = [miembro, ...this.miembros];
           this.emailNuevoMiembro = '';
           this.estadoAnadir = 'success';
           this.cdr.detectChanges();
@@ -317,6 +320,74 @@ export class GrupoDetalleComponent implements OnInit {
         error: (err) => {
           this.estadoEliminarGrupo = 'error';
           this.errorEliminarGrupo  = this.extractErrorMessage(err, 'No se pudo eliminar el grupo.');
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  // ── Añadir vídeo existente ────────────────────────────────────────────────
+
+  abrirSelectorVideo(): void {
+    this.mostrarSelectorVideo = true;
+    this.videoSeleccionadoId  = null;
+    this.estadoAniadirVideo   = 'idle';
+    this.errorAniadirVideo    = '';
+
+    this.videoService.obtenerMisVideos()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (videos) => {
+          this.videosDisponibles = videos.filter(
+            v => v.grupo?.idGrupo == null || v.grupo.idGrupo !== this.idGrupo,
+          );
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  cerrarSelectorVideo(): void {
+    this.mostrarSelectorVideo = false;
+    this.videoSeleccionadoId  = null;
+    this.estadoAniadirVideo   = 'idle';
+    this.errorAniadirVideo    = '';
+  }
+
+  confirmarAniadirVideo(): void {
+    if (!this.videoSeleccionadoId) return;
+
+    const video = this.videosDisponibles.find(v => v.idVideo === this.videoSeleccionadoId);
+    if (!video) return;
+
+    this.estadoAniadirVideo = 'loading';
+    this.errorAniadirVideo  = '';
+
+    this.videoService.editarVideo(video.idVideo, video.titulo, this.idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.videosGrupo = [...this.videosGrupo, updated];
+          this.cerrarSelectorVideo();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.estadoAniadirVideo = 'error';
+          this.errorAniadirVideo  = err?.error?.error || 'No se pudo añadir el vídeo.';
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  // ── Quitar vídeo del grupo ────────────────────────────────────────────────
+
+  quitarVideo(idVideo: number): void {
+    const video = this.videosGrupo.find(v => v.idVideo === idVideo);
+    if (!video) return;
+
+    this.videoService.editarVideo(idVideo, video.titulo, null)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.videosGrupo = this.videosGrupo.filter(v => v.idVideo !== idVideo);
           this.cdr.detectChanges();
         },
       });

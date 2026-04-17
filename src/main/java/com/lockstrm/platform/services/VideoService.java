@@ -85,13 +85,25 @@ public class VideoService {
 
         Video guardado = videoRepository.save(nuevoVideo);
 
+        String grupoNombre = null;
         if (idGrupo != null) {
             Grupo grupo = grupoRepository.findById(idGrupo)
                     .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            if (!grupo.getCreador().getEmail().equals(emailUsuario)) {
+                throw new AccessDeniedException("Solo el creador del grupo puede asignarle vídeos");
+            }
             permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
+            grupoNombre = grupo.getNombre();
         }
 
-        return guardado;
+        return new VideoDTO(
+                guardado.getIdVideo(),
+                guardado.getTitulo(),
+                guardado.getDuracion(),
+                guardado.getFechaSubida(),
+                idGrupo,
+                grupoNombre
+        );
     }
 
     /**
@@ -211,6 +223,16 @@ public class VideoService {
         video.setTitulo(titulo);
         videoRepository.save(video);
 
+        // Verify creator rights on the current group (unlink) and/or the new group (link)
+        List<PermisosGrupo> currentPermisos = permisosGrupoRepository.findById_IdVideoId(idVideo);
+        if (!currentPermisos.isEmpty()) {
+            Grupo grupoActual = grupoRepository.findById(currentPermisos.get(0).getId().getIdGrupoId())
+                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+            if (!grupoActual.getCreador().getEmail().equals(emailUsuario)) {
+                throw new AccessDeniedException("Solo el creador del grupo puede desvincular vídeos de él");
+            }
+        }
+
         // Reasignar grupo: eliminar la asociación actual y crear la nueva si procede
         permisosGrupoRepository.deleteByVideoId(idVideo);
 
@@ -218,6 +240,9 @@ public class VideoService {
         if (idGrupo != null) {
             Grupo grupo = grupoRepository.findById(idGrupo)
                     .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            if (!grupo.getCreador().getEmail().equals(emailUsuario)) {
+                throw new AccessDeniedException("Solo el creador del grupo puede asignarle vídeos");
+            }
             permisosGrupoRepository.save(new PermisosGrupo(idVideo, grupo.getIdGrupo()));
             grupoNombre = grupo.getNombre();
         }

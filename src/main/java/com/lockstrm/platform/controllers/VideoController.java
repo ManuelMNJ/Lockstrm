@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ public class VideoController {
     private final VideoVistaService videoVistaService;
 
     @PostMapping("/subir")
-    public ResponseEntity<Map<String, Object>> subirVideo(
+    public ResponseEntity<?> subirVideo(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo,
@@ -50,7 +49,6 @@ public class VideoController {
             ));
         }
 
-        Map<String, Object> respuesta = new HashMap<>();
         try {
             Video guardado = videoService.subirVideo(file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl);
             respuesta.put("status",       "exito");
@@ -63,14 +61,10 @@ public class VideoController {
             return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
         } catch (IOException e) {
             log.error("Error de I/O al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
-            respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error al leer el archivo: " + e.getMessage());
-            return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(Map.of("status", "error", "mensaje", "Error al leer el archivo: " + e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             log.error("Error al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
-            respuesta.put("status",  "error");
-            respuesta.put("mensaje", e.getMessage() != null ? e.getMessage() : "Error interno al subir el vídeo");
-            return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(Map.of("status", "error", "mensaje", e.getMessage() != null ? e.getMessage() : "Error interno al subir el vídeo"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -125,9 +119,9 @@ public class VideoController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{idVideo}")
+    @PatchMapping("/{id}")
     public ResponseEntity<?> editarVideo(
-            @PathVariable Long idVideo,
+            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, Object> body) {
 
@@ -137,14 +131,14 @@ public class VideoController {
         }
         String titulo = tituloObj.toString().trim();
 
-        Long idGrupo = null;
-        Object idGrupoObj = body.get("idGrupo");
-        if (idGrupoObj instanceof Number n) {
-            idGrupo = n.longValue();
+        Long grupoId = null;
+        Object grupoIdObj = body.get("grupoId");
+        if (grupoIdObj instanceof Number n) {
+            grupoId = n.longValue();
         }
 
         try {
-            VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(), titulo, idGrupo);
+            VideoDTO dto = videoService.editarVideo(id, userDetails.getUsername(), titulo, grupoId);
             return ResponseEntity.ok(dto);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));

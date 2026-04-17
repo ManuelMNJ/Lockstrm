@@ -3,19 +3,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { EMPTY, catchError, finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
-import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
-import { Paginator } from '../../shared/utils/paginator';
+import { ModalService } from '../../shared/services/modal.service';
+import { VideoCardComponent } from '../../shared/components/video-card/video-card.component';
 
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoCardComponent],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +31,7 @@ export class VideosComponent implements OnInit {
   private objectUrl: string | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
+  faseSubida: 'inactiva' | 'subiendo' | 'procesando' = 'inactiva';
   progreso = 0;
   mensajeError = '';
 
@@ -43,7 +44,6 @@ export class VideosComponent implements OnInit {
   errorEliminacionVisible = false;
   private errorEliminacionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  videoAEliminar: Video | null = null;
   videoReproduciendose: Video | null = null;
 
   // ── Edición de vídeo ───────────────────────────────────────────────────────
@@ -56,22 +56,73 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Paginación ─────────────────────────────────────────────────────────────
-  readonly paginator = new Paginator<Video>(15);
+  // ── Ordenación ────────────────────────────────────────────────────────────
+  columnaOrden = '';
+  ordenAscendente = true;
 
-  goToPage(page: number): void {
-    this.paginator.goToPage(page);
+  ordenarTabla(columna: string): void {
+    if (this.columnaOrden === columna) {
+      this.ordenAscendente = !this.ordenAscendente;
+    } else {
+      this.columnaOrden    = columna;
+      this.ordenAscendente = true;
+    }
+
+    const dir = this.ordenAscendente ? 1 : -1;
+
+    this.videos = [...this.videos].sort((a, b) => {
+      let cmp = 0;
+      switch (columna) {
+        case 'titulo':
+          cmp = (a.titulo ?? '').localeCompare(b.titulo ?? '', undefined, { sensitivity: 'base' });
+          break;
+        case 'fecha':
+          cmp = new Date(a.fechaSubida ?? 0).getTime() - new Date(b.fechaSubida ?? 0).getTime();
+          break;
+        case 'grupo':
+          cmp = (a.grupo?.nombre ?? '').localeCompare(b.grupo?.nombre ?? '', undefined, { sensitivity: 'base' });
+          break;
+        case 'duracion':
+          cmp = (a.duracion ?? 0) - (b.duracion ?? 0);
+          break;
+      }
+      return cmp * dir;
+    });
+
+    this.paginaActual = 1;
     this.cdr.markForCheck();
   }
 
+  // ── Paginación ─────────────────────────────────────────────────────────────
+  paginaActual   = 1;
+  itemsPorPagina = 10;
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.videos.length / this.itemsPorPagina));
+  }
+
+  get videosPaginados(): Video[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.videos.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  irAPagina(pagina: number): void {
+    this.paginaActual = Math.max(1, Math.min(pagina, this.totalPaginas));
+    this.cdr.markForCheck();
+  }
+
+  anterior(): void { this.irAPagina(this.paginaActual - 1); }
+  siguiente(): void { this.irAPagina(this.paginaActual + 1); }
+
   @ViewChild('archivoInput') archivoInput!: ElementRef<HTMLInputElement>;
 
-  private cdr        = inject(ChangeDetectorRef);
-  private destroyRef = inject(DestroyRef);
+  private cdr          = inject(ChangeDetectorRef);
+  private destroyRef   = inject(DestroyRef);
+  private modalService = inject(ModalService);
 
   constructor(
     protected videoService: VideoService,
-    private  grupoService:  GrupoService,
+    private   grupoService: GrupoService,
   ) {}
 
   private refresh(): void {
@@ -94,8 +145,7 @@ export class VideosComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoEnEdicion)    { this.cancelarEdicion();    return; }
-    if (this.videoAEliminar)    { this.cancelarEliminacion(); return; }
+    if (this.videoEnEdicion)       { this.cancelarEdicion();  return; }
     if (this.videoReproduciendose) { this.cerrarReproductor(); }
   }
 
@@ -194,14 +244,29 @@ export class VideosComponent implements OnInit {
     }
 
     this.estadoSubida = 'uploading';
+    this.faseSubida   = 'subiendo';
     this.progreso     = 0;
     this.mensajeError = '';
 
     this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
+        catchError((err) => {
+          this.estadoSubida = 'error';
+          this.faseSubida   = 'inactiva';
+          this.progreso     = 0;
+          this.mensajeError = err?.error?.mensaje || err?.error?.error || 'Error al subir. Comprueba la consola.';
+          console.error('[VideosComponent] Error en subida:', {
+            status:     err?.status,
+            statusText: err?.statusText,
+            body:       err?.error,
+          });
+          this.cdr.markForCheck();
+          return EMPTY;
+        }),
         finalize(() => {
           if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
+          if (this.faseSubida !== 'inactiva') this.faseSubida = 'inactiva';
           this.progreso = 0;
           this.cdr.markForCheck();
         })
@@ -210,6 +275,9 @@ export class VideosComponent implements OnInit {
         next: (event) => {
           if (event.type === HttpEventType.UploadProgress && event.total) {
             this.progreso = Math.round(100 * event.loaded / event.total);
+            if (this.progreso >= 100) {
+              this.faseSubida = 'procesando';
+            }
             this.cdr.markForCheck();
             return;
           }
@@ -217,6 +285,16 @@ export class VideosComponent implements OnInit {
           if (event.type !== HttpEventType.Response) return;
 
           const res = event.body!;
+          console.log('[VideosComponent] Upload response:', res);
+
+          if (!res?.idVideo) {
+            console.error('[VideosComponent] La respuesta no contiene idVideo:', res);
+            this.estadoSubida = 'error';
+            this.mensajeError = 'El servidor no devolvió el ID del vídeo.';
+            this.cdr.markForCheck();
+            return;
+          }
+
           const grupo = this.idGrupoSeleccionado
             ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
             : null;
@@ -231,8 +309,9 @@ export class VideosComponent implements OnInit {
           };
 
           this.videos              = [nuevoVideo, ...this.videos];
-          this.paginator.setItems(this.videos);
+          this.paginaActual = 1;
           this.estadoSubida        = 'success';
+          this.faseSubida          = 'inactiva';
           this.progreso            = 0;
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
@@ -262,21 +341,14 @@ export class VideosComponent implements OnInit {
 
   // ── Eliminación ────────────────────────────────────────────────────────────
 
-  solicitarEliminacion(video: Video): void {
-    this.videoAEliminar = video;
-    this.cdr.markForCheck();
-  }
+  async eliminarVideo(video: Video): Promise<void> {
+    const ok = await this.modalService.confirm(
+      'Eliminar vídeo',
+      `¿Eliminar "${video.titulo}"? Esta acción eliminará el archivo de la nube, todos los permisos asociados y el historial de reproducción. No se puede deshacer.`,
+      'Eliminar permanentemente',
+    );
+    if (!ok) return;
 
-  cancelarEliminacion(): void {
-    this.videoAEliminar = null;
-    this.cdr.markForCheck();
-  }
-
-  confirmarEliminacion(): void {
-    const video = this.videoAEliminar;
-    if (!video) return;
-
-    this.videoAEliminar = null;
     this.deletingIds = new Set(this.deletingIds).add(video.idVideo);
     this.cdr.markForCheck();
 
@@ -292,7 +364,7 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: () => {
           this.videos = this.videos.filter(v => v.idVideo !== video.idVideo);
-          this.paginator.setItems(this.videos);
+          this.paginaActual = 1;
           this.cdr.markForCheck();
         },
         error: (err) => {
@@ -366,7 +438,7 @@ export class VideosComponent implements OnInit {
               ? { ...v, titulo: this.editTitulo.trim(), grupo: grupoNuevo ? { idGrupo: grupoNuevo.idGrupo, nombre: grupoNuevo.nombre } : undefined }
               : v
           );
-          this.paginator.setItems(this.videos);
+          this.paginaActual = 1;
           this.videoEnEdicion = null;
           this.estadoEdicion  = 'idle';
           this.mostrarExitoEdicion();
@@ -390,7 +462,7 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: (datos) => {
           this.videos   = datos;
-          this.paginator.setItems(datos);
+          this.paginaActual = 1;
           this.cargando = false;
           this.cdr.markForCheck();
         },

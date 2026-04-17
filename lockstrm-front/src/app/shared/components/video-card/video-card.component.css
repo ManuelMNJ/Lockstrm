@@ -1,0 +1,181 @@
+/* ==========================================================================
+   Video Card — shared reusable component
+   ========================================================================== */
+
+.vc {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.vc--clickable {
+  cursor: pointer;
+}
+
+.vc--clickable:hover {
+  border-color: var(--border-soft);
+  background-color: var(--bg-surface-hover);
+}
+
+/* ── Thumbnail ── */
+.vc__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.vc__thumb svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ── Info block ── */
+.vc__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vc__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-subtle);
+  flex-wrap: wrap;
+}
+
+.vc__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* ── Index ── */
+.vc__index {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-subtle);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* ── Actions ── */
+.vc__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.vc__btn-view {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-primary);
+  background-color: transparent;
+  border: 1px solid var(--color-primary-ghost);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.vc__btn-view:hover {
+  background-color: var(--color-primary-ghost);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.vc__btn-view:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.vc__btn-edit,
+.vc__btn-delete,
+.vc__btn-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-subtle);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast),
+    color            var(--transition-fast);
+}
+
+.vc__btn-edit svg,
+.vc__btn-delete svg,
+.vc__btn-remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vc__btn-edit:hover {
+  background-color: var(--color-primary-ghost);
+  border-color: rgba(124, 58, 237, 0.25);
+  color: var(--color-primary);
+}
+
+.vc__btn-edit:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.vc__btn-delete:hover,
+.vc__btn-remove:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--color-error);
+}
+
+.vc__btn-delete:focus-visible,
+.vc__btn-remove:focus-visible {
+  outline: 2px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+.vc__btn-delete:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

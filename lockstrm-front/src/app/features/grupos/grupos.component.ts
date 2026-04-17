@@ -3,13 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
 import { A11yModule } from '@angular/cdk/a11y';
-import { GrupoService, Grupo } from '../../core/services/grupo.service';
-import { VideoService } from '../../core/services/video.service';
+import { GrupoService, Grupo, GrupoStats } from '../../core/services/grupo.service';
+import { AuthService } from '../../core/services/auth.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 import { InitialPipe } from '../../shared/pipes/initial.pipe';
+import { ModalService } from '../../shared/services/modal.service';
 
 @Component({
   selector: 'app-grupos',
@@ -30,10 +29,7 @@ export class GruposComponent implements OnInit {
   estadoCreacion: 'idle' | 'loading' | 'error' = 'idle';
   errorCreacion = '';
 
-  // ── Estadísticas de tarjetas ───────────────────────────────────────────────
-  miembrosPerGrupo = new Map<number, number>();
-  videosPerGrupo   = new Map<number, number>();
-  cargandoStats    = false;
+  statsMap = new Map<number, GrupoStats>();
 
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
@@ -41,12 +37,17 @@ export class GruposComponent implements OnInit {
   private cdr        = inject(ChangeDetectorRef);
 
   constructor(
-    private grupoService: GrupoService,
-    private videoService: VideoService,
-    private router: Router,
+    private grupoService:  GrupoService,
+    private router:        Router,
+    private authService:   AuthService,
+    private cdr:           ChangeDetectorRef,
+    private modalService:  ModalService,
   ) {}
 
-  // ── Escape para cerrar modal ───────────────────────────────────────────────
+  get currentUserId(): number | undefined {
+    return this.authService.getUser()?.id;
+  }
+
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     if (this.modalAbierto) this.cerrarModal();
@@ -79,9 +80,9 @@ export class GruposComponent implements OnInit {
         error: () => {
           this.errorCarga = 'No se pudo cargar la lista de grupos.';
           this.cargando   = false;
+          this.cdr.detectChanges();
         },
       });
-  }
 
   private cargarEstadisticas(grupos: Grupo[]): void {
     if (!grupos.length) return;
@@ -90,18 +91,15 @@ export class GruposComponent implements OnInit {
     this.videoService.obtenerMisVideos()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (videos) => {
-          const countMap = new Map<number, number>();
-          videos.forEach(v => {
-            const idGrupo = v.grupo?.idGrupo;
-            if (idGrupo) {
-              countMap.set(idGrupo, (countMap.get(idGrupo) ?? 0) + 1);
-            }
-          });
-          this.videosPerGrupo = countMap;
+        next: (stats) => {
+          const map = new Map<number, GrupoStats>();
+          stats.forEach(s => map.set(s.idGrupo, s));
+          this.statsMap = map;
+          this.cdr.detectChanges();
         },
         error: () => { /* stats opcionales */ },
       });
+  }
 
     const requests = grupos.map(g =>
       this.grupoService.obtenerMiembros(g.idGrupo).pipe(
@@ -109,17 +107,18 @@ export class GruposComponent implements OnInit {
         catchError(() => of({ idGrupo: g.idGrupo, count: 0 })),
       )
     );
+    if (!ok) return;
 
-    forkJoin(requests)
+    this.grupoService.eliminarGrupo(idGrupo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (results) => {
-          const countMap = new Map<number, number>();
-          results.forEach(r => countMap.set(r.idGrupo, r.count));
-          this.miembrosPerGrupo = countMap;
-          this.cargandoStats    = false;
+        next: () => {
+          this.gruposCreados  = this.gruposCreados.filter(g => g.idGrupo !== idGrupo);
+          this.gruposInvitado = this.gruposInvitado.filter(g => g.idGrupo !== idGrupo);
+          this.statsMap.delete(idGrupo);
+          this.cdr.detectChanges();
         },
-        error: () => { this.cargandoStats = false; },
+        error: () => {},
       });
   }
 
@@ -150,20 +149,14 @@ export class GruposComponent implements OnInit {
           this.miembrosPerGrupo = new Map(this.miembrosPerGrupo).set(grupo.idGrupo, 1);
           this.videosPerGrupo   = new Map(this.videosPerGrupo).set(grupo.idGrupo, 0);
           this.cerrarModal();
+          this.cdr.detectChanges();
         },
         error: (err) => {
-          this.estadoCreacion = 'error';
+          this.estadoCreacion = 'idle';
           this.errorCreacion  = err?.error?.error || 'Error al crear el grupo.';
+          this.cerrarModal();
+          this.cdr.detectChanges();
         },
       });
   }
-
-  getMiembros(idGrupo: number): number | null {
-    return this.miembrosPerGrupo.has(idGrupo) ? (this.miembrosPerGrupo.get(idGrupo) ?? null) : null;
-  }
-
-  getVideos(idGrupo: number): number | null {
-    return this.videosPerGrupo.has(idGrupo) ? (this.videosPerGrupo.get(idGrupo) ?? null) : null;
-  }
-
 }

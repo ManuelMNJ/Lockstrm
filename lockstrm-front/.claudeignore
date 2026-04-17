@@ -1,0 +1,20 @@
+# Dependencias (El agujero negro de los tokens)
+node_modules/
+
+# Archivos de bloqueo (Líneas infinitas sin lógica para la IA)
+package-lock.json
+yarn.lock
+
+# Compilación y caché de Angular
+dist/
+out-tsc/
+.angular/
+
+# Mapeos de código (Basura para la IA)
+*.map
+
+# Assets multimedia pesados
+src/assets/**/*.mp4
+src/assets/**/*.svg
+src/assets/**/*.png
+src/assets/**/*.jpg
