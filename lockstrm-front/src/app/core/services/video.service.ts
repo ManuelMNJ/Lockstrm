@@ -7,7 +7,7 @@ import { VideoStreamService } from './video-stream.service';
 
 // ── Respuesta del endpoint de subida ──────────────────────────────────────────
 export interface VideoUploadResponse {
-  id_video: number;
+  idVideo: number;
   titulo: string;
   url: string;
   duracion: number;
@@ -128,7 +128,7 @@ export class VideoService {
 
   /** PATCH /api/videos/{id} — edita título y/o reasigna el grupo. */
   editarVideo(idVideo: number, titulo: string, idGrupo: number | null): Observable<Video> {
-    return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupo }).pipe(
+    return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, grupoId: idGrupo }).pipe(
       map(raw => mapVideo(raw)),
       tap(() => { this.misVideosCache$ = null; }),
     );

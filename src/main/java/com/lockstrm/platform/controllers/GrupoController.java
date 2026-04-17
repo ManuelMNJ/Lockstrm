@@ -1,5 +1,9 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.GrupoDTO;
+import com.lockstrm.platform.dto.GrupoStatsDTO;
+import com.lockstrm.platform.dto.MiembroDTO;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +24,14 @@ public class GrupoController {
 
     private final GrupoService grupoService;
 
-    /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
+    @GetMapping("/stats")
+    public ResponseEntity<List<GrupoStatsDTO>> obtenerGrupoStats(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(grupoService.obtenerGrupoStats(userDetails.getUsername()));
+    }
+
+    /** Lista todos los grupos del usuario (propios + miembro) con el campo esCreador. */
     @GetMapping
-    public ResponseEntity<List<Grupo>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<GrupoDTO>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(grupoService.obtenerGruposDelUsuario(userDetails.getUsername()));
     }
 
@@ -44,7 +53,7 @@ public class GrupoController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Grupo grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
+            GrupoDTO grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
             return ResponseEntity.ok(grupo);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
@@ -65,6 +74,34 @@ public class GrupoController {
         return ResponseEntity.status(201).body(grupo);
     }
 
+    @GetMapping("/{idGrupo}/miembros")
+    public ResponseEntity<?> obtenerMiembros(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            List<MiembroDTO> miembros = grupoService.obtenerMiembros(idGrupo, userDetails.getUsername());
+            return ResponseEntity.ok(miembros);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{idGrupo}/videos")
+    public ResponseEntity<?> obtenerVideosDeGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            List<VideoDTO> videos = grupoService.obtenerVideosDeGrupo(idGrupo, userDetails.getUsername());
+            return ResponseEntity.ok(videos);
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{idGrupo}/miembros")
     public ResponseEntity<?> aniadirMiembro(
             @PathVariable Long idGrupo,
@@ -75,12 +112,14 @@ public class GrupoController {
             return ResponseEntity.badRequest().body(Map.of("error", "El email del nuevo miembro es obligatorio"));
         }
         try {
-            grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
-            return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
+            MiembroDTO miembro = grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
+            return ResponseEntity.status(201).body(miembro);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
         }
     }
 

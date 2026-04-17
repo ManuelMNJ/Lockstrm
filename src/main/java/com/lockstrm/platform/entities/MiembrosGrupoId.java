@@ -14,9 +14,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class MiembrosGrupoId implements Serializable {
 
-    @Column(name = "id_usuario_id")
+    @Column(name = "id_usuario")
     private Long idUsuarioId;
 
-    @Column(name = "id_grupo_id")
+    @Column(name = "id_grupo")
     private Long idGrupoId;
 }

@@ -1,0 +1,142 @@
+/* ==========================================================================
+   Confirm Modal — global confirm dialog
+   ========================================================================== */
+
+/* ── Backdrop ── */
+.cm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background-color: rgba(0, 0, 0, 0.74);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: cm-fade-in 0.15s ease;
+}
+
+@keyframes cm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Dialog box ── */
+.cm-box {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-top: 3px solid var(--color-error);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.65),
+    0  4px 16px rgba(0, 0, 0, 0.40);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 24px 22px;
+  animation: cm-pop-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cm-pop-in {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* ── Warning icon ── */
+.cm-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  color: var(--color-error);
+  flex-shrink: 0;
+}
+
+.cm-icon-wrap svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ── Title ── */
+.cm-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Message ── */
+.cm-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: 0;
+  text-align: center;
+  max-width: 340px;
+}
+
+/* ── Button row ── */
+.cm-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ── Base button ── */
+.cm-btn {
+  flex: 1;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    box-shadow       0.14s ease,
+    color            0.14s ease;
+}
+
+.cm-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Cancel ── */
+.cm-btn--cancel {
+  color: var(--text-muted);
+  background-color: transparent;
+  border: 1px solid var(--border-soft);
+}
+
+.cm-btn--cancel:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-main);
+}
+
+/* ── Confirm (destructive) ── */
+.cm-btn--confirm {
+  color: #fff;
+  background-color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.cm-btn--confirm:hover {
+  background-color: color-mix(in srgb, var(--color-error) 84%, #000);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.38);
+}
+
+.cm-btn--confirm:focus-visible {
+  outline-color: var(--color-error);
+}

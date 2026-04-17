@@ -12,6 +12,7 @@ public class Video {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_video")
     private Long idVideo;
 
     private String titulo;
