@@ -175,6 +175,7 @@
         <div class="modal-player">
           <app-video-player
             [videoUrl]="videoService.buildStreamUrl(videoReproduciendose.idVideo)"
+            [idVideo]="videoReproduciendose.idVideo"
             (heartbeat)="onHeartbeat($event)">
           </app-video-player>
         </div>

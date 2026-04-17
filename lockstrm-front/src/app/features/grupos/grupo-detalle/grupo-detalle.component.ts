@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
-import { VideoService, Video } from '../../../core/services/video.service';
+import { VideoService, Video, VideoVistaEstadistica } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
@@ -55,6 +55,12 @@ export class GrupoDetalleComponent implements OnInit {
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
 
+  // Estadísticas de vistas
+  videoStats: Video | null = null;
+  estadisticas: VideoVistaEstadistica[] = [];
+  cargandoStats = false;
+  errorStats = '';
+
   private idGrupo!: number;
   private destroyRef = inject(DestroyRef);
 
@@ -95,7 +101,7 @@ export class GrupoDetalleComponent implements OnInit {
     })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        finalize(() => { this.cargando = false; this.cdr.detectChanges(); }),
+        finalize(() => { setTimeout(() => { this.cargando = false; this.cdr.detectChanges(); }, 0); }),
       )
       .subscribe({
         next: ({ grupo, creados }) => {
@@ -320,7 +326,36 @@ export class GrupoDetalleComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoReproduciendose) { this.cerrarReproductor(); }
+    if (this.videoReproduciendose) { this.cerrarReproductor(); return; }
+    if (this.videoStats)           { this.cerrarStats();       return; }
+  }
+
+  abrirStats(video: Video): void {
+    this.videoStats      = video;
+    this.estadisticas    = [];
+    this.cargandoStats   = true;
+    this.errorStats      = '';
+    this.cdr.detectChanges();
+
+    this.videoService.obtenerEstadisticas(video.idVideo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.estadisticas  = data;
+          this.cargandoStats = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.errorStats    = 'No se pudieron cargar las estadísticas.';
+          this.cargandoStats = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  cerrarStats(): void {
+    this.videoStats = null;
+    this.cdr.detectChanges();
   }
 
   verVideo(video: Video): void {

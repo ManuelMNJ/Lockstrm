@@ -5,6 +5,12 @@ import { map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
+export interface VideoVistaEstadistica {
+  nombre:   string;
+  email:    string;
+  contador: number;
+}
+
 // ── Respuesta del endpoint de subida ──────────────────────────────────────────
 export interface VideoUploadResponse {
   id_video:     number;
@@ -145,5 +151,13 @@ export class VideoService {
    */
   registrarHeartbeat(idVideo: number, currentTime: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { currentTime: Math.floor(currentTime) });
+  }
+
+  registrarVista(idVideo: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idVideo}/ver`, {});
+  }
+
+  obtenerEstadisticas(idVideo: number): Observable<VideoVistaEstadistica[]> {
+    return this.http.get<VideoVistaEstadistica[]>(`${this.apiUrl}/${idVideo}/estadisticas`);
   }
 }

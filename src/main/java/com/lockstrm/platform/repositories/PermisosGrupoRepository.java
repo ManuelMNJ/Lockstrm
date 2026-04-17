@@ -22,6 +22,9 @@ public interface PermisosGrupoRepository extends JpaRepository<PermisosGrupo, Pe
     @Query("SELECT pg FROM PermisosGrupo pg JOIN FETCH pg.grupo WHERE pg.id.idVideoId IN :videoIds")
     List<PermisosGrupo> findByVideoIds(@Param("videoIds") List<Long> videoIds);
 
+    @Query("SELECT COUNT(pg) > 0 FROM PermisosGrupo pg WHERE pg.id.idVideoId = :idVideo AND pg.grupo.creador.email = :email")
+    boolean existsByVideoIdAndGrupoCreadorEmail(@Param("idVideo") Long idVideo, @Param("email") String email);
+
     @Modifying
     @Query("DELETE FROM PermisosGrupo pg WHERE pg.id.idVideoId = :idVideo")
     void deleteByVideoId(@Param("idVideo") Long idVideo);
