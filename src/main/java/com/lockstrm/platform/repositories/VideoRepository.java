@@ -2,6 +2,7 @@ package com.lockstrm.platform.repositories;
 
 import com.lockstrm.platform.entities.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,8 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
            "JOIN PermisosGrupo pg ON pg.video = v " +
            "WHERE pg.id.idGrupoId = :idGrupo")
     List<Video> findByGrupoId(@Param("idGrupo") Long idGrupo);
+
+    @Modifying
+    @Query("DELETE FROM PermisosGrupo pg WHERE pg.id.idGrupoId = :idGrupo")
+    void desasociarVideosDeGrupo(@Param("idGrupo") Long idGrupo);
 }

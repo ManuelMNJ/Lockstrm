@@ -1,5 +1,6 @@
 package com.lockstrm.platform.services;
 
+import com.lockstrm.platform.dto.GrupoDTO;
 import com.lockstrm.platform.dto.GrupoStatsDTO;
 import com.lockstrm.platform.dto.MiembroDTO;
 import com.lockstrm.platform.dto.VideoDTO;
@@ -18,11 +19,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -35,25 +33,19 @@ public class GrupoService {
     private final VideoRepository         videoRepository;
 
     /**
-     * Devuelve todos los grupos a los que pertenece el usuario:
-     * los que creó + los que integra como miembro (sin duplicados).
-     * Mantiene compatibilidad con clientes existentes.
+     * Devuelve todos los grupos a los que pertenece el usuario
+     * (creador o miembro), mapeados a GrupoDTO con el campo esCreador.
      */
     @Transactional(readOnly = true)
-    public List<Grupo> obtenerGruposDelUsuario(String email) {
-        List<Grupo> comoCreador = grupoRepository.findByCreador_Email(email);
-        List<Grupo> comoMiembro = miembrosGrupoRepository.findGruposByUsuarioEmail(email);
-
-        Set<Long> vistos = new HashSet<>();
-        List<Grupo> resultado = new ArrayList<>();
-
-        for (Grupo g : comoCreador) {
-            if (vistos.add(g.getIdGrupo())) resultado.add(g);
-        }
-        for (Grupo g : comoMiembro) {
-            if (vistos.add(g.getIdGrupo())) resultado.add(g);
-        }
-        return resultado;
+    public List<GrupoDTO> obtenerGruposDelUsuario(String email) {
+        return grupoRepository.findGruposForUser(email).stream()
+                .map(g -> new GrupoDTO(
+                        g.getIdGrupo(),
+                        g.getNombre(),
+                        g.getIdCreador(),
+                        g.getFechaCreacion(),
+                        g.getCreador().getEmail().equals(email)))
+                .toList();
     }
 
     /** Grupos Creados por Mí: grupos donde el usuario autenticado es el administrador/creador (contexto Propietario). */
@@ -69,12 +61,12 @@ public class GrupoService {
     }
 
     /**
-     * Devuelve el detalle de un único grupo.
+     * Devuelve el detalle de un único grupo como DTO con el campo esCreador.
      * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es creador ni miembro.
      * Lanza {@link NoSuchElementException} (→ 404) si el grupo no existe.
      */
     @Transactional(readOnly = true)
-    public Grupo obtenerDetalle(Long idGrupo, String email) {
+    public GrupoDTO obtenerDetalle(Long idGrupo, String email) {
         Grupo grupo = grupoRepository.findById(idGrupo)
                 .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
 
@@ -85,7 +77,12 @@ public class GrupoService {
             throw new AccessDeniedException("No tienes acceso a este grupo");
         }
 
-        return grupo;
+        return new GrupoDTO(
+                grupo.getIdGrupo(),
+                grupo.getNombre(),
+                grupo.getIdCreador(),
+                grupo.getFechaCreacion(),
+                esCreador);
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +131,21 @@ public class GrupoService {
                 .toList();
     }
 
+    // ── Security helper ───────────────────────────────────────────────────────
+
+    /**
+     * Fetches the group and throws {@link AccessDeniedException} (→ 403) if
+     * {@code email} is not the creator. Returns the group for further use.
+     */
+    private Grupo requireCreador(Long idGrupo, String email) {
+        Grupo grupo = grupoRepository.findById(idGrupo)
+                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        if (!grupo.getCreador().getEmail().equals(email)) {
+            throw new AccessDeniedException("Solo el creador del grupo puede realizar esta acción");
+        }
+        return grupo;
+    }
+
     public Grupo crearGrupo(String emailCreador, String nombre) {
         Usuario creador = userRepository.findByEmail(emailCreador)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -144,21 +156,26 @@ public class GrupoService {
     }
 
     @Transactional
-    public void aniadirMiembro(Long idGrupo, String emailSolicitante, String emailInvitado) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
-
-        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
-            throw new AccessDeniedException("Solo el creador del grupo puede añadir miembros");
-        }
+    public MiembroDTO aniadirMiembro(Long idGrupo, String emailSolicitante, String emailInvitado) {
+        Grupo grupo = requireCreador(idGrupo, emailSolicitante);
 
         Usuario invitado = userRepository.findByEmail(emailInvitado)
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + emailInvitado));
 
+        if (emailInvitado.equals(grupo.getCreador().getEmail())) {
+            throw new IllegalArgumentException("El creador del grupo ya forma parte de él");
+        }
+
         MiembrosGrupoId miembroId = new MiembrosGrupoId(invitado.getIdUsuario(), idGrupo);
+        if (miembrosGrupoRepository.existsById(miembroId)) {
+            throw new IllegalArgumentException("El usuario ya es miembro de este grupo");
+        }
+
         MiembrosGrupo miembro = new MiembrosGrupo();
         miembro.setId(miembroId);
         miembrosGrupoRepository.save(miembro);
+
+        return new MiembroDTO(invitado.getIdUsuario(), invitado.getNombre(), invitado.getEmail());
     }
 
     /**
@@ -167,13 +184,7 @@ public class GrupoService {
      */
     @Transactional
     public void eliminarMiembro(Long idGrupo, Long idUsuario, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
-
-        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
-            throw new AccessDeniedException("Solo el creador del grupo puede eliminar miembros");
-        }
-
+        requireCreador(idGrupo, emailSolicitante);
         miembrosGrupoRepository.deleteByGrupoIdAndUsuarioId(idGrupo, idUsuario);
     }
 
@@ -183,13 +194,7 @@ public class GrupoService {
      */
     @Transactional
     public Grupo renombrarGrupo(Long idGrupo, String nuevoNombre, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
-
-        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
-            throw new AccessDeniedException("Solo el creador del grupo puede cambiar su nombre");
-        }
-
+        Grupo grupo = requireCreador(idGrupo, emailSolicitante);
         grupo.setNombre(nuevoNombre.trim());
         return grupoRepository.save(grupo);
     }
@@ -201,16 +206,11 @@ public class GrupoService {
      */
     @Transactional
     public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
-
-        if (!grupo.getCreador().getEmail().equals(emailSolicitante)) {
-            throw new AccessDeniedException("Solo el creador del grupo puede eliminarlo");
-        }
-
+        requireCreador(idGrupo, emailSolicitante);
+        // Desvincular vídeos del grupo (quedan privados, no se eliminan)
+        videoRepository.desasociarVideosDeGrupo(idGrupo);
         // Eliminar relaciones antes que el grupo (FK constraints)
         miembrosGrupoRepository.deleteByGrupoId(idGrupo);
-        permisosGrupoRepository.deleteByGrupoId(idGrupo);
-        grupoRepository.delete(grupo);
+        grupoRepository.deleteGrupoById(idGrupo);
     }
 }

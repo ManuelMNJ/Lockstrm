@@ -39,76 +39,168 @@
     </div>
   }
 
-  <!-- ── Group grid ── -->
+  <!-- ================================================================
+    SECCIONES DE GRUPOS
+    ================================================================ -->
   @if (!cargando && !errorCarga) {
-    <div class="grupos-grid">
-      @for (g of grupos; track g.idGrupo) {
-        <div class="grupo-card"
-             role="button"
-             tabindex="0"
-             [attr.aria-label]="'Abrir grupo ' + g.nombre"
-             (click)="abrirDetalle(g)"
-             (keydown.enter)="abrirDetalle(g)"
-             (keydown.space)="abrirDetalle(g)">
 
-          <div class="grupo-card-icon" aria-hidden="true">
-            {{ g.nombre | initial }}
-          </div>
+    <!-- ── Mis Grupos (Soy Creador) ── -->
+    <section class="grupos-section">
+      <h3 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="section-icon">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        Mis Grupos <span class="section-badge">{{ gruposCreados.length }}</span>
+      </h3>
 
-          <div class="grupo-card-body">
-            <span class="grupo-card-name">{{ g.nombre }}</span>
-            <span class="grupo-card-date">Creado el {{ g.fechaCreacion | dateLocale }}</span>
+      <div class="grupos-grid">
+        @for (g of gruposCreados; track g.idGrupo) {
+          <div class="grupo-card"
+               role="button"
+               tabindex="0"
+               [attr.aria-label]="'Abrir grupo ' + g.nombre"
+               (click)="abrirDetalle(g)"
+               (keydown.enter)="abrirDetalle(g)"
+               (keydown.space)="abrirDetalle(g)">
 
-            <!-- Estadísticas -->
-            <div class="grupo-card-stats" aria-label="Estadísticas del grupo">
-              <span class="stat-pill" title="Miembros">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     aria-hidden="true">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-                @if (statsMap.get(g.idGrupo) !== undefined) {
-                  {{ statsMap.get(g.idGrupo)!.totalMiembros }}
-                } @else {
-                  <span class="stat-loading" aria-hidden="true"></span>
-                }
-                <span class="stat-label">miembros</span>
-              </span>
+            <div class="grupo-card-icon" aria-hidden="true">
+              {{ g.nombre | initial }}
             </div>
-          </div>
 
-          <svg class="grupo-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </div>
-      } @empty {
-        <div class="empty-state" style="grid-column: 1 / -1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <p>Aún no tienes ningún grupo</p>
-          <span class="empty-hint">Crea tu primer grupo para controlar quién accede a tus vídeos.</span>
-          <button class="btn-primary" (click)="abrirModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true" class="btn-icon">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+            <div class="grupo-card-body">
+              <span class="grupo-card-name">{{ g.nombre }}</span>
+              <span class="grupo-card-date">Creado el {{ g.fechaCreacion | dateLocale }}</span>
+
+              <div class="grupo-card-stats" aria-label="Estadísticas del grupo">
+                <span class="stat-pill" title="Miembros">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  @if (statsMap.get(g.idGrupo) !== undefined) {
+                    {{ statsMap.get(g.idGrupo)!.totalMiembros }}
+                  } @else {
+                    <span class="stat-loading" aria-hidden="true"></span>
+                  }
+                  <span class="stat-label">miembros</span>
+                </span>
+              </div>
+            </div>
+
+            <svg class="grupo-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
             </svg>
-            Crear primer grupo
-          </button>
-        </div>
-      }
-    </div>
+
+            <button class="btn-danger-sm"
+                    [attr.aria-label]="'Borrar grupo ' + g.nombre"
+                    (click)="$event.stopPropagation(); eliminarGrupo(g.idGrupo)">
+              Borrar
+            </button>
+          </div>
+        } @empty {
+          <div class="empty-state" style="grid-column: 1 / -1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <p>Aún no has creado ningún grupo</p>
+            <span class="empty-hint">Crea tu primer grupo para controlar quién accede a tus vídeos.</span>
+            <button class="btn-primary" (click)="abrirModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true" class="btn-icon">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Crear primer grupo
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- ── Compartidos Conmigo ── -->
+    <section class="grupos-section">
+      <h3 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="section-icon">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Compartidos Conmigo <span class="section-badge">{{ gruposInvitado.length }}</span>
+      </h3>
+
+      <div class="grupos-grid">
+        @for (g of gruposInvitado; track g.idGrupo) {
+          <div class="grupo-card"
+               role="button"
+               tabindex="0"
+               [attr.aria-label]="'Abrir grupo ' + g.nombre"
+               (click)="abrirDetalle(g)"
+               (keydown.enter)="abrirDetalle(g)"
+               (keydown.space)="abrirDetalle(g)">
+
+            <div class="grupo-card-icon grupo-card-icon--member" aria-hidden="true">
+              {{ g.nombre | initial }}
+            </div>
+
+            <div class="grupo-card-body">
+              <span class="grupo-card-name">{{ g.nombre }}</span>
+              <span class="grupo-card-date">Añadido el {{ g.fechaCreacion | dateLocale }}</span>
+
+              <div class="grupo-card-stats" aria-label="Estadísticas del grupo">
+                <span class="stat-pill" title="Miembros">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  @if (statsMap.get(g.idGrupo) !== undefined) {
+                    {{ statsMap.get(g.idGrupo)!.totalMiembros }}
+                  } @else {
+                    <span class="stat-loading" aria-hidden="true"></span>
+                  }
+                  <span class="stat-label">miembros</span>
+                </span>
+              </div>
+            </div>
+
+            <svg class="grupo-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        } @empty {
+          <div class="empty-state" style="grid-column: 1 / -1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <p>Aún no perteneces a ningún grupo</p>
+            <span class="empty-hint">Cuando alguien te añada a un grupo, aparecerá aquí.</span>
+          </div>
+        }
+      </div>
+    </section>
+
   }
 
 </div>

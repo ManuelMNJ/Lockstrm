@@ -10,6 +10,7 @@ export interface Grupo {
   nombre: string;
   fechaCreacion?: string;
   idCreador?: number;
+  esCreador?: boolean;
 }
 
 export interface Miembro {
@@ -81,8 +82,8 @@ export class GrupoService {
     );
   }
 
-  aniadirMiembro(idGrupo: number, email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idGrupo}/miembros`, { email });
+  aniadirMiembro(idGrupo: number, email: string): Observable<Miembro> {
+    return this.http.post<Miembro>(`${this.apiUrl}/${idGrupo}/miembros`, { email });
   }
 
   eliminarMiembro(idGrupo: number, idUsuario: number): Observable<void> {
