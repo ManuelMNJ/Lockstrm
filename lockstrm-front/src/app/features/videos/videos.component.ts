@@ -9,13 +9,13 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
-import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ModalService } from '../../shared/services/modal.service';
+import { VideoCardComponent } from '../../shared/components/video-card/video-card.component';
 
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoCardComponent],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

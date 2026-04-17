@@ -11,11 +11,12 @@ import { Video, VideoService } from '../../../core/services/video.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
 import { ModalService } from '../../../shared/services/modal.service';
+import { VideoCardComponent } from '../../../shared/components/video-card/video-card.component';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialPipe, VideoPlayerComponent],
+  imports: [CommonModule, FormsModule, InitialPipe, VideoPlayerComponent, VideoCardComponent],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
 })

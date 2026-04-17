@@ -251,41 +251,16 @@
         <p>No hay vídeos asignados a este grupo todavía.</p>
       </div>
 
-      <ul class="videos-list" *ngIf="videosGrupo.length > 0" role="list">
-        <li *ngFor="let v of videosGrupo; let i = index"
-            class="video-item"
-            role="listitem"
-            style="cursor: pointer"
-            (click)="verVideo(v.idVideo)">
-          <div class="video-thumb" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-              stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-          </div>
-          <div class="video-info">
-            <span class="video-title">{{ v.titulo }}</span>
-            <span class="video-meta">
-              {{ v.duracion != null ? (v.duracion | number:'1.0-0') + ' s' : 'Sin duración' }}
-            </span>
-          </div>
-          <div class="video-index" aria-hidden="true">#{{ i + 1 }}</div>
-          @if (grupo.esCreador) {
-            <button class="btn-remove"
-                    (click)="$event.stopPropagation(); quitarVideo(v)"
-                    [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/>
-                <path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </button>
-          }
-        </li>
-      </ul>
+      <div class="videos-list" *ngIf="videosGrupo.length > 0" role="list">
+        <app-video-card
+          *ngFor="let v of videosGrupo; let i = index"
+          [video]="v"
+          [index]="i + 1"
+          [canRemove]="grupo.esCreador"
+          (cardClicked)="verVideo(v.idVideo)"
+          (removeClicked)="quitarVideo(v)">
+        </app-video-card>
+      </div>
     </section>
 
   </div>
