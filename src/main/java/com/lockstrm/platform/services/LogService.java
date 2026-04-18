@@ -1,12 +1,10 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.entities.Log;
-import com.lockstrm.platform.entities.PermisosGrupo;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
-import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +22,6 @@ public class LogService {
     private final LogRepository            logRepository;
     private final UserRepository           userRepository;
     private final VideoRepository          videoRepository;
-    private final PermisosGrupoRepository  permisosGrupoRepository;
     private final MiembrosGrupoRepository  miembrosGrupoRepository;
 
     // ── Registro de acceso inicial ──────────────────────────────────────────
@@ -119,21 +115,9 @@ public class LogService {
      * se aplica en ambos puntos de entrada sin duplicar la lógica.
      */
     public void verificarAcceso(Video video, String emailUsuario) {
-        boolean esPropietario = video.getPropietario().getEmail().equals(emailUsuario);
-
-        if (!esPropietario) {
-            List<PermisosGrupo> permisos = permisosGrupoRepository
-                    .findById_IdVideoId(video.getIdVideo());
-
-            boolean esMiembro = permisos.stream()
-                    .anyMatch(p -> miembrosGrupoRepository
-                            .countMiembroByEmailAndGrupo(
-                                    emailUsuario,
-                                    p.getId().getIdGrupoId()) > 0);
-
-            if (!esMiembro) {
-                throw new AccessDeniedException("Acceso denegado al video");
-            }
+        if (video.getPropietario().getEmail().equals(emailUsuario)) return;
+        if (!miembrosGrupoRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
+            throw new AccessDeniedException("Acceso denegado al video");
         }
     }
 }

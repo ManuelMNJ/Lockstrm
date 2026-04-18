@@ -44,6 +44,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+    public boolean emailDisponible(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
     public boolean cambiarContrasena(String email, String actual, String nueva) {
         Usuario usuario = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));

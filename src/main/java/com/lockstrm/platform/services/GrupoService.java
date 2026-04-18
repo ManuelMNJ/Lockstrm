@@ -109,15 +109,8 @@ public class GrupoService {
 
         return miembrosGrupoRepository.findUsuariosByGrupoId(idGrupo)
                 .stream()
-                .map(u -> new MiembroDto(u.getIdUsuario(), resolverNombre(u), u.getEmail()))
+                .map(u -> new MiembroDto(u.getIdUsuario(), u.getNombreCompleto(), u.getEmail()))
                 .collect(Collectors.toList());
-    }
-
-    private String resolverNombre(Usuario u) {
-        String nombre = u.getNombre() != null ? u.getNombre() : "";
-        String apellidos = u.getApellidos() != null ? u.getApellidos() : "";
-        String full = (nombre + " " + apellidos).trim();
-        return full.isEmpty() ? u.getEmail() : full;
     }
 
     @Transactional

@@ -34,6 +34,13 @@ public class Usuario {
     @ToString.Exclude
     private List<Video> videosSubidos;
 
+    public String getNombreCompleto() {
+        String n = nombre    != null ? nombre    : "";
+        String a = apellidos != null ? apellidos : "";
+        String full = (n + " " + a).trim();
+        return full.isEmpty() ? email : full;
+    }
+
     @PrePersist
     protected void onCreate() {
         fechaRegistro = LocalDateTime.now();
