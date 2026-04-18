@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../core/services/video.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
@@ -24,6 +25,10 @@ export class GrupoDetalleComponent implements OnInit {
   grupo: Grupo | null = null;
   esCreador = false;
   miembros: Miembro[] = [];
+
+  rolActual: string | null = null;
+  cambiandoRoles = new Set<number>();
+  errorCambioRol = '';
 
   videosGrupo: Video[] = [];
   misVideosDisponibles: Video[] = [];
@@ -65,8 +70,30 @@ export class GrupoDetalleComponent implements OnInit {
     private router: Router,
     private grupoService: GrupoService,
     protected videoService: VideoService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef,
   ) {}
+
+  get currentUserId(): number | null {
+    return this.authService.getUser()?.id ?? null;
+  }
+
+  get esSuperAdmin(): boolean {
+    return this.rolActual === 'SUPER_ADMIN';
+  }
+
+  get esAdmin(): boolean {
+    return this.rolActual === 'ADMIN' || this.rolActual === 'SUPER_ADMIN';
+  }
+
+  get puedeGestionarRoles(): boolean {
+    return this.esAdmin;
+  }
+
+  get rolesDisponibles(): string[] {
+    if (this.esSuperAdmin) return ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MEMBER'];
+    return ['ADMIN', 'EDITOR', 'MEMBER'];
+  }
 
   private addEliminando(idUsuario: number): void {
     this.eliminandoMiembros = new Set(this.eliminandoMiembros).add(idUsuario);
@@ -114,7 +141,12 @@ export class GrupoDetalleComponent implements OnInit {
     this.grupoService.obtenerMiembros(this.idGrupo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (miembros) => { this.miembros = miembros; this.cdr.markForCheck(); },
+        next: (miembros) => {
+          this.miembros = miembros;
+          const propio = miembros.find(m => m.idUsuario === this.currentUserId);
+          this.rolActual = propio?.rol ?? null;
+          this.cdr.markForCheck();
+        },
         error: () => {},
       });
   }
@@ -230,6 +262,35 @@ export class GrupoDetalleComponent implements OnInit {
         error: (err) => {
           this.removeEliminando(miembro.idUsuario);
           this.errorEliminarMiembro = extractHttpErrorMessage(err, 'No se pudo eliminar el miembro.');
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  cambiarRolMiembro(miembro: Miembro, nuevoRol: string): void {
+    if (!nuevoRol || nuevoRol === miembro.rol) return;
+
+    this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
+    this.errorCambioRol = '';
+    this.cdr.markForCheck();
+
+    this.grupoService.cambiarRolMiembro(this.idGrupo, miembro.idUsuario, nuevoRol)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.miembros = this.miembros.map(m =>
+            m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
+          );
+          const next = new Set(this.cambiandoRoles);
+          next.delete(miembro.idUsuario);
+          this.cambiandoRoles = next;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const next = new Set(this.cambiandoRoles);
+          next.delete(miembro.idUsuario);
+          this.cambiandoRoles = next;
+          this.errorCambioRol = extractHttpErrorMessage(err, 'No se pudo cambiar el rol.');
           this.cdr.markForCheck();
         },
       });

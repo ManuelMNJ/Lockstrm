@@ -53,4 +53,8 @@ public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, Mi
     /** Lista los usuarios miembros de un grupo. */
     @Query("SELECT mg.usuario FROM MiembrosGrupo mg WHERE mg.id.idGrupoId = :idGrupo")
     List<Usuario> findUsuariosByGrupoId(@Param("idGrupo") Long idGrupo);
+
+    /** Lista registros de membresía completos (usuario + rol) para un grupo. */
+    @Query("SELECT mg FROM MiembrosGrupo mg JOIN FETCH mg.usuario WHERE mg.id.idGrupoId = :idGrupo")
+    List<MiembrosGrupo> findMiembrosByGrupoId(@Param("idGrupo") Long idGrupo);
 }

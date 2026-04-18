@@ -12,6 +12,8 @@ public interface GrupoRepository extends JpaRepository<Grupo, Long> {
 
     List<Grupo> findByCreador_Email(String email);
 
+    long countByCreador_Email(String email);
+
     default Grupo getByIdOrThrow(Long id) {
         return findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + id));

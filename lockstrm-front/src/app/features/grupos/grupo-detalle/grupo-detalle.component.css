@@ -595,6 +595,37 @@
 }
 
 /* ==========================================================================
+   ROL SELECT / BADGE
+   ========================================================================== */
+.rol-select {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface-active);
+  color: var(--text-main);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.rol-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rol-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background-color: var(--bg-surface-active);
+  color: var(--text-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
    FORM INPUTS (local overrides)
    ========================================================================== */
 .form-input {

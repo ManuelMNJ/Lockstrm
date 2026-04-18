@@ -54,8 +54,8 @@
       }
     </div>
 
-    <!-- Botón eliminar grupo — solo creador -->
-    @if (esCreador) {
+    <!-- Botón eliminar grupo — solo SUPER_ADMIN -->
+    @if (esSuperAdmin) {
       <button class="btn-danger"
               *ngIf="grupo && !cargando"
               (click)="solicitarEliminarGrupo()"
@@ -126,6 +126,9 @@
           <p *ngIf="errorEliminarMiembro" class="feedback-msg feedback-msg--error" role="alert">
             {{ errorEliminarMiembro }}
           </p>
+          <p *ngIf="errorCambioRol" class="feedback-msg feedback-msg--error" role="alert">
+            {{ errorCambioRol }}
+          </p>
 
           <div *ngIf="miembros.length === 0" class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -145,6 +148,22 @@
                 <span class="member-name">{{ m.username }}</span>
                 <span class="member-email">{{ m.email }}</span>
               </div>
+
+              <!-- Rol: select editable para admins, badge de solo lectura para el resto -->
+              @if (puedeGestionarRoles) {
+                <select class="rol-select"
+                        [ngModel]="m.rol"
+                        (ngModelChange)="cambiarRolMiembro(m, $event)"
+                        [disabled]="cambiandoRoles.has(m.idUsuario)
+                                    || m.idUsuario === currentUserId
+                                    || (!esSuperAdmin && m.rol === 'SUPER_ADMIN')"
+                        [attr.aria-label]="'Rol de ' + m.username">
+                  <option *ngFor="let r of rolesDisponibles" [value]="r">{{ r }}</option>
+                </select>
+              } @else {
+                <span class="rol-badge">{{ m.rol }}</span>
+              }
+
               @if (esCreador) {
                 <button class="btn-remove"
                         (click)="eliminarMiembro(m)"

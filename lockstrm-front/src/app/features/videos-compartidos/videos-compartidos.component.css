@@ -179,6 +179,15 @@
   transition: opacity var(--transition-fast);
 }
 
+.thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* Play overlay: appears on hover */
 .play-overlay {
   position: absolute;

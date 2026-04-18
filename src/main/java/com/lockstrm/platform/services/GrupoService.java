@@ -5,6 +5,7 @@ import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.enums.RolGrupo;
 import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
@@ -93,9 +94,13 @@ public class GrupoService {
         Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyGrupoAccess(grupo, email);
 
-        return miembrosGrupoRepository.findUsuariosByGrupoId(idGrupo)
+        return miembrosGrupoRepository.findMiembrosByGrupoId(idGrupo)
                 .stream()
-                .map(u -> new MiembroDto(u.getIdUsuario(), u.getNombreCompleto(), u.getEmail()))
+                .map(mg -> new MiembroDto(
+                        mg.getUsuario().getIdUsuario(),
+                        mg.getUsuario().getNombreCompleto(),
+                        mg.getUsuario().getEmail(),
+                        mg.getRol()))
                 .toList();
     }
 
@@ -107,7 +112,8 @@ public class GrupoService {
         grupo.setCreador(creador);
         Grupo guardado = grupoRepository.save(grupo);
 
-        miembrosGrupoRepository.save(new MiembrosGrupo(creador.getIdUsuario(), guardado.getIdGrupo()));
+        miembrosGrupoRepository.save(
+                new MiembrosGrupo(creador.getIdUsuario(), guardado.getIdGrupo(), RolGrupo.SUPER_ADMIN));
         return guardado;
     }
 
@@ -144,14 +150,57 @@ public class GrupoService {
         return grupoRepository.save(grupo);
     }
 
+    /** Devuelve el registro de membresía o lanza 403 si el usuario no pertenece al grupo. */
+    private MiembrosGrupo getMiembroOrThrow(Long idUsuario, Long idGrupo) {
+        return miembrosGrupoRepository
+                .findById(new MiembrosGrupoId(idUsuario, idGrupo))
+                .orElseThrow(() -> new AccessDeniedException("No perteneces a este grupo"));
+    }
+
     /** Los vídeos asignados al grupo quedan como privados al eliminarlo. */
     @Transactional
     public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
         Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
-        verifyCreadorOnly(grupo, emailSolicitante, "eliminarlo");
+
+        Usuario solicitante = userRepository.getByEmailOrThrow(emailSolicitante);
+        MiembrosGrupo miembro = getMiembroOrThrow(solicitante.getIdUsuario(), idGrupo);
+        if (miembro.getRol() != RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("Solo el SUPER_ADMIN puede eliminar el grupo");
+        }
 
         miembrosGrupoRepository.deleteByGrupoId(idGrupo);
         permisosGrupoRepository.deleteByGrupoId(idGrupo);
         grupoRepository.delete(grupo);
+    }
+
+    /**
+     * Cambia el rol de un miembro del grupo.
+     * Reglas de autorización:
+     * - El solicitante debe tener rol ADMIN o SUPER_ADMIN.
+     * - Un ADMIN no puede modificar ni expulsar al SUPER_ADMIN.
+     * - Un ADMIN no puede asignar el rol SUPER_ADMIN.
+     */
+    @Transactional
+    public void cambiarRolMiembro(Long idGrupo, String emailAdmin,
+                                   Long idUsuarioObjetivo, RolGrupo nuevoRol) {
+        Usuario admin = userRepository.getByEmailOrThrow(emailAdmin);
+        MiembrosGrupo adminMiembro = getMiembroOrThrow(admin.getIdUsuario(), idGrupo);
+        RolGrupo rolAdmin = adminMiembro.getRol();
+
+        if (rolAdmin != RolGrupo.SUPER_ADMIN && rolAdmin != RolGrupo.ADMIN) {
+            throw new AccessDeniedException("Se requiere rol ADMIN o superior para cambiar roles");
+        }
+
+        MiembrosGrupo objetivo = getMiembroOrThrow(idUsuarioObjetivo, idGrupo);
+
+        if (rolAdmin == RolGrupo.ADMIN && objetivo.getRol() == RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("Un ADMIN no puede modificar al SUPER_ADMIN");
+        }
+        if (rolAdmin == RolGrupo.ADMIN && nuevoRol == RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("Un ADMIN no puede asignar el rol SUPER_ADMIN");
+        }
+
+        objetivo.setRol(nuevoRol);
+        miembrosGrupoRepository.save(objetivo);
     }
 }

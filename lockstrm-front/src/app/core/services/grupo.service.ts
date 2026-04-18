@@ -14,6 +14,7 @@ export interface Miembro {
   idUsuario: number;
   username: string;
   email: string;
+  rol: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -76,6 +77,10 @@ export class GrupoService {
 
   eliminarMiembro(idGrupo: number, idUsuario: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}/miembros/${idUsuario}`);
+  }
+
+  cambiarRolMiembro(idGrupo: number, idUsuario: number, rol: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${idGrupo}/miembros/${idUsuario}/rol`, { rol });
   }
 
   eliminarGrupo(idGrupo: number): Observable<void> {

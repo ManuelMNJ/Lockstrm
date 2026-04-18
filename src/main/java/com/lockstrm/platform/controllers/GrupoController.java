@@ -2,6 +2,7 @@ package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.MiembroDto;
 import com.lockstrm.platform.entities.Grupo;
+import com.lockstrm.platform.enums.RolGrupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -81,6 +82,30 @@ public class GrupoController {
         }
         grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
         return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
+    }
+
+    @PatchMapping("/{idGrupo}/miembros/{idUsuario}/rol")
+    public ResponseEntity<Map<String, String>> cambiarRolMiembro(
+            @PathVariable Long idGrupo,
+            @PathVariable Long idUsuario,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, String> body) {
+
+        String rolStr = body.get("rol");
+        if (rolStr == null || rolStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El campo 'rol' es obligatorio"));
+        }
+
+        RolGrupo nuevoRol;
+        try {
+            nuevoRol = RolGrupo.valueOf(rolStr.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MEMBER"));
+        }
+
+        grupoService.cambiarRolMiembro(idGrupo, userDetails.getUsername(), idUsuario, nuevoRol);
+        return ResponseEntity.ok(Map.of("mensaje", "Rol actualizado correctamente"));
     }
 
     @DeleteMapping("/{idGrupo}/miembros/{idUsuario}")
