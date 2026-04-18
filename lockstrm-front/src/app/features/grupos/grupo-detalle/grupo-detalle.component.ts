@@ -9,6 +9,7 @@ import { VideoService, Video, VideoVistaEstadistica } from '../../../core/servic
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
+import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 
 @Component({
   selector: 'app-grupo-detalle',
@@ -72,10 +73,6 @@ export class GrupoDetalleComponent implements OnInit {
     protected videoService: VideoService,
     private cdr: ChangeDetectorRef,
   ) {}
-
-  private extractErrorMessage(err: any, defaultMsg: string): string {
-    return err?.error?.error || err?.error?.mensaje || defaultMsg;
-  }
 
   private addEliminando(idUsuario: number): void {
     this.eliminandoMiembros = new Set(this.eliminandoMiembros).add(idUsuario);
@@ -170,7 +167,7 @@ export class GrupoDetalleComponent implements OnInit {
         },
         error: (err) => {
           this.estadoAnadirVideo = 'error';
-          this.errorAnadirVideo  = this.extractErrorMessage(err, 'No se pudo añadir el vídeo.');
+          this.errorAnadirVideo  = extractHttpErrorMessage(err, 'No se pudo añadir el vídeo.');
           this.cdr.markForCheck();
         },
       });
@@ -223,7 +220,7 @@ export class GrupoDetalleComponent implements OnInit {
         },
         error: (err) => {
           this.estadoAnadir = 'error';
-          this.errorAnadir  = this.extractErrorMessage(err, 'No se pudo añadir el miembro.');
+          this.errorAnadir  = extractHttpErrorMessage(err, 'No se pudo añadir el miembro.');
           this.cdr.markForCheck();
         },
       });
@@ -246,7 +243,7 @@ export class GrupoDetalleComponent implements OnInit {
         },
         error: (err) => {
           this.removeEliminando(miembro.idUsuario);
-          this.errorEliminarMiembro = this.extractErrorMessage(err, 'No se pudo eliminar el miembro.');
+          this.errorEliminarMiembro = extractHttpErrorMessage(err, 'No se pudo eliminar el miembro.');
           this.cdr.markForCheck();
         },
       });
@@ -289,7 +286,7 @@ export class GrupoDetalleComponent implements OnInit {
         },
         error: (err) => {
           this.estadoRenombrar = 'error';
-          this.errorRenombrar  = this.extractErrorMessage(err, 'No se pudo actualizar el nombre.');
+          this.errorRenombrar  = extractHttpErrorMessage(err, 'No se pudo actualizar el nombre.');
           this.cdr.markForCheck();
         },
       });
@@ -317,7 +314,7 @@ export class GrupoDetalleComponent implements OnInit {
         next: () => this.router.navigate(['/mi-espacio/grupos']),
         error: (err) => {
           this.estadoEliminarGrupo = 'error';
-          this.errorEliminarGrupo  = this.extractErrorMessage(err, 'No se pudo eliminar el grupo.');
+          this.errorEliminarGrupo  = extractHttpErrorMessage(err, 'No se pudo eliminar el grupo.');
           this.cdr.markForCheck();
         },
       });

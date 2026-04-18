@@ -5,14 +5,12 @@ import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.services.GrupoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/grupos")
@@ -41,17 +39,10 @@ public class GrupoController {
 
     /** Detalle de un grupo. Solo accesible si el usuario es creador o miembro del grupo (403 en caso contrario). */
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerDetalle(
+    public ResponseEntity<Grupo> obtenerDetalle(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            Grupo grupo = grupoService.obtenerDetalle(id, userDetails.getUsername());
-            return ResponseEntity.ok(grupo);
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(grupoService.obtenerDetalle(id, userDetails.getUsername()));
     }
 
     @PostMapping
@@ -67,21 +58,14 @@ public class GrupoController {
     }
 
     @GetMapping("/{idGrupo}/miembros")
-    public ResponseEntity<?> obtenerMiembros(
+    public ResponseEntity<List<MiembroDto>> obtenerMiembros(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            List<MiembroDto> miembros = grupoService.obtenerMiembros(idGrupo, userDetails.getUsername());
-            return ResponseEntity.ok(miembros);
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(grupoService.obtenerMiembros(idGrupo, userDetails.getUsername()));
     }
 
     @PostMapping("/{idGrupo}/miembros")
-    public ResponseEntity<?> aniadirMiembro(
+    public ResponseEntity<Map<String, String>> aniadirMiembro(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
@@ -89,63 +73,36 @@ public class GrupoController {
         if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El email del nuevo miembro es obligatorio"));
         }
-        try {
-            grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
-            return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
+        return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
     }
 
     @DeleteMapping("/{idGrupo}/miembros/{idUsuario}")
-    public ResponseEntity<?> eliminarMiembro(
+    public ResponseEntity<Map<String, String>> eliminarMiembro(
             @PathVariable Long idGrupo,
             @PathVariable Long idUsuario,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            grupoService.eliminarMiembro(idGrupo, idUsuario, userDetails.getUsername());
-            return ResponseEntity.ok(Map.of("mensaje", "Miembro eliminado correctamente"));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        }
+        grupoService.eliminarMiembro(idGrupo, idUsuario, userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("mensaje", "Miembro eliminado correctamente"));
     }
 
     @PutMapping("/{idGrupo}")
-    public ResponseEntity<?> renombrarGrupo(
+    public ResponseEntity<Grupo> renombrarGrupo(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
         String nombre = body.get("nombre");
         if (nombre == null || nombre.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El nombre del grupo es obligatorio"));
+            return ResponseEntity.badRequest().build();
         }
-        try {
-            Grupo grupo = grupoService.renombrarGrupo(idGrupo, nombre, userDetails.getUsername());
-            return ResponseEntity.ok(grupo);
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(grupoService.renombrarGrupo(idGrupo, nombre, userDetails.getUsername()));
     }
 
     @DeleteMapping("/{idGrupo}")
-    public ResponseEntity<?> eliminarGrupo(
+    public ResponseEntity<Map<String, String>> eliminarGrupo(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
-            return ResponseEntity.ok(Map.of("mensaje", "Grupo eliminado correctamente"));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        }
+        grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("mensaje", "Grupo eliminado correctamente"));
     }
 }

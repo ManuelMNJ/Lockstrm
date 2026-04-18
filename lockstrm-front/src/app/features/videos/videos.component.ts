@@ -11,6 +11,7 @@ import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { Paginator } from '../../shared/utils/paginator';
+import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 
 @Component({
   selector: 'app-videos',
@@ -76,20 +77,6 @@ export class VideosComponent implements OnInit {
 
   private refresh(): void {
     this.cdr.markForCheck();
-  }
-
-  private extractErrorMessage(err: any, defaultMsg: string): string {
-    return err?.error?.error || err?.error?.mensaje || defaultMsg;
-  }
-
-  private scheduleStateReset(property: string, value: any, delay: number): void {
-    const timer = setTimeout(() => {
-      (this as any)[property] = value;
-      this.refresh();
-      clearTimeout(timer);
-    }, delay);
-    if (property === 'estadoSubida') this.exitoEdicionTimer = timer as any;
-    if (property === 'errorEliminacionVisible') this.errorEliminacionTimer = timer as any;
   }
 
   @HostListener('document:keydown.escape')
@@ -249,7 +236,7 @@ export class VideosComponent implements OnInit {
         error: (err) => {
           this.estadoSubida = 'error';
           this.progreso     = 0;
-          this.mensajeError = this.extractErrorMessage(err, 'Error al subir. Comprueba la consola.');
+          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Comprueba la consola.');
           console.error('[VideosComponent] Error en subida:', {
             status:     err?.status,
             statusText: err?.statusText,
@@ -302,7 +289,7 @@ export class VideosComponent implements OnInit {
             body:       err?.error,
           });
           this.mostrarErrorEliminacion(
-            this.extractErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
+            extractHttpErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
           );
           this.refresh();
         }
@@ -374,7 +361,7 @@ export class VideosComponent implements OnInit {
         },
         error: (err) => {
           this.estadoEdicion  = 'error';
-          this.mensajeEdicion = this.extractErrorMessage(err, 'No se pudo guardar el cambio.');
+          this.mensajeEdicion = extractHttpErrorMessage(err, 'No se pudo guardar el cambio.');
           this.refresh();
         }
       });
