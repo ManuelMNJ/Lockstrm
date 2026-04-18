@@ -86,7 +86,7 @@ export class VideosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarVideos();
-    this.grupoService.obtenerMisGrupos()
+    this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupos) => {

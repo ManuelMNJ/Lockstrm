@@ -54,6 +54,12 @@ public class GrupoService {
         return grupoRepository.findByCreador_Email(email);
     }
 
+    /** Grupos disponibles para asignar a un vídeo: solo donde el usuario es PROPIETARIO. */
+    @Transactional(readOnly = true)
+    public List<Grupo> obtenerGruposParaDesplegable(String email) {
+        return grupoRepository.findByCreador_Email(email);
+    }
+
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposComoMiembro(String email) {
         return miembrosGrupoRepository.findGruposComoMiembroNoCreador(email);
@@ -99,7 +105,10 @@ public class GrupoService {
         Grupo grupo = new Grupo();
         grupo.setNombre(nombre);
         grupo.setCreador(creador);
-        return grupoRepository.save(grupo);
+        Grupo guardado = grupoRepository.save(grupo);
+
+        miembrosGrupoRepository.save(new MiembrosGrupo(creador.getIdUsuario(), guardado.getIdGrupo()));
+        return guardado;
     }
 
     @Transactional

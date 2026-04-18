@@ -11,6 +11,7 @@ import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
+import com.lockstrm.platform.repositories.VideoVistaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -41,6 +42,7 @@ public class VideoService {
     private final UserRepository          userRepository;
     private final GrupoRepository         grupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final VideoVistaRepository    videoVistaRepository;
     private final LogService              logService;
     private final Cloudinary              cloudinary;
 
@@ -261,6 +263,7 @@ public class VideoService {
         String cloudinaryIdParaBorrar = video.getCloudinaryId();
 
         permisosGrupoRepository.deleteByVideoId(idVideo);
+        videoVistaRepository.deleteByVideoId(idVideo);
         logService.eliminarLogsPorVideo(idVideo);
         videoRepository.delete(video);
 
