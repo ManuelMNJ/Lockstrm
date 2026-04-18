@@ -27,13 +27,11 @@ public class VideoVistaService {
 
     @Transactional
     public void incrementarVista(Long idVideo, String email) {
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado"));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
 
         logService.verificarAcceso(video, email);
 
-        Usuario usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = userRepository.getByEmailOrThrow(email);
 
         VideoVista vista = videoVistaRepository.findByUsuarioAndVideo(usuario, video)
                 .orElseGet(() -> {

@@ -27,43 +27,28 @@ export class VideoStreamService {
       this.registerSW();
     }
 
-    // Sincroniza el token al SW cada vez que el estado de auth cambia
-    // (login, logout, refresco de token).
     effect(() => {
       const token = this.authService.currentUser()?.token ?? null;
       this.syncToken(token);
     });
   }
 
-  // ── API pública ─────────────────────────────────────────────────────────────
-
-  /**
-   * Devuelve la URL de streaming para un vídeo.
-   * - Con SW activo: URL same-origin /video-proxy/{id} (JWT en cabecera)
-   * - Sin SW:        URL directa con ?token= (fallback, menos seguro)
-   */
   buildUrl(idVideo: number): string {
     if (this.swReady) {
       return `/video-proxy/${idVideo}`;
     }
-    // Fallback: comportamiento anterior
     const token = this.authService.getToken() ?? '';
     return `${environment.apiUrl}/api/videos/stream/${idVideo}?token=${token}`;
   }
 
-  // ── Internos ────────────────────────────────────────────────────────────────
-
   private async registerSW(): Promise<void> {
     try {
       const reg = await navigator.serviceWorker.register('/stream-proxy.sw.js', { scope: '/' });
-
-      // Espera a que haya un SW activo y controlando la página
       await navigator.serviceWorker.ready;
 
       this.swActive = reg.active ?? navigator.serviceWorker.controller;
       this.swReady  = true;
 
-      // Inicializa el SW con el token actual y la base URL del backend
       const token = this.authService.getToken();
       this.postMessage({ type: 'LOCKSTRM_INIT', token, apiBase: environment.apiUrl });
 
@@ -79,7 +64,6 @@ export class VideoStreamService {
   }
 
   private postMessage(msg: object): void {
-    // Envía tanto al controller activo como a través de la registration
     navigator.serviceWorker.controller?.postMessage(msg);
     navigator.serviceWorker.ready
       .then(reg => reg.active?.postMessage(msg))

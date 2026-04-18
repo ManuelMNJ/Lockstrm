@@ -52,8 +52,7 @@ public class VideoService {
             throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (100 MB)");
         }
 
-        Usuario autor = userRepository.findByEmail(emailUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + emailUsuario));
+        Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
 
         Map<?, ?> uploadResult = cloudinary.uploader().uploadLarge(
                 file.getInputStream(),
@@ -88,8 +87,7 @@ public class VideoService {
         Video guardado = videoRepository.save(nuevoVideo);
 
         if (idGrupo != null) {
-            Grupo grupo = grupoRepository.findById(idGrupo)
-                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
             permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
         }
 
@@ -102,8 +100,7 @@ public class VideoService {
      * para que la misma lógica sea compartida con el endpoint de heartbeat.
      */
     public ResponseEntity<InputStreamResource> streamVideo(Long id, String rangeHeader, String emailUsuario) throws Exception {
-        Video video = videoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Video no encontrado: " + id));
+        Video video = videoRepository.getByIdOrThrow(id);
 
         logService.verificarAcceso(video, emailUsuario);
 
@@ -219,8 +216,7 @@ public class VideoService {
 
     @Transactional
     public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, Long idGrupo) {
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(emailUsuario)) {
             throw new AccessDeniedException("No tienes permiso para editar este vídeo");
@@ -232,8 +228,7 @@ public class VideoService {
         // Validar el grupo ANTES de borrar para evitar dejar el vídeo sin grupo si no existe
         Grupo grupo = null;
         if (idGrupo != null) {
-            grupo = grupoRepository.findById(idGrupo)
-                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            grupo = grupoRepository.getByIdOrThrow(idGrupo);
         }
 
         permisosGrupoRepository.deleteByVideoId(idVideo);
@@ -257,8 +252,7 @@ public class VideoService {
 
     @Transactional
     public void eliminarVideo(Long idVideo, String userEmail) {
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("No tienes permiso para eliminar este vídeo");

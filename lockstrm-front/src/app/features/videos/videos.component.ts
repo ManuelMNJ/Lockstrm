@@ -47,7 +47,6 @@ export class VideosComponent implements OnInit {
   videoAEliminar: Video | null = null;
   videoReproduciendose: Video | null = null;
 
-  // ── Edición de vídeo ───────────────────────────────────────────────────────
   videoEnEdicion: Video | null = null;
   editTitulo    = '';
   editIdGrupo: number | null = null;
@@ -57,7 +56,6 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Paginación ─────────────────────────────────────────────────────────────
   readonly paginator = new Paginator<Video>(15);
 
   goToPage(page: number): void {
@@ -99,9 +97,6 @@ export class VideosComponent implements OnInit {
       });
   }
 
-  // ── Subida ─────────────────────────────────────────────────────────────────
-
-  /** Valida el tipo MIME antes de aceptar el archivo. */
   seleccionarArchivo(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0] ?? null;
@@ -247,8 +242,6 @@ export class VideosComponent implements OnInit {
       });
   }
 
-  // ── Eliminación ────────────────────────────────────────────────────────────
-
   solicitarEliminacion(video: Video): void {
     this.videoAEliminar = video;
     this.cdr.markForCheck();
@@ -317,8 +310,6 @@ export class VideosComponent implements OnInit {
     }, 6000);
   }
 
-  // ── Edición ────────────────────────────────────────────────────────────────
-
   iniciarEdicion(video: Video): void {
     this.videoEnEdicion = video;
     this.editTitulo     = video.titulo;
@@ -366,8 +357,6 @@ export class VideosComponent implements OnInit {
         }
       });
   }
-
-  // ── Reproductor ────────────────────────────────────────────────────────────
 
   cargarVideos(): void {
     this.listaError = '';

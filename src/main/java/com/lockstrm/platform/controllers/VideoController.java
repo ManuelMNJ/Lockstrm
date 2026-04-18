@@ -108,14 +108,6 @@ public class VideoController {
         return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
     }
 
-    /**
-     * Recibe el pulso de telemetría del reproductor cada 30 segundos.
-     * Actualiza el campo segundosVistos del registro de log del día actual,
-     * o crea un nuevo registro si es la primera sesión del día.
-     *
-     * @AuthenticationPrincipal inyecta el UserDetails cuyo username es el email
-     * (establecido por JwtAuthenticationFilter al validar el token Bearer).
-     */
     @PostMapping("/{idVideo}/heartbeat")
     public ResponseEntity<Void> heartbeat(
             @PathVariable Long idVideo,

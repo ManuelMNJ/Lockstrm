@@ -27,8 +27,6 @@ export class GrupoService {
 
   constructor(private http: HttpClient) {}
 
-  // ── Lectura ─────────────────────────────────────────────────────────────────
-
   obtenerMisGrupos(): Observable<Grupo[]> {
     if (!this.misGruposCache$) {
       this.misGruposCache$ = this.http.get<Grupo[]>(this.apiUrl).pipe(shareReplay(1));
@@ -57,8 +55,6 @@ export class GrupoService {
   obtenerMiembros(idGrupo: number): Observable<Miembro[]> {
     return this.http.get<Miembro[]>(`${this.apiUrl}/${idGrupo}/miembros`);
   }
-
-  // ── Escrituras (invalidan la caché al completar) ────────────────────────────
 
   crearGrupo(nombre: string): Observable<Grupo> {
     return this.http.post<Grupo>(this.apiUrl, { nombre }).pipe(

@@ -25,7 +25,6 @@ export class GrupoDetalleComponent implements OnInit {
   esCreador = false;
   miembros: Miembro[] = [];
 
-  // Vídeos del grupo
   videosGrupo: Video[] = [];
   misVideosDisponibles: Video[] = [];
   idVideoAAnadir: number | null = null;
@@ -37,27 +36,22 @@ export class GrupoDetalleComponent implements OnInit {
   cargando = true;
   errorCarga = '';
 
-  // Añadir miembro
   emailNuevoMiembro = '';
   estadoAnadir: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorAnadir = '';
 
-  // Editar nombre
   editandoNombre = false;
   nombreEditado = '';
   estadoRenombrar: 'idle' | 'loading' | 'error' = 'idle';
   errorRenombrar = '';
 
-  // Eliminar miembro
   eliminandoMiembros = new Set<number>();
   errorEliminarMiembro = '';
 
-  // Eliminar grupo
   confirmandoEliminarGrupo = false;
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
 
-  // Estadísticas de vistas
   videoStats: Video | null = null;
   estadisticas: VideoVistaEstadistica[] = [];
   cargandoStats = false;
@@ -144,8 +138,6 @@ export class GrupoDetalleComponent implements OnInit {
       });
   }
 
-  // ── Añadir vídeo existente ────────────────────────────────────────────────
-
   aniadirVideoExistente(): void {
     if (this.idVideoAAnadir == null) return;
     const video = this.misVideosDisponibles.find(v => v.idVideo === this.idVideoAAnadir);
@@ -173,8 +165,6 @@ export class GrupoDetalleComponent implements OnInit {
       });
   }
 
-  // ── Quitar vídeo del grupo ────────────────────────────────────────────────
-
   quitarVideoDelGrupo(video: Video): void {
     this.quitandoVideos = new Set(this.quitandoVideos).add(video.idVideo);
 
@@ -197,8 +187,6 @@ export class GrupoDetalleComponent implements OnInit {
         },
       });
   }
-
-  // ── Añadir miembro ────────────────────────────────────────────────────────
 
   aniadirMiembro(): void {
     const email = this.emailNuevoMiembro.trim();
@@ -226,8 +214,6 @@ export class GrupoDetalleComponent implements OnInit {
       });
   }
 
-  // ── Eliminar miembro ──────────────────────────────────────────────────────
-
   eliminarMiembro(miembro: Miembro): void {
     this.addEliminando(miembro.idUsuario);
     this.errorEliminarMiembro = '';
@@ -248,8 +234,6 @@ export class GrupoDetalleComponent implements OnInit {
         },
       });
   }
-
-  // ── Renombrar grupo ───────────────────────────────────────────────────────
 
   activarEdicion(): void {
     this.editandoNombre  = true;
@@ -292,8 +276,6 @@ export class GrupoDetalleComponent implements OnInit {
       });
   }
 
-  // ── Eliminar grupo ────────────────────────────────────────────────────────
-
   solicitarEliminarGrupo(): void {
     this.confirmandoEliminarGrupo = true;
     this.estadoEliminarGrupo      = 'idle';
@@ -319,8 +301,6 @@ export class GrupoDetalleComponent implements OnInit {
         },
       });
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
