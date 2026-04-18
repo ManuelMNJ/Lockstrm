@@ -23,11 +23,15 @@ public class VideoVistaService {
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final LogService logService;
 
     @Transactional
     public void incrementarVista(Long idVideo, String email) {
         Video video = videoRepository.findById(idVideo)
                 .orElseThrow(() -> new RuntimeException("Vídeo no encontrado"));
+
+        logService.verificarAcceso(video, email);
+
         Usuario usuario = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 

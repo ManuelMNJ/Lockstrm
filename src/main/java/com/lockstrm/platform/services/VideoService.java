@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -111,35 +113,51 @@ public class VideoService {
         }
 
         HttpURLConnection con = (HttpURLConnection) new URL(video.getUrlCloudSecure()).openConnection();
-        con.setRequestMethod("GET");
-        con.setConnectTimeout(10_000);
-        con.setReadTimeout(30_000);
+        try {
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(10_000);
+            con.setReadTimeout(30_000);
 
-        if (rangeHeader != null && !rangeHeader.isBlank()) {
-            con.setRequestProperty("Range", rangeHeader);
+            if (rangeHeader != null && !rangeHeader.isBlank()) {
+                con.setRequestProperty("Range", rangeHeader);
+            }
+
+            con.connect();
+
+            int cloudinaryStatus = con.getResponseCode();
+
+            if (cloudinaryStatus >= 400) {
+                throw new RuntimeException("Error al obtener vídeo del almacenamiento: HTTP " + cloudinaryStatus);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+
+            String contentType = con.getHeaderField("Content-Type");
+            if (contentType != null) headers.set("Content-Type", contentType);
+
+            String contentLength = con.getHeaderField("Content-Length");
+            if (contentLength != null) headers.setContentLength(Long.parseLong(contentLength));
+
+            String contentRange = con.getHeaderField("Content-Range");
+            if (contentRange != null) headers.set("Content-Range", contentRange);
+
+            headers.set("Accept-Ranges", "bytes");
+
+            HttpStatus status = (cloudinaryStatus == 206) ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
+
+            // Envuelve el stream para que disconnect() se llame al cerrarlo
+            InputStream wrapped = new FilterInputStream(con.getInputStream()) {
+                @Override
+                public void close() throws IOException {
+                    try { super.close(); } finally { con.disconnect(); }
+                }
+            };
+
+            return ResponseEntity.status(status).headers(headers).body(new InputStreamResource(wrapped));
+        } catch (Exception e) {
+            con.disconnect();
+            throw e;
         }
-
-        con.connect();
-
-        int cloudinaryStatus = con.getResponseCode();
-
-        HttpHeaders headers = new HttpHeaders();
-
-        String contentType = con.getHeaderField("Content-Type");
-        if (contentType != null) headers.set("Content-Type", contentType);
-
-        String contentLength = con.getHeaderField("Content-Length");
-        if (contentLength != null) headers.setContentLength(Long.parseLong(contentLength));
-
-        String contentRange = con.getHeaderField("Content-Range");
-        if (contentRange != null) headers.set("Content-Range", contentRange);
-
-        headers.set("Accept-Ranges", "bytes");
-
-        HttpStatus status = (cloudinaryStatus == 206) ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
-
-        return ResponseEntity.status(status).headers(headers)
-                .body(new InputStreamResource(con.getInputStream()));
     }
 
     @Transactional(readOnly = true)
@@ -211,13 +229,17 @@ public class VideoService {
         video.setTitulo(titulo);
         videoRepository.save(video);
 
-        // Reasignar grupo: eliminar la asociación actual y crear la nueva si procede
+        // Validar el grupo ANTES de borrar para evitar dejar el vídeo sin grupo si no existe
+        Grupo grupo = null;
+        if (idGrupo != null) {
+            grupo = grupoRepository.findById(idGrupo)
+                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+        }
+
         permisosGrupoRepository.deleteByVideoId(idVideo);
 
         String grupoNombre = null;
-        if (idGrupo != null) {
-            Grupo grupo = grupoRepository.findById(idGrupo)
-                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+        if (grupo != null) {
             permisosGrupoRepository.save(new PermisosGrupo(idVideo, grupo.getIdGrupo()));
             grupoNombre = grupo.getNombre();
         }
