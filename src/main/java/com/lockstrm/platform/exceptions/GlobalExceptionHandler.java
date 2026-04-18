@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,7 +37,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
-        return buildErrorResponse(HttpStatus.FORBIDDEN, "No tienes permiso para realizar esta acción");
+        return buildErrorResponse(HttpStatus.FORBIDDEN, extractErrorMessage(ex, "No tienes permiso para realizar esta acción"));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(NoSuchElementException ex) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, extractErrorMessage(ex, "Recurso no encontrado"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

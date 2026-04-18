@@ -30,7 +30,6 @@ export class GruposComponent implements OnInit {
   estadoCreacion: 'idle' | 'loading' | 'error' = 'idle';
   errorCreacion = '';
 
-  // ── Estadísticas de tarjetas ───────────────────────────────────────────────
   miembrosPerGrupo = new Map<number, number>();
   videosPerGrupo   = new Map<number, number>();
   cargandoStats    = false;
@@ -46,7 +45,6 @@ export class GruposComponent implements OnInit {
     private router: Router,
   ) {}
 
-  // ── Escape para cerrar modal ───────────────────────────────────────────────
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
     if (this.modalAbierto) this.cerrarModal();
@@ -159,11 +157,11 @@ export class GruposComponent implements OnInit {
   }
 
   getMiembros(idGrupo: number): number | null {
-    return this.miembrosPerGrupo.has(idGrupo) ? (this.miembrosPerGrupo.get(idGrupo) ?? null) : null;
+    return this.miembrosPerGrupo.get(idGrupo) ?? null;
   }
 
   getVideos(idGrupo: number): number | null {
-    return this.videosPerGrupo.has(idGrupo) ? (this.videosPerGrupo.get(idGrupo) ?? null) : null;
+    return this.videosPerGrupo.get(idGrupo) ?? null;
   }
 
 }

@@ -18,7 +18,6 @@ public class UserService implements UserDetailsService {
     private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Requerido por Spring Security: subject del JWT es el email del usuario
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = userRepository.findByEmail(email)
@@ -42,6 +41,10 @@ public class UserService implements UserDetailsService {
 
     public Usuario buscarPorEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+
+    public boolean emailDisponible(String email) {
+        return !userRepository.existsByEmail(email);
     }
 
     public boolean cambiarContrasena(String email, String actual, String nueva) {

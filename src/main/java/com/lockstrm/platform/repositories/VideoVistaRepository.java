@@ -4,6 +4,7 @@ import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.entities.VideoVista;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,4 +17,8 @@ public interface VideoVistaRepository extends JpaRepository<VideoVista, Long> {
 
     @Query("SELECT vv FROM VideoVista vv JOIN FETCH vv.usuario WHERE vv.video.idVideo = :idVideo")
     List<VideoVista> findByVideoIdWithUsuario(@Param("idVideo") Long idVideo);
+
+    @Modifying
+    @Query("DELETE FROM VideoVista vv WHERE vv.video.idVideo = :idVideo")
+    void deleteByVideoId(@Param("idVideo") Long idVideo);
 }

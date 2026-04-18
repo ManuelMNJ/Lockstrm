@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +28,6 @@ public class GrupoService {
     private final MiembrosGrupoRepository miembrosGrupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
 
-    /**
-     * Devuelve todos los grupos a los que pertenece el usuario:
-     * los que creó + los que integra como miembro (sin duplicados).
-     * Mantiene compatibilidad con clientes existentes.
-     */
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposDelUsuario(String email) {
         List<Grupo> comoCreador = grupoRepository.findByCreador_Email(email);
@@ -56,27 +49,25 @@ public class GrupoService {
         }
     }
 
-    /** Grupos Creados por Mí: grupos donde el usuario autenticado es el administrador/creador (contexto Propietario). */
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposCreados(String email) {
         return grupoRepository.findByCreador_Email(email);
     }
 
-    /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
+    /** Grupos disponibles para asignar a un vídeo: solo donde el usuario es PROPIETARIO. */
+    @Transactional(readOnly = true)
+    public List<Grupo> obtenerGruposParaDesplegable(String email) {
+        return grupoRepository.findByCreador_Email(email);
+    }
+
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposComoMiembro(String email) {
         return miembrosGrupoRepository.findGruposComoMiembroNoCreador(email);
     }
 
-    /**
-     * Devuelve el detalle de un único grupo.
-     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es creador ni miembro.
-     * Lanza {@link NoSuchElementException} (→ 404) si el grupo no existe.
-     */
     @Transactional(readOnly = true)
     public Grupo obtenerDetalle(Long idGrupo, String email) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
 
         verifyGrupoAccess(grupo, email);
         return grupo;
@@ -97,47 +88,35 @@ public class GrupoService {
         }
     }
 
-    /**
-     * Lista los miembros de un grupo.
-     * Solo accesible si el solicitante es creador o miembro del grupo.
-     */
     @Transactional(readOnly = true)
     public List<MiembroDto> obtenerMiembros(Long idGrupo, String email) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyGrupoAccess(grupo, email);
 
         return miembrosGrupoRepository.findUsuariosByGrupoId(idGrupo)
                 .stream()
-                .map(u -> new MiembroDto(u.getIdUsuario(), resolverNombre(u), u.getEmail()))
-                .collect(Collectors.toList());
-    }
-
-    private String resolverNombre(Usuario u) {
-        String nombre = u.getNombre() != null ? u.getNombre() : "";
-        String apellidos = u.getApellidos() != null ? u.getApellidos() : "";
-        String full = (nombre + " " + apellidos).trim();
-        return full.isEmpty() ? u.getEmail() : full;
+                .map(u -> new MiembroDto(u.getIdUsuario(), u.getNombreCompleto(), u.getEmail()))
+                .toList();
     }
 
     @Transactional
     public Grupo crearGrupo(String emailCreador, String nombre) {
-        Usuario creador = userRepository.findByEmail(emailCreador)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario creador = userRepository.getByEmailOrThrow(emailCreador);
         Grupo grupo = new Grupo();
         grupo.setNombre(nombre);
         grupo.setCreador(creador);
-        return grupoRepository.save(grupo);
+        Grupo guardado = grupoRepository.save(grupo);
+
+        miembrosGrupoRepository.save(new MiembrosGrupo(creador.getIdUsuario(), guardado.getIdGrupo()));
+        return guardado;
     }
 
     @Transactional
     public void aniadirMiembro(Long idGrupo, String emailSolicitante, String emailInvitado) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyCreadorOnly(grupo, emailSolicitante, "añadir miembros");
 
-        Usuario invitado = userRepository.findByEmail(emailInvitado)
-                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + emailInvitado));
+        Usuario invitado = userRepository.getByEmailOrThrow(emailInvitado);
 
         MiembrosGrupoId miembroId = new MiembrosGrupoId(invitado.getIdUsuario(), idGrupo);
         if (miembrosGrupoRepository.existsById(miembroId)) {
@@ -148,42 +127,27 @@ public class GrupoService {
         miembrosGrupoRepository.save(miembro);
     }
 
-    /**
-     * Elimina un miembro del grupo. Solo el creador puede expulsar miembros.
-     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es el creador.
-     */
     @Transactional
     public void eliminarMiembro(Long idGrupo, Long idUsuario, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyCreadorOnly(grupo, emailSolicitante, "eliminar miembros");
 
         miembrosGrupoRepository.deleteByGrupoIdAndUsuarioId(idGrupo, idUsuario);
     }
 
-    /**
-     * Renombra un grupo. Solo el creador puede cambiar el nombre.
-     * Lanza {@link AccessDeniedException} (→ 403) si el solicitante no es el creador.
-     */
     @Transactional
     public Grupo renombrarGrupo(Long idGrupo, String nuevoNombre, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyCreadorOnly(grupo, emailSolicitante, "cambiar su nombre");
 
         grupo.setNombre(nuevoNombre.trim());
         return grupoRepository.save(grupo);
     }
 
-    /**
-     * Elimina un grupo y todas sus relaciones (miembros y permisos de vídeo).
-     * Solo el creador puede eliminar el grupo.
-     * Los vídeos asignados al grupo NO se eliminan; quedan como privados.
-     */
+    /** Los vídeos asignados al grupo quedan como privados al eliminarlo. */
     @Transactional
     public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
-        Grupo grupo = grupoRepository.findById(idGrupo)
-                .orElseThrow(() -> new NoSuchElementException("Grupo no encontrado: " + idGrupo));
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
         verifyCreadorOnly(grupo, emailSolicitante, "eliminarlo");
 
         miembrosGrupoRepository.deleteByGrupoId(idGrupo);

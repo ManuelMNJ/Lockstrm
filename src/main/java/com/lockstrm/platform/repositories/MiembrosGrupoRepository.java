@@ -29,6 +29,17 @@ public interface MiembrosGrupoRepository extends JpaRepository<MiembrosGrupo, Mi
            "AND mg.grupo.creador.email <> :email")
     List<Grupo> findGruposComoMiembroNoCreador(@Param("email") String email);
 
+    @Query("""
+            SELECT COUNT(mg) > 0 FROM MiembrosGrupo mg
+            WHERE mg.id.idGrupoId IN (
+                SELECT p.id.idGrupoId FROM PermisosGrupo p
+                WHERE p.id.idVideoId = :idVideo
+            )
+            AND mg.usuario.email = :email
+            """)
+    boolean existsMiembroConAccesoAlVideo(@Param("email") String email,
+                                          @Param("idVideo") Long idVideo);
+
     /** Elimina todos los miembros de un grupo (usado al borrar el grupo). */
     @Modifying
     @Query("DELETE FROM MiembrosGrupo mg WHERE mg.id.idGrupoId = :idGrupo")

@@ -9,7 +9,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-// Orden de creacion garantizado: PasswordConfig -> UserService -> ApplicationConfig.
 @Configuration
 public class ApplicationConfig {
 

@@ -21,13 +21,12 @@ export class GrupoService {
 
   private readonly apiUrl = `${environment.apiUrl}/api/grupos`;
 
-  private misGruposCache$:          Observable<Grupo[]> | null = null;
-  private gruposCreadosCache$:      Observable<Grupo[]> | null = null;
-  private gruposMiembroCache$:      Observable<Grupo[]> | null = null;
+  private misGruposCache$:           Observable<Grupo[]> | null = null;
+  private gruposCreadosCache$:       Observable<Grupo[]> | null = null;
+  private gruposMiembroCache$:       Observable<Grupo[]> | null = null;
+  private gruposDesplegableCache$:   Observable<Grupo[]> | null = null;
 
   constructor(private http: HttpClient) {}
-
-  // ── Lectura ─────────────────────────────────────────────────────────────────
 
   obtenerMisGrupos(): Observable<Grupo[]> {
     if (!this.misGruposCache$) {
@@ -41,6 +40,13 @@ export class GrupoService {
       this.gruposCreadosCache$ = this.http.get<Grupo[]>(`${this.apiUrl}/creados`).pipe(shareReplay(1));
     }
     return this.gruposCreadosCache$;
+  }
+
+  obtenerGruposParaDesplegable(): Observable<Grupo[]> {
+    if (!this.gruposDesplegableCache$) {
+      this.gruposDesplegableCache$ = this.http.get<Grupo[]>(`${this.apiUrl}/desplegable`).pipe(shareReplay(1));
+    }
+    return this.gruposDesplegableCache$;
   }
 
   obtenerGruposComoMiembro(): Observable<Grupo[]> {
@@ -58,11 +64,9 @@ export class GrupoService {
     return this.http.get<Miembro[]>(`${this.apiUrl}/${idGrupo}/miembros`);
   }
 
-  // ── Escrituras (invalidan la caché al completar) ────────────────────────────
-
   crearGrupo(nombre: string): Observable<Grupo> {
     return this.http.post<Grupo>(this.apiUrl, { nombre }).pipe(
-      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
+      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; this.gruposDesplegableCache$ = null; }),
     );
   }
 
@@ -76,7 +80,7 @@ export class GrupoService {
 
   eliminarGrupo(idGrupo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}`).pipe(
-      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
+      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; this.gruposDesplegableCache$ = null; }),
     );
   }
 

@@ -4,7 +4,6 @@ import com.lockstrm.platform.dto.AuthResponse;
 import com.lockstrm.platform.dto.LoginRequest;
 import com.lockstrm.platform.dto.RegisterRequest;
 import com.lockstrm.platform.entities.Usuario;
-import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.security.JwtService;
 import com.lockstrm.platform.services.UserService;
 import jakarta.validation.Valid;
@@ -23,19 +22,17 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService     userService;
-    private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService      jwtService;
 
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
-        boolean tomado = userRepository.existsByEmail(email);
-        return ResponseEntity.ok(Map.of("disponible", !tomado));
+        return ResponseEntity.ok(Map.of("disponible", userService.emailDisponible(email)));
     }
 
     @PostMapping("/registro")
     public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (!userService.emailDisponible(request.getEmail())) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "El email ya está registrado"));

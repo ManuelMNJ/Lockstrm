@@ -16,26 +16,18 @@ export class AuthService {
   private readonly apiUrl      = `${environment.apiUrl}/api/auth`;
   private readonly STORAGE_KEY = 'usuarioLogueado';
 
-  // ── Reactive core ────────────────────────────────────────────────────────
-  // Signal privado que actúa como fuente de verdad del estado de autenticación.
-  // Se inicializa leyendo localStorage al arrancar la app (recarga de página).
   private readonly _currentUser = signal<AuthResponse | null>(this.loadFromStorage());
 
-  /** Señal de sólo lectura con los datos del usuario autenticado (o null). */
-  readonly currentUser = this._currentUser.asReadonly();
-
-  /** Computed derivado: true mientras haya un usuario en sesión. */
+  readonly currentUser     = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => !!this._currentUser());
 
   constructor(private readonly http: HttpClient, private readonly router: Router) {}
-
-  // ── Auth operations ──────────────────────────────────────────────────────
 
   login(email: string, password: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
       tap(res => {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(res));
-        this._currentUser.set(res);   // actualiza el signal → UI reacciona
+        this._currentUser.set(res);
       })
     );
   }
@@ -49,8 +41,6 @@ export class AuthService {
     });
   }
 
-  // ── Accessors (retrocompatibles con guards e interceptores) ──────────────
-
   getToken(): string | null {
     return this._currentUser()?.token ?? null;
   }
@@ -59,12 +49,9 @@ export class AuthService {
     return this._currentUser();
   }
 
-  /** Usado por authGuard y noAuthGuard. Lee del signal, no de localStorage. */
   isLoggedIn(): boolean {
     return this.isAuthenticated();
   }
-
-  // ── Private helpers ──────────────────────────────────────────────────────
 
   private loadFromStorage(): AuthResponse | null {
     const stored = localStorage.getItem(this.STORAGE_KEY);

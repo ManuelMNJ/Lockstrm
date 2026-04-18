@@ -25,28 +25,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desactivamos CSRF porque la API no usa cookies de sesión: el token JWT
-            // viaja en la cabecera Authorization, así que los ataques CSRF clásicos no aplican.
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Login y registro tienen que ser públicos, obviamente nadie puede
-                // autenticarse con un token que todavía no existe.
                 .requestMatchers("/api/auth/**").permitAll()
-                // El SW debe ser accesible antes de que el usuario esté autenticado:
-                // el navegador lo registra al arrancar la app, no durante el login.
                 .requestMatchers("/", "/index.html", "/css/**", "/js/**",
                                  "/stream-proxy.sw.js", "/assets/**", "/favicon.ico",
                                  "/*.js", "/*.css", "/*.mjs").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
-                // STATELESS es lo que nos permite escalar sin compartir sesión entre instancias;
-                // con JWT el estado lo lleva el propio cliente, no el servidor.
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider)
-            // El filtro JWT debe ejecutarse ANTES del de Spring, si no, Spring rechaza
-            // la petición sin darle oportunidad a nuestro filtro de inyectar el usuario.
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

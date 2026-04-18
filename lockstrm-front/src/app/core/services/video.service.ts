@@ -11,7 +11,6 @@ export interface VideoVistaEstadistica {
   contador: number;
 }
 
-// ── Respuesta del endpoint de subida ──────────────────────────────────────────
 export interface VideoUploadResponse {
   id_video:     number;
   titulo:       string;
@@ -22,9 +21,6 @@ export interface VideoUploadResponse {
   miniaturaUrl: string | null;
 }
 
-// ── Interfaz canónica del frontend ────────────────────────────────────────────
-// NOTA: urlCloudSecure y cloudinaryId se omiten deliberadamente.
-// La reproducción usa siempre el proxy /api/videos/stream/{id} (ver VideoStreamService).
 export interface Video {
   idVideo:      number;
   titulo:       string;
@@ -63,9 +59,6 @@ export class VideoService {
 
   private readonly apiUrl = `${environment.apiUrl}/api/videos`;
 
-  // ── Caché reactiva (shareReplay) ────────────────────────────────────────────
-  // Cada caché se invalida (null) cuando el endpoint de escritura asociado
-  // completa con éxito, forzando un nuevo GET en la siguiente suscripción.
   private misVideosCache$:         Observable<Video[]> | null = null;
   private videosCompartidosCache$: Observable<Video[]> | null = null;
 
@@ -74,14 +67,9 @@ export class VideoService {
     private streamService: VideoStreamService,
   ) {}
 
-  // ── URL de streaming ────────────────────────────────────────────────────────
-
-  /** Devuelve la URL segura para el reproductor (vía Service Worker o token en QS). */
   buildStreamUrl(idVideo: number): string {
     return this.streamService.buildUrl(idVideo);
   }
-
-  // ── Lecturas ────────────────────────────────────────────────────────────────
 
   obtenerVideos(): Observable<Video[]> {
     return this.http.get<VideoRaw[]>(this.apiUrl).pipe(
@@ -110,8 +98,6 @@ export class VideoService {
     }
     return this.videosCompartidosCache$;
   }
-
-  // ── Escrituras (invalidan la caché al completar) ────────────────────────────
 
   subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
@@ -145,10 +131,6 @@ export class VideoService {
     );
   }
 
-  /**
-   * POST /api/videos/{id}/heartbeat — registra los segundos vistos en tiempo real.
-   * currentTime se trunca a entero en el servicio para no duplicar Math.floor en cada componente.
-   */
   registrarHeartbeat(idVideo: number, currentTime: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { currentTime: Math.floor(currentTime) });
   }

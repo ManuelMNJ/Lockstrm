@@ -1,12 +1,10 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.entities.Log;
-import com.lockstrm.platform.entities.PermisosGrupo;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
-import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,21 +22,11 @@ public class LogService {
     private final LogRepository            logRepository;
     private final UserRepository           userRepository;
     private final VideoRepository          videoRepository;
-    private final PermisosGrupoRepository  permisosGrupoRepository;
     private final MiembrosGrupoRepository  miembrosGrupoRepository;
 
-    // ── Registro de acceso inicial ──────────────────────────────────────────
-
-    /**
-     * Crea un nuevo registro de auditoría cuando el usuario inicia la reproducción
-     * (primera petición de bytes del stream). Llamado desde VideoService.
-     *
-     * No verifica acceso porque VideoService ya lo ha hecho antes de llamar aquí.
-     */
     @Transactional
     public void registrarAcceso(Video video, String emailUsuario) {
-        Usuario usuario = userRepository.findByEmail(emailUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + emailUsuario));
+        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         Log log = new Log();
         log.setUsuario(usuario);
@@ -48,30 +35,12 @@ public class LogService {
         logRepository.save(log);
     }
 
-    // ── Heartbeat (upsert diario) ───────────────────────────────────────────
-
-    /**
-     * Procesa un pulso de telemetría del reproductor.
-     *
-     * Lógica de upsert:
-     *   - Si ya existe un Log para este usuario+vídeo creado HOY → actualiza segundosVistos.
-     *   - Si no existe (primera sesión del día) → crea un nuevo Log.
-     *
-     * La búsqueda acota por rango de fecha (inicio/fin del día) para evitar
-     * que se actualice erróneamente un registro de días anteriores.
-     *
-     * @param idVideo      ID del vídeo que se está reproduciendo.
-     * @param emailUsuario Email extraído del JWT por Spring Security.
-     * @param currentTime  Posición de reproducción en segundos (Double de HTMLVideoElement.currentTime).
-     */
+    /** Upsert diario: actualiza segundosVistos del log de hoy o crea uno nuevo. */
     @Transactional
     public void registrarHeartbeat(Long idVideo, String emailUsuario, Double currentTime) {
 
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Video no encontrado: " + idVideo));
-
-        Usuario usuario = userRepository.findByEmail(emailUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + emailUsuario));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
+        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         // Verificación de acceso: misma lógica que el proxy de streaming.
         // Un usuario malintencionado no debería poder hacer POST al heartbeat
@@ -97,43 +66,15 @@ public class LogService {
         logRepository.save(log);
     }
 
-    // ── Borrado por vídeo (llamado desde VideoService.eliminarVideo) ───────
-
-    /**
-     * Elimina todos los registros de log asociados a un vídeo.
-     * Debe ejecutarse dentro de la misma transacción que borra el vídeo.
-     */
     @Transactional
     public void eliminarLogsPorVideo(Long idVideo) {
         logRepository.deleteByVideoId(idVideo);
     }
 
-    // ── Verificación de acceso compartida ──────────────────────────────────
-
-    /**
-     * Comprueba que el usuario es propietario del vídeo o miembro de un grupo
-     * con permisos sobre él. Lanza AccessDeniedException si no tiene acceso.
-     *
-     * Este método es usado tanto por registrarHeartbeat (aquí) como por
-     * VideoService.streamVideo() para garantizar que la misma regla de negocio
-     * se aplica en ambos puntos de entrada sin duplicar la lógica.
-     */
     public void verificarAcceso(Video video, String emailUsuario) {
-        boolean esPropietario = video.getPropietario().getEmail().equals(emailUsuario);
-
-        if (!esPropietario) {
-            List<PermisosGrupo> permisos = permisosGrupoRepository
-                    .findById_IdVideoId(video.getIdVideo());
-
-            boolean esMiembro = permisos.stream()
-                    .anyMatch(p -> miembrosGrupoRepository
-                            .countMiembroByEmailAndGrupo(
-                                    emailUsuario,
-                                    p.getId().getIdGrupoId()) > 0);
-
-            if (!esMiembro) {
-                throw new AccessDeniedException("Acceso denegado al video");
-            }
+        if (video.getPropietario().getEmail().equals(emailUsuario)) return;
+        if (!miembrosGrupoRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
+            throw new AccessDeniedException("Acceso denegado al video");
         }
     }
 }

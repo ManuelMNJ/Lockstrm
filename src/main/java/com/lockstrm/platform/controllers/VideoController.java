@@ -1,5 +1,6 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.EditarVideoRequest;
 import com.lockstrm.platform.dto.HeartbeatRequest;
 import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.dto.VideoVistaEstadisticaDto;
@@ -107,14 +108,6 @@ public class VideoController {
         return videoService.streamVideo(id, rangeHeader, userDetails.getUsername());
     }
 
-    /**
-     * Recibe el pulso de telemetría del reproductor cada 30 segundos.
-     * Actualiza el campo segundosVistos del registro de log del día actual,
-     * o crea un nuevo registro si es la primera sesión del día.
-     *
-     * @AuthenticationPrincipal inyecta el UserDetails cuyo username es el email
-     * (establecido por JwtAuthenticationFilter al validar el token Bearer).
-     */
     @PostMapping("/{idVideo}/heartbeat")
     public ResponseEntity<Void> heartbeat(
             @PathVariable Long idVideo,
@@ -126,33 +119,13 @@ public class VideoController {
     }
 
     @PatchMapping("/{idVideo}")
-    public ResponseEntity<?> editarVideo(
+    public ResponseEntity<VideoDTO> editarVideo(
             @PathVariable Long idVideo,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, Object> body) {
-
-        Object tituloObj = body.get("titulo");
-        if (tituloObj == null || tituloObj.toString().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El título es obligatorio"));
-        }
-        String titulo = tituloObj.toString().trim();
-
-        Long idGrupo = null;
-        Object idGrupoObj = body.get("idGrupo");
-        if (idGrupoObj instanceof Number n) {
-            idGrupo = n.longValue();
-        }
-
-        try {
-            VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(), titulo, idGrupo);
-            return ResponseEntity.ok(dto);
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            HttpStatus status = msg.contains("no encontrado") ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
-            return ResponseEntity.status(status).body(Map.of("error", msg));
-        }
+            @Valid @RequestBody EditarVideoRequest req) {
+        VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(),
+                req.titulo().trim(), req.idGrupo());
+        return ResponseEntity.ok(dto);
     }
 
     @PostMapping("/{id}/ver")

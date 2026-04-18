@@ -11,6 +11,7 @@ import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
+import com.lockstrm.platform.repositories.VideoVistaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -39,6 +42,7 @@ public class VideoService {
     private final UserRepository          userRepository;
     private final GrupoRepository         grupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final VideoVistaRepository    videoVistaRepository;
     private final LogService              logService;
     private final Cloudinary              cloudinary;
 
@@ -50,8 +54,7 @@ public class VideoService {
             throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (100 MB)");
         }
 
-        Usuario autor = userRepository.findByEmail(emailUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + emailUsuario));
+        Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
 
         Map<?, ?> uploadResult = cloudinary.uploader().uploadLarge(
                 file.getInputStream(),
@@ -86,8 +89,7 @@ public class VideoService {
         Video guardado = videoRepository.save(nuevoVideo);
 
         if (idGrupo != null) {
-            Grupo grupo = grupoRepository.findById(idGrupo)
-                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+            Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
             permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
         }
 
@@ -100,8 +102,7 @@ public class VideoService {
      * para que la misma lógica sea compartida con el endpoint de heartbeat.
      */
     public ResponseEntity<InputStreamResource> streamVideo(Long id, String rangeHeader, String emailUsuario) throws Exception {
-        Video video = videoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Video no encontrado: " + id));
+        Video video = videoRepository.getByIdOrThrow(id);
 
         logService.verificarAcceso(video, emailUsuario);
 
@@ -111,35 +112,51 @@ public class VideoService {
         }
 
         HttpURLConnection con = (HttpURLConnection) new URL(video.getUrlCloudSecure()).openConnection();
-        con.setRequestMethod("GET");
-        con.setConnectTimeout(10_000);
-        con.setReadTimeout(30_000);
+        try {
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(10_000);
+            con.setReadTimeout(30_000);
 
-        if (rangeHeader != null && !rangeHeader.isBlank()) {
-            con.setRequestProperty("Range", rangeHeader);
+            if (rangeHeader != null && !rangeHeader.isBlank()) {
+                con.setRequestProperty("Range", rangeHeader);
+            }
+
+            con.connect();
+
+            int cloudinaryStatus = con.getResponseCode();
+
+            if (cloudinaryStatus >= 400) {
+                throw new RuntimeException("Error al obtener vídeo del almacenamiento: HTTP " + cloudinaryStatus);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+
+            String contentType = con.getHeaderField("Content-Type");
+            if (contentType != null) headers.set("Content-Type", contentType);
+
+            String contentLength = con.getHeaderField("Content-Length");
+            if (contentLength != null) headers.setContentLength(Long.parseLong(contentLength));
+
+            String contentRange = con.getHeaderField("Content-Range");
+            if (contentRange != null) headers.set("Content-Range", contentRange);
+
+            headers.set("Accept-Ranges", "bytes");
+
+            HttpStatus status = (cloudinaryStatus == 206) ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
+
+            // Envuelve el stream para que disconnect() se llame al cerrarlo
+            InputStream wrapped = new FilterInputStream(con.getInputStream()) {
+                @Override
+                public void close() throws IOException {
+                    try { super.close(); } finally { con.disconnect(); }
+                }
+            };
+
+            return ResponseEntity.status(status).headers(headers).body(new InputStreamResource(wrapped));
+        } catch (Exception e) {
+            con.disconnect();
+            throw e;
         }
-
-        con.connect();
-
-        int cloudinaryStatus = con.getResponseCode();
-
-        HttpHeaders headers = new HttpHeaders();
-
-        String contentType = con.getHeaderField("Content-Type");
-        if (contentType != null) headers.set("Content-Type", contentType);
-
-        String contentLength = con.getHeaderField("Content-Length");
-        if (contentLength != null) headers.setContentLength(Long.parseLong(contentLength));
-
-        String contentRange = con.getHeaderField("Content-Range");
-        if (contentRange != null) headers.set("Content-Range", contentRange);
-
-        headers.set("Accept-Ranges", "bytes");
-
-        HttpStatus status = (cloudinaryStatus == 206) ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
-
-        return ResponseEntity.status(status).headers(headers)
-                .body(new InputStreamResource(con.getInputStream()));
     }
 
     @Transactional(readOnly = true)
@@ -201,8 +218,7 @@ public class VideoService {
 
     @Transactional
     public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, Long idGrupo) {
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(emailUsuario)) {
             throw new AccessDeniedException("No tienes permiso para editar este vídeo");
@@ -211,13 +227,16 @@ public class VideoService {
         video.setTitulo(titulo);
         videoRepository.save(video);
 
-        // Reasignar grupo: eliminar la asociación actual y crear la nueva si procede
+        // Validar el grupo ANTES de borrar para evitar dejar el vídeo sin grupo si no existe
+        Grupo grupo = null;
+        if (idGrupo != null) {
+            grupo = grupoRepository.getByIdOrThrow(idGrupo);
+        }
+
         permisosGrupoRepository.deleteByVideoId(idVideo);
 
         String grupoNombre = null;
-        if (idGrupo != null) {
-            Grupo grupo = grupoRepository.findById(idGrupo)
-                    .orElseThrow(() -> new RuntimeException("Grupo no encontrado: " + idGrupo));
+        if (grupo != null) {
             permisosGrupoRepository.save(new PermisosGrupo(idVideo, grupo.getIdGrupo()));
             grupoNombre = grupo.getNombre();
         }
@@ -235,8 +254,7 @@ public class VideoService {
 
     @Transactional
     public void eliminarVideo(Long idVideo, String userEmail) {
-        Video video = videoRepository.findById(idVideo)
-                .orElseThrow(() -> new RuntimeException("Vídeo no encontrado: " + idVideo));
+        Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("No tienes permiso para eliminar este vídeo");
@@ -245,6 +263,7 @@ public class VideoService {
         String cloudinaryIdParaBorrar = video.getCloudinaryId();
 
         permisosGrupoRepository.deleteByVideoId(idVideo);
+        videoVistaRepository.deleteByVideoId(idVideo);
         logService.eliminarLogsPorVideo(idVideo);
         videoRepository.delete(video);
 

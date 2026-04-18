@@ -7,9 +7,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long> {
+
+    default Video getByIdOrThrow(Long id) {
+        return findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Vídeo no encontrado: " + id));
+    }
 
     List<Video> findByPropietario_IdUsuario(Long idPropietario);
 
