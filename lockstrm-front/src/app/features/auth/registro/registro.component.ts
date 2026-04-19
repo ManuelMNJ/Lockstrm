@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import {
   ReactiveFormsModule, FormBuilder, FormGroup, Validators,
   AbstractControl, AsyncValidatorFn, ValidationErrors
@@ -15,7 +15,7 @@ import { passwordFortalezaValidator, calcPwReqs } from '../../../core/validators
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.css'
 })

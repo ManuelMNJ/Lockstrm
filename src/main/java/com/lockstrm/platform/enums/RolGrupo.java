@@ -4,5 +4,5 @@ public enum RolGrupo {
     SUPER_ADMIN,
     ADMIN,
     EDITOR,
-    MEMBER
+    MIEMBRO
 }

@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { timer } from 'rxjs';
 import { UsuarioService, PerfilUsuario } from '../../core/services/usuario.service';
 import {
   passwordFortalezaValidator,
@@ -21,6 +22,7 @@ export class AjustesComponent implements OnInit {
 
   perfil: PerfilUsuario | null = null;
   cargandoPerfil = true;
+  errorPerfil = '';
 
   // Formulario reactivo de cambio de contraseña
   formPassword: FormGroup;
@@ -29,8 +31,8 @@ export class AjustesComponent implements OnInit {
   estadoPassword: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   mensajePassword = '';
 
-  // Dark mode
-  modoOscuro = true;
+  // Dark mode — se inicializa desde localStorage para evitar discrepancias con el DOM
+  modoOscuro = localStorage.getItem('lockstrm-theme') !== 'light';
 
   private destroyRef = inject(DestroyRef);
 
@@ -49,13 +51,14 @@ export class AjustesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.modoOscuro = !document.body.classList.contains('light-mode');
-
     this.usuarioService.obtenerPerfil()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next:  (p) => { this.perfil = p; this.cargandoPerfil = false; },
-        error: ()  => { this.cargandoPerfil = false; },
+        error: ()  => {
+          this.cargandoPerfil = false;
+          this.errorPerfil = 'No se pudo cargar la información de perfil.';
+        },
       });
   }
 
@@ -87,7 +90,9 @@ export class AjustesComponent implements OnInit {
           this.estadoPassword  = 'success';
           this.mensajePassword = res.mensaje ?? 'Contraseña actualizada correctamente.';
           this.formPassword.reset();
-          setTimeout(() => { this.estadoPassword = 'idle'; }, 4000);
+          timer(4000)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => { this.estadoPassword = 'idle'; });
         },
         error: (err) => {
           this.estadoPassword  = 'error';
@@ -104,8 +109,12 @@ export class AjustesComponent implements OnInit {
     localStorage.setItem('lockstrm-theme', this.modoOscuro ? 'dark' : 'light');
   }
 
-  rolLegible(rol: string | undefined): string {
-    if (!rol) return '—';
-    return rol === 'SUPER_ADMIN' ? 'Administrador' : 'Miembro';
+  rolLegible(rol: string | undefined | null): string {
+    switch (rol) {
+      case 'SUPER_ADMIN': return 'Administrador';
+      case 'ADMIN':       return 'Admin';
+      case 'USER':        return 'Usuario';
+      default:            return rol || '—';
+    }
   }
 }

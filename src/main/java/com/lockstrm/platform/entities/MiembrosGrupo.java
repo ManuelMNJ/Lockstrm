@@ -31,7 +31,7 @@ public class MiembrosGrupo implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false, length = 20)
-    private RolGrupo rol = RolGrupo.MEMBER;
+    private RolGrupo rol = RolGrupo.MIEMBRO;
 
     @Column(name = "fecha_union")
     private LocalDateTime fechaUnion;
