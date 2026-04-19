@@ -3,7 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, finalize } from 'rxjs';
+import { forkJoin, finalize, of } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../core/services/video.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -179,19 +180,19 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   private cargarVideos(): void {
-    // Si puede gestionar vídeos, le traemos sus vídeos disponibles. Si no, solo los compartidos.
-    const videos$ = this.puedeGestionarVideos
-      ? this.videoService.obtenerMisVideos()
-      : this.videoService.obtenerVideosCompartidos();
+    const videosGrupo$ = this.videoService.obtenerVideosPorGrupo(this.idGrupo);
+    const misVideos$   = this.puedeGestionarVideos
+      ? this.videoService.obtenerMisVideos().pipe(take(1))
+      : of([] as Video[]);
 
-    videos$
+    forkJoin({ videosGrupo: videosGrupo$, misVideos: misVideos$ })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (videos) => {
-          this.videosGrupo = videos.filter(v => v.grupo?.idGrupo === this.idGrupo);
-          this.misVideosDisponibles = this.puedeGestionarVideos
-            ? videos.filter(v => !v.grupo || v.grupo.idGrupo !== this.idGrupo)
-            : [];
+        next: ({ videosGrupo, misVideos }) => {
+          this.videosGrupo          = videosGrupo;
+          this.misVideosDisponibles = misVideos.filter(
+            v => !v.grupo || v.grupo.idGrupo !== this.idGrupo
+          );
           this.cdr.markForCheck();
         },
         error: () => {

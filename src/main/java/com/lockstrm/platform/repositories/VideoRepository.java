@@ -38,4 +38,9 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
            "WHERE mg.usuario.email = :email " +
            "AND v.propietario.email <> :email")
     List<Video> findVideosCompartidosConUsuario(@Param("email") String email);
+
+    @Query("SELECT DISTINCT v FROM Video v " +
+           "JOIN PermisosGrupo pg ON pg.video = v " +
+           "WHERE pg.grupo.idGrupo = :idGrupo")
+    List<Video> findByGrupoId(@Param("idGrupo") Long idGrupo);
 }

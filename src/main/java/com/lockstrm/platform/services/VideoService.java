@@ -8,6 +8,7 @@ import com.lockstrm.platform.entities.PermisosGrupo;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.GrupoRepository;
+import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
@@ -41,6 +42,7 @@ public class VideoService {
     private final VideoRepository         videoRepository;
     private final UserRepository          userRepository;
     private final GrupoRepository         grupoRepository;
+    private final MiembrosGrupoRepository miembrosGrupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
     private final VideoVistaRepository    videoVistaRepository;
     private final LogService              logService;
@@ -157,6 +159,16 @@ public class VideoService {
             con.disconnect();
             throw e;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<VideoDTO> obtenerVideosPorGrupo(Long idGrupo, String emailUsuario) {
+        if (miembrosGrupoRepository.countMiembroByEmailAndGrupo(emailUsuario, idGrupo) == 0) {
+            throw new AccessDeniedException("No tienes acceso a este grupo");
+        }
+        List<Video> videos = videoRepository.findByGrupoId(idGrupo);
+        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
     @Transactional(readOnly = true)

@@ -1,11 +1,14 @@
 package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.MiembroDto;
+import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.enums.RolGrupo;
 import com.lockstrm.platform.services.GrupoService;
+import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +22,7 @@ import java.util.Map;
 public class GrupoController {
 
     private final GrupoService grupoService;
+    private final VideoService videoService;
 
     /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
@@ -62,6 +66,17 @@ public class GrupoController {
         }
         Grupo grupo = grupoService.crearGrupo(userDetails.getUsername(), nombre.trim());
         return ResponseEntity.status(201).body(grupo);
+    }
+
+    @GetMapping("/{idGrupo}/videos")
+    public ResponseEntity<?> obtenerVideosDelGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            return ResponseEntity.ok(videoService.obtenerVideosPorGrupo(idGrupo, userDetails.getUsername()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{idGrupo}/miembros")

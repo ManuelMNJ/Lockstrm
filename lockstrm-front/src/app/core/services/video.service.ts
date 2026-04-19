@@ -108,6 +108,13 @@ export class VideoService {
     this._misVideos$.next([video, ...(this._misVideos$.value ?? [])]);
   }
 
+  /** GET /api/grupos/{idGrupo}/videos — todos los vídeos asignados a un grupo. */
+  obtenerVideosPorGrupo(idGrupo: number): Observable<Video[]> {
+    return this.http.get<VideoRaw[]>(`${environment.apiUrl}/api/grupos/${idGrupo}/videos`).pipe(
+      map(arr => arr.map(mapVideo)),
+    );
+  }
+
   /** GET /api/videos/compartidos — vídeos accesibles vía permisos de grupo (contexto Espectador). */
   obtenerVideosCompartidos(): Observable<Video[]> {
     if (!this._videosCompartidosCache$) {
