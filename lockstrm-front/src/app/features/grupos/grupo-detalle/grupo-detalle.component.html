@@ -83,7 +83,7 @@
   @if (!cargando && grupo) {
     <div class="detalle-body">
 
-      <div class="detalle-columns" [class.detalle-columns--guest]="!esAdmin">
+      <div class="detalle-columns">
 
         <div class="detalle-col" [class.detalle-col--sidebar]="!esAdmin">
 
@@ -140,7 +140,7 @@
                   </div>
 
                   @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol)) {
-                    <select class="rol-select"
+                    <select class="rol-select-custom"
                             [ngModel]="m.rol"
                             (ngModelChange)="cambiarRolMiembro(m, $event)"
                             [disabled]="cambiandoRoles.has(m.idUsuario) || m.idUsuario === currentUserId"
@@ -179,7 +179,9 @@
             </ul>
           </section>
 
-        </div><div class="detalle-col" [class.detalle-col--main]="!esAdmin">
+        </div>
+
+        <div class="detalle-col detalle-col--main">
 
           <section class="section-card" aria-labelledby="videos-title">
             <h3 class="section-title" id="videos-title">
@@ -276,7 +278,10 @@
             </div>
           </section>
 
-        </div></div></div>
+        </div>
+
+      </div><!-- /.detalle-columns -->
+    </div><!-- /.detalle-body -->
   }
 
 </div>

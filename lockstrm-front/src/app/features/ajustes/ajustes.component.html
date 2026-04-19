@@ -1,56 +1,6 @@
 <div class="ajustes-page">
 
   <!-- ================================================================
-  PERFIL
-  ================================================================ -->
-  <section class="settings-section" aria-labelledby="perfil-heading">
-    <div class="section-header">
-      <div class="section-icon section-icon--purple">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      </div>
-      <div>
-        <h2 class="section-title" id="perfil-heading">Mi perfil</h2>
-        <p class="section-sub">Información de tu cuenta en Lockstrm.</p>
-      </div>
-    </div>
-
-    @if (cargandoPerfil) {
-      <div class="info-loading">Cargando perfil...</div>
-    }
-
-    @if (errorPerfil) {
-      <p class="feedback-msg feedback-msg--error" role="alert">{{ errorPerfil }}</p>
-    }
-
-    @if (!cargandoPerfil && perfil) {
-      <div class="info-grid">
-        <div class="info-row">
-          <span class="info-label">Nombre</span>
-          <span class="info-value">{{ perfil.nombre }} {{ perfil.apellidos }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Correo electrónico</span>
-          <span class="info-value">{{ perfil.email }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Miembro desde</span>
-          <span class="info-value">{{ perfil.fechaRegistro | dateLocale:'long' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Rol</span>
-          <span class="info-value">
-            <span class="badge badge-primary">{{ rolLegible(perfil.rolSistema) }}</span>
-          </span>
-        </div>
-      </div>
-    }
-  </section>
-
-  <!-- ================================================================
   SEGURIDAD
   ================================================================ -->
   <section class="settings-section" aria-labelledby="seguridad-heading">

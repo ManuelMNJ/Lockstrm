@@ -302,6 +302,12 @@ export class GrupoDetalleComponent implements OnInit {
   cambiarRolMiembro(miembro: Miembro, nuevoRol: string): void {
     if (!nuevoRol || nuevoRol === miembro.rol) return;
 
+    const rolAnterior = miembro.rol;
+
+    // Actualización optimista: el select muestra el nuevo rol de inmediato y no rebota
+    this.miembros = this.miembros.map(m =>
+      m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
+    );
     this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
     this.errorCambioRol = '';
     this.cdr.markForCheck();
@@ -310,15 +316,16 @@ export class GrupoDetalleComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.miembros = this.miembros.map(m =>
-            m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
-          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;
           this.cdr.markForCheck();
         },
         error: (err) => {
+          // Revertir al rol anterior si el servidor rechaza el cambio
+          this.miembros = this.miembros.map(m =>
+            m.idUsuario === miembro.idUsuario ? { ...m, rol: rolAnterior } : m
+          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;

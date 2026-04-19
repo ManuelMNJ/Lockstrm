@@ -144,10 +144,9 @@ export class GruposComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupo) => {
-          this.misGrupos        = [...this.misGrupos, grupo];
-          this.miembrosPerGrupo = new Map(this.miembrosPerGrupo).set(grupo.idGrupo, 1);
-          this.videosPerGrupo   = new Map(this.videosPerGrupo).set(grupo.idGrupo, 0);
+          this.estadoCreacion = 'idle';
           this.cerrarModal();
+          this.router.navigate(['/mi-espacio/grupos', grupo.idGrupo]);
         },
         error: (err) => {
           this.estadoCreacion = 'error';

@@ -1,28 +1,22 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { timer } from 'rxjs';
-import { UsuarioService, PerfilUsuario } from '../../core/services/usuario.service';
+import { UsuarioService } from '../../core/services/usuario.service';
 import {
   passwordFortalezaValidator,
   confirmarPasswordValidator,
   calcPwReqs,
 } from '../../core/validators/password.validator';
-import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 
 @Component({
   selector: 'app-ajustes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DateLocalePipe],
+  imports: [ReactiveFormsModule],
   templateUrl: './ajustes.component.html',
   styleUrl: './ajustes.component.css',
 })
-export class AjustesComponent implements OnInit {
-
-  perfil: PerfilUsuario | null = null;
-  cargandoPerfil = true;
-  errorPerfil = '';
+export class AjustesComponent {
 
   // Formulario reactivo de cambio de contraseña
   formPassword: FormGroup;
@@ -48,18 +42,6 @@ export class AjustesComponent implements OnInit {
       },
       { validators: confirmarPasswordValidator('contrasenaNueva', 'contrasenaConfirm') },
     );
-  }
-
-  ngOnInit(): void {
-    this.usuarioService.obtenerPerfil()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next:  (p) => { this.perfil = p; this.cargandoPerfil = false; },
-        error: ()  => {
-          this.cargandoPerfil = false;
-          this.errorPerfil = 'No se pudo cargar la información de perfil.';
-        },
-      });
   }
 
   // ── Shortcuts de controles ──────────────────────────────────────────────────
@@ -109,12 +91,4 @@ export class AjustesComponent implements OnInit {
     localStorage.setItem('lockstrm-theme', this.modoOscuro ? 'dark' : 'light');
   }
 
-  rolLegible(rol: string | undefined | null): string {
-    switch (rol) {
-      case 'SUPER_ADMIN': return 'Administrador';
-      case 'ADMIN':       return 'Admin';
-      case 'USER':        return 'Usuario';
-      default:            return rol || '—';
-    }
-  }
 }

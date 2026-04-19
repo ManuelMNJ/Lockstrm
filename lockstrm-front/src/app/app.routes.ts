@@ -13,6 +13,7 @@ import { VideosCompartidosComponent } from './features/videos-compartidos/videos
 import { GruposComponent }            from './features/grupos/grupos.component';
 import { GrupoDetalleComponent }      from './features/grupos/grupo-detalle/grupo-detalle.component';
 import { AjustesComponent }           from './features/ajustes/ajustes.component';
+import { PerfilComponent }            from './features/perfil/perfil.component';
 
 import { authGuard }   from './core/guards/auth.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
@@ -66,6 +67,7 @@ export const routes: Routes = [
           // Contexto Espectador: Compartido conmigo
           { path: 'compartido', component: VideosCompartidosComponent },
 
+          { path: 'perfil',  component: PerfilComponent },
           { path: 'ajustes', component: AjustesComponent },
 
           // Compatibilidad con rutas anteriores
