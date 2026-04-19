@@ -56,6 +56,13 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // ── Espacio de almacenamiento (hardcoded hasta que el backend lo exponga) ──
+  readonly storageMB      = 1229;               // 1.2 GB
+  readonly storageLimitMB = 5120;               // 5 GB
+  readonly storagePercent = Math.round(this.storageMB / this.storageLimitMB * 100);
+  readonly storageUsedGB  = (this.storageMB / 1024).toFixed(1);
+  readonly storageLimitGB = (this.storageLimitMB / 1024).toFixed(0);
+
   readonly paginator = new Paginator<Video>(15);
 
   goToPage(page: number): void {

@@ -10,29 +10,74 @@
       </h2>
       <p class="welcome-sub">Aquí tienes un resumen de tu actividad en Lockstrm.</p>
     </div>
-    <div class="welcome-actions">
-      <a routerLink="/mi-espacio/videos" class="btn-primary">
+  </section>
+
+  <!-- ================================================================
+    QUICK ACTIONS
+    ================================================================ -->
+  <div class="quick-actions" aria-label="Acciones rápidas">
+
+    <a routerLink="/mi-espacio/videos" class="quick-action-card quick-action-card--upload">
+      <div class="qa-icon-wrap" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true" class="btn-icon">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
         </svg>
-        Subir vídeo
-      </a>
-      <a routerLink="/mi-espacio/grupos" class="btn-secondary">
+      </div>
+      <div class="qa-body">
+        <span class="qa-title">Subir vídeo rápido</span>
+        <span class="qa-sub">MP4 · hasta 95 MB</span>
+      </div>
+      <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+
+    <a routerLink="/mi-espacio/grupos" class="quick-action-card quick-action-card--group">
+      <div class="qa-icon-wrap" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true" class="btn-icon">
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        Ver grupos
-      </a>
-    </div>
-  </section>
+      </div>
+      <div class="qa-body">
+        <span class="qa-title">Crear grupo</span>
+        <span class="qa-sub">Gestiona accesos por equipo</span>
+      </div>
+      <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+
+    <a routerLink="/perfil" class="quick-action-card quick-action-card--profile">
+      <div class="qa-icon-wrap" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="qa-body">
+        <span class="qa-title">Mi perfil</span>
+        <span class="qa-sub">Cuenta y configuración</span>
+      </div>
+      <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </a>
+
+  </div>
 
   <!-- ================================================================
     ERROR
@@ -129,7 +174,8 @@
 
     </section>
 
-    <!-- TWO LISTS -->
+    <!-- MAIN BODY: lists + activity sidebar -->
+    <div class="dashboard-body">
     <div class="lists-grid">
 
       <!-- Top más vistos -->
@@ -236,7 +282,94 @@
         }
       </section>
 
-    </div>
+    </div><!-- end lists-grid -->
+
+      <!-- ── Activity Feed Sidebar ── -->
+      <aside class="activity-feed" aria-labelledby="activity-heading">
+        <div class="section-header">
+          <h3 class="section-title" id="activity-heading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true" class="activity-feed-icon">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Actividad
+          </h3>
+        </div>
+
+        <ul class="activity-list" role="list">
+          @for (item of activityFeed; track $index) {
+            <li class="activity-item">
+
+              <div class="activity-dot-wrap" aria-hidden="true">
+                @if (item.icon === 'group') {
+                  <div class="activity-dot activity-dot--purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                }
+                @if (item.icon === 'views') {
+                  <div class="activity-dot activity-dot--blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </div>
+                }
+                @if (item.icon === 'upload') {
+                  <div class="activity-dot activity-dot--green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="16 16 12 12 8 16"/>
+                      <line x1="12" y1="12" x2="12" y2="21"/>
+                      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                    </svg>
+                  </div>
+                }
+                @if (item.icon === 'share') {
+                  <div class="activity-dot activity-dot--teal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="18" cy="5" r="3"/>
+                      <circle cx="6" cy="12" r="3"/>
+                      <circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  </div>
+                }
+                @if (item.icon === 'video') {
+                  <div class="activity-dot activity-dot--amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7"/>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                    </svg>
+                  </div>
+                }
+                @if ($index < activityFeed.length - 1) {
+                  <div class="activity-line" aria-hidden="true"></div>
+                }
+              </div>
+
+              <div class="activity-content">
+                <p class="activity-text" [innerHTML]="item.text"></p>
+                <span class="activity-time">{{ item.time }}</span>
+              </div>
+
+            </li>
+          }
+        </ul>
+      </aside>
+
+    </div><!-- end dashboard-body -->
   }
 
 </div>

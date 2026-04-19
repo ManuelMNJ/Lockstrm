@@ -46,4 +46,13 @@ export class DashboardComponent implements OnInit {
   }
 
   readonly skeletonItems = [1, 2, 3];
+
+  readonly activityFeed: { icon: 'group' | 'video' | 'views' | 'upload' | 'share'; text: string; time: string }[] = [
+    { icon: 'group',  text: 'Se te añadió al grupo <strong>Marketing Q4</strong>',          time: 'hace 2 h'  },
+    { icon: 'views',  text: '<strong>Presentación anual</strong> alcanzó 100 vistas',        time: 'hace 5 h'  },
+    { icon: 'upload', text: 'Subiste <strong>Demo producto v2.mp4</strong> correctamente',   time: 'ayer'       },
+    { icon: 'group',  text: 'Nuevo miembro en el grupo <strong>Ventas EMEA</strong>',        time: 'hace 2 d'  },
+    { icon: 'share',  text: '<strong>Tutorial onboarding</strong> compartido con 3 grupos',  time: 'hace 3 d'  },
+    { icon: 'video',  text: 'Grupo <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
+  ];
 }
