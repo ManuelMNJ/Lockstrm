@@ -60,6 +60,25 @@ export class GrupoDetalleComponent implements OnInit {
 
   errorVideos = '';
 
+  criterioOrden: 'fechaDesc' | 'fechaAsc' | 'duracionDesc' | 'duracionAsc' | 'nombreAsc' = 'fechaDesc';
+
+  get videosGrupoOrdenados(): Video[] {
+    return [...this.videosGrupo].sort((a, b) => {
+      switch (this.criterioOrden) {
+        case 'fechaDesc':    return new Date(b.fechaSubida ?? 0).getTime() - new Date(a.fechaSubida ?? 0).getTime();
+        case 'fechaAsc':     return new Date(a.fechaSubida ?? 0).getTime() - new Date(b.fechaSubida ?? 0).getTime();
+        case 'duracionDesc': return (b.duracion ?? 0) - (a.duracion ?? 0);
+        case 'duracionAsc':  return (a.duracion ?? 0) - (b.duracion ?? 0);
+        case 'nombreAsc':    return a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' });
+        default:             return 0;
+      }
+    });
+  }
+
+  onCambioOrden(): void {
+    this.cdr.markForCheck();
+  }
+
   videoStats: Video | null = null;
   estadisticas: VideoVistaEstadistica[] = [];
   cargandoStats = false;

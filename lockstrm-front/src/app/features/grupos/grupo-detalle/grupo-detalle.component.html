@@ -184,10 +184,33 @@
         <div class="detalle-col detalle-col--main">
 
           <section class="section-card" aria-labelledby="videos-title">
-            <h3 class="section-title" id="videos-title">
-              Vídeos del grupo
-              <span class="count-badge">{{ videosGrupo.length }}</span>
-            </h3>
+            <div class="section-title-row">
+              <h3 class="section-title" id="videos-title">
+                Vídeos del grupo
+                <span class="count-badge">{{ videosGrupo.length }}</span>
+              </h3>
+
+              @if (videosGrupo.length > 1) {
+                <div class="sort-bar">
+                  <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="3" y1="6"  x2="21" y2="6"/>
+                    <line x1="6" y1="12" x2="18" y2="12"/>
+                    <line x1="9" y1="18" x2="15" y2="18"/>
+                  </svg>
+                  <select class="sort-select"
+                          [(ngModel)]="criterioOrden"
+                          (ngModelChange)="onCambioOrden()"
+                          aria-label="Ordenar vídeos">
+                    <option value="fechaDesc">Más recientes</option>
+                    <option value="fechaAsc">Más antiguos</option>
+                    <option value="duracionDesc">Mayor duración</option>
+                    <option value="duracionAsc">Menor duración</option>
+                    <option value="nombreAsc">Nombre (A-Z)</option>
+                  </select>
+                </div>
+              }
+            </div>
 
             @if (puedeGestionarVideos) {
               <div class="add-row">
@@ -220,7 +243,7 @@
             }
 
             <div class="videos-grid" role="list">
-              @for (v of videosGrupo; track v.idVideo) {
+              @for (v of videosGrupoOrdenados; track v.idVideo) {
                 <div class="video-card" role="listitem" (click)="verVideo(v)">
                   <div class="video-card-thumb">
                     @if (v.miniaturaUrl) {

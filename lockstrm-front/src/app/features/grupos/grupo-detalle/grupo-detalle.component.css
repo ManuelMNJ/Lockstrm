@@ -484,6 +484,72 @@
 }
 
 /* ==========================================================================
+   SECTION TITLE ROW (title + sort bar)
+   ========================================================================== */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   SORT BAR
+   ========================================================================== */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.sort-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--text-subtle);
+  flex-shrink: 0;
+}
+
+.sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 4px 26px 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background-color: var(--bg-surface-active);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%237C3AED' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    border-color     var(--transition-fast),
+    background-color var(--transition-fast),
+    box-shadow       var(--transition-fast);
+}
+
+.sort-select option {
+  background-color: var(--bg-surface-active);
+  color: var(--text-main);
+}
+
+.sort-select:hover {
+  border-color: var(--color-primary);
+  background-color: var(--bg-surface-hover);
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ghost);
+}
+
+/* ==========================================================================
    ADD MEMBER ROW
    ========================================================================== */
 .add-row {
