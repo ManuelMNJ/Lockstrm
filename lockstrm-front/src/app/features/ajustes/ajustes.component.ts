@@ -1,26 +1,22 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { UsuarioService, PerfilUsuario } from '../../core/services/usuario.service';
+import { timer } from 'rxjs';
+import { UsuarioService } from '../../core/services/usuario.service';
 import {
   passwordFortalezaValidator,
   confirmarPasswordValidator,
   calcPwReqs,
 } from '../../core/validators/password.validator';
-import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 
 @Component({
   selector: 'app-ajustes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DateLocalePipe],
+  imports: [ReactiveFormsModule],
   templateUrl: './ajustes.component.html',
   styleUrl: './ajustes.component.css',
 })
-export class AjustesComponent implements OnInit {
-
-  perfil: PerfilUsuario | null = null;
-  cargandoPerfil = true;
+export class AjustesComponent {
 
   // Formulario reactivo de cambio de contraseña
   formPassword: FormGroup;
@@ -29,8 +25,8 @@ export class AjustesComponent implements OnInit {
   estadoPassword: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   mensajePassword = '';
 
-  // Dark mode
-  modoOscuro = true;
+  // Dark mode — se inicializa desde localStorage para evitar discrepancias con el DOM
+  modoOscuro = localStorage.getItem('lockstrm-theme') !== 'light';
 
   private destroyRef = inject(DestroyRef);
 
@@ -46,17 +42,6 @@ export class AjustesComponent implements OnInit {
       },
       { validators: confirmarPasswordValidator('contrasenaNueva', 'contrasenaConfirm') },
     );
-  }
-
-  ngOnInit(): void {
-    this.modoOscuro = !document.body.classList.contains('light-mode');
-
-    this.usuarioService.obtenerPerfil()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next:  (p) => { this.perfil = p; this.cargandoPerfil = false; },
-        error: ()  => { this.cargandoPerfil = false; },
-      });
   }
 
   // ── Shortcuts de controles ──────────────────────────────────────────────────
@@ -87,7 +72,9 @@ export class AjustesComponent implements OnInit {
           this.estadoPassword  = 'success';
           this.mensajePassword = res.mensaje ?? 'Contraseña actualizada correctamente.';
           this.formPassword.reset();
-          setTimeout(() => { this.estadoPassword = 'idle'; }, 4000);
+          timer(4000)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => { this.estadoPassword = 'idle'; });
         },
         error: (err) => {
           this.estadoPassword  = 'error';
@@ -104,8 +91,4 @@ export class AjustesComponent implements OnInit {
     localStorage.setItem('lockstrm-theme', this.modoOscuro ? 'dark' : 'light');
   }
 
-  rolLegible(rol: string | undefined): string {
-    if (!rol) return '—';
-    return rol === 'SUPER_ADMIN' ? 'Administrador' : 'Miembro';
-  }
 }

@@ -1,8 +1,43 @@
 <div class="videos-page">
 
   <!-- ================================================================
-    UPLOAD PANEL
-    ================================================================ -->
+  STORAGE WIDGET
+  ================================================================ -->
+  <div class="storage-widget" aria-label="Espacio de almacenamiento de la cuenta">
+    <div class="storage-info">
+      <div class="storage-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+        </svg>
+      </div>
+      <div class="storage-text">
+        <span class="storage-label">Espacio de la cuenta</span>
+        <span class="storage-values">
+          <strong>{{ storageUsedGB }} GB</strong>
+          <span class="storage-sep">/</span>
+          {{ storageLimitGB }} GB
+        </span>
+      </div>
+    </div>
+    <div class="storage-bar-wrap" role="progressbar"
+         [attr.aria-valuenow]="storagePercent"
+         aria-valuemin="0" aria-valuemax="100"
+         [attr.aria-label]="storagePercent + '% usado'">
+      <div class="storage-bar">
+        <div class="storage-fill"
+             [style.width.%]="storagePercent"
+             [class.storage-fill--warn]="storagePercent >= 80"></div>
+      </div>
+      <span class="storage-pct">{{ storagePercent }}%</span>
+    </div>
+  </div>
+
+  <!-- ================================================================
+  UPLOAD PANEL
+  ================================================================ -->
   <section class="upload-panel" aria-labelledby="upload-heading">
 
     <div class="panel-header">
@@ -23,465 +58,466 @@
             placeholder="Introduce un título descriptivo"
             maxlength="200"
             autocomplete="off">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="archivo-video">Archivo de vídeo</label>
-          <input
-            #archivoInput
-            id="archivo-video"
-            class="form-input form-input--file"
-            type="file"
-            accept="video/*"
-            (change)="seleccionarArchivo($event)">
-        </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="archivo-video">Archivo de vídeo</label>
+            <input
+              #archivoInput
+              id="archivo-video"
+              class="form-input form-input--file"
+              type="file"
+              accept="video/*"
+              (change)="seleccionarArchivo($event)">
+            </div>
 
-        <div class="form-field">
-          <label class="form-label" for="grupo-video">Asignar a grupo</label>
-          <select
-            id="grupo-video"
-            class="form-input form-select"
-            [(ngModel)]="idGrupoSeleccionado">
-            <option [ngValue]="null">Ningún grupo (Privado)</option>
-            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
-          </select>
-        </div>
+            <div class="form-field">
+              <label class="form-label" for="grupo-video">Asignar a grupo</label>
+              <select
+                id="grupo-video"
+                class="form-input form-select"
+                [(ngModel)]="idGrupoSeleccionado">
+                <option [ngValue]="null">Ningún grupo (Privado)</option>
+                @for (g of misGrupos; track g) {
+                  <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+                }
+              </select>
+            </div>
 
-      </div>
-      @if (miniaturaDataUrl) {
-        <div class="thumbnail-preview" aria-label="Vista previa de miniatura">
-          <img [src]="miniaturaDataUrl" alt="Miniatura generada" class="thumbnail-preview__img">
-        </div>
-      }
-
-      <div class="upload-actions">
-        <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true" class="btn-icon">
-            <polyline points="16 16 12 12 8 16"/>
-            <line x1="12" y1="12" x2="12" y2="21"/>
-            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-          </svg>
-          {{ estadoSubida === 'uploading' ? 'Subiendo…' : 'Subir vídeo' }}
-        </button>
-      </div>
-
-      @if (estadoSubida === 'uploading') {
-        <div class="upload-progress" role="status" aria-label="Progreso de subida">
-          <div class="upload-progress-bar" [style.width.%]="progreso"></div>
-          <span class="upload-progress-label">{{ progreso }}%</span>
-        </div>
-      }
-      <p *ngIf="estadoSubida === 'success'"
-         class="upload-message"
-         role="status"
-         aria-live="polite">
-        Vídeo subido correctamente.
-      </p>
-      <p *ngIf="estadoSubida === 'error'"
-         class="upload-message upload-message--error"
-         role="alert"
-         aria-live="assertive">
-        {{ mensajeError }}
-      </p>
-
-    </div>
-  </section>
-
-  <!-- ================================================================
-    VIDEO LIBRARY — Data Table
-    ================================================================ -->
-  <section class="library" aria-labelledby="library-heading">
-
-    <div class="section-header">
-      <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
-      @if (!cargando) {
-        <span class="section-badge">
-          @if (paginator.totalPages > 1) {
-            {{ paginator.paginatedItems.length }} de {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
-          } @else {
-            {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
+          </div>
+          @if (miniaturaDataUrl) {
+            <div class="thumbnail-preview" aria-label="Vista previa de miniatura">
+              <img [src]="miniaturaDataUrl" alt="Miniatura generada" class="thumbnail-preview__img">
+            </div>
           }
-        </span>
-      }
-    </div>
 
-    <p *ngIf="listaError"
-       class="upload-message upload-message--error"
-       role="alert"
-       aria-live="assertive">
-      {{ listaError }}
-    </p>
+          <div class="upload-actions">
+            <button class="btn-primary" (click)="subir()" [disabled]="estadoSubida === 'uploading'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true" class="btn-icon">
+                <polyline points="16 16 12 12 8 16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+              {{ estadoSubida === 'uploading' ? 'Subiendo…' : 'Subir vídeo' }}
+            </button>
+          </div>
 
-    @if (cargando) {
-      <div class="skeleton-table" aria-label="Cargando biblioteca…">
-        @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="skeleton-row">
-            <div class="skeleton-cell skeleton-cell--thumb"></div>
-            <div class="skeleton-cell skeleton-cell--title"></div>
-            <div class="skeleton-cell skeleton-cell--group"></div>
-            <div class="skeleton-cell skeleton-cell--date"></div>
-            <div class="skeleton-cell skeleton-cell--dur"></div>
-            <div class="skeleton-cell skeleton-cell--actions"></div>
+          @if (estadoSubida === 'uploading') {
+            <div class="upload-progress" role="status" aria-label="Progreso de subida">
+              <div class="upload-progress-bar" [style.width.%]="progreso"></div>
+              <span class="upload-progress-label">{{ progreso }}%</span>
+            </div>
+          }
+          @if (estadoSubida === 'success') {
+            <p
+              class="upload-message"
+              role="status"
+              aria-live="polite">
+              Vídeo subido correctamente.
+            </p>
+          }
+          @if (estadoSubida === 'error') {
+            <p
+              class="upload-message upload-message--error"
+              role="alert"
+              aria-live="assertive">
+              {{ mensajeError }}
+            </p>
+          }
+
+        </div>
+      </section>
+
+      <!-- ================================================================
+      VIDEO LIBRARY — Data Table
+      ================================================================ -->
+      <section class="library" aria-labelledby="library-heading">
+
+        <div class="section-header">
+          <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
+          @if (!cargando) {
+            <span class="section-badge">
+              @if (paginator.totalPages > 1) {
+                {{ paginator.paginatedItems.length }} de {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
+              } @else {
+                {{ videos.length }} {{ videos.length === 1 ? 'vídeo' : 'vídeos' }}
+              }
+            </span>
+          }
+        </div>
+
+        @if (listaError) {
+          <p
+            class="upload-message upload-message--error"
+            role="alert"
+            aria-live="assertive">
+            {{ listaError }}
+          </p>
+        }
+
+        @if (cargando) {
+          <div class="skeleton-table" aria-label="Cargando biblioteca…">
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div class="skeleton-row">
+                <div class="skeleton-cell skeleton-cell--thumb"></div>
+                <div class="skeleton-cell skeleton-cell--title"></div>
+                <div class="skeleton-cell skeleton-cell--group"></div>
+                <div class="skeleton-cell skeleton-cell--date"></div>
+                <div class="skeleton-cell skeleton-cell--dur"></div>
+                <div class="skeleton-cell skeleton-cell--actions"></div>
+              </div>
+            }
           </div>
         }
-      </div>
-    }
 
-    @if (!cargando && !listaError) {
-    <div class="table-wrapper" role="region" aria-label="Listado de vídeos" tabindex="0">
-      <table class="data-table">
+        @if (!cargando && !listaError) {
+          <div class="table-wrapper" role="region" aria-label="Listado de vídeos" tabindex="0">
+            <table class="data-table">
 
-        <thead>
-          <tr>
-            <th scope="col" class="col-thumb">Miniatura</th>
-            <th scope="col" class="col-title">Título</th>
-            <th scope="col" class="col-group">Grupo</th>
-            <th scope="col" class="col-date">Fecha</th>
-            <th scope="col" class="col-duration">Duración</th>
-            <th scope="col" class="col-actions">Acciones</th>
-          </tr>
-        </thead>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-thumb">Miniatura</th>
+                  <th scope="col" class="col-title">Título</th>
+                  <th scope="col" class="col-group">Grupo</th>
+                  <th scope="col" class="col-date">Fecha</th>
+                  <th scope="col" class="col-duration">Duración</th>
+                  <th scope="col" class="col-actions">Acciones</th>
+                </tr>
+              </thead>
 
-        <tbody>
-          @for (v of paginator.paginatedItems; track v.idVideo) {
-            <tr class="table-row">
-              <td class="col-thumb">
-                @if (v.miniaturaUrl) {
-                  <img [src]="v.miniaturaUrl" [alt]="'Miniatura de ' + v.titulo" class="video-thumb-img">
-                } @else {
-                  <div class="video-thumb" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="23 7 16 12 23 17 23 7"/>
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                    </svg>
-                  </div>
-                }
-              </td>
-              <td class="col-title">
-                <span class="video-title">{{ v.titulo }}</span>
-              </td>
+              <tbody>
+                @for (v of paginator.paginatedItems; track v.idVideo) {
+                  <tr class="table-row">
+                    <td class="col-thumb">
+                      @if (v.miniaturaUrl) {
+                        <img [src]="v.miniaturaUrl" [alt]="'Miniatura de ' + v.titulo" class="video-thumb-img">
+                      } @else {
+                        <div class="video-thumb" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                          </svg>
+                        </div>
+                      }
+                    </td>
+                    <td class="col-title">
+                      <span class="video-title">{{ v.titulo }}</span>
+                    </td>
 
-              <td class="col-group">
-                @if (v.grupo?.nombre) {
-                  <span class="cell-badge">{{ v.grupo!.nombre }}</span>
-                } @else {
-                  <span class="cell-text">—</span>
-                }
-              </td>
-              <td class="col-date">
-                <span class="cell-text">
-                  {{ (v.fechaSubida | date:'dd/MM/yyyy') || '—' }}
-                </span>
-              </td>
-              <td class="col-duration">
-                <span class="cell-text">{{ v.duracion | videoDuration }}</span>
-              </td>
-              <td class="col-actions">
-                <div class="actions-cell">
-                  <button class="btn-view"
+                    <td class="col-group">
+                      @if (v.grupo?.nombre) {
+                        <span class="cell-badge">{{ v.grupo!.nombre }}</span>
+                      } @else {
+                        <span class="cell-text">—</span>
+                      }
+                    </td>
+                    <td class="col-date">
+                      <span class="cell-text">
+                        {{ (v.fechaSubida | date:'dd/MM/yyyy') || '—' }}
+                      </span>
+                    </td>
+                    <td class="col-duration">
+                      <span class="cell-text">{{ v.duracion | videoDuration }}</span>
+                    </td>
+                    <td class="col-actions">
+                      <div class="actions-cell">
+                        <button class="btn-view"
                           (click)="abrirReproductor(v)"
                           [attr.aria-label]="'Ver vídeo: ' + v.titulo">
-                    Ver vídeo
-                  </button>
-                  <button class="btn-edit"
+                          Ver vídeo
+                        </button>
+                        <button class="btn-edit"
                           (click)="iniciarEdicion(v)"
                           [attr.aria-label]="'Editar vídeo: ' + v.titulo"
                           title="Editar título o grupo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                  <button class="btn-delete"
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button class="btn-delete"
                           (click)="solicitarEliminacion(v)"
                           [disabled]="deletingIds.has(v.idVideo)"
                           [attr.aria-label]="'Eliminar vídeo: ' + v.titulo"
                           title="Eliminar vídeo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         aria-hidden="true">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                      <path d="M10 11v6"/>
-                      <path d="M14 11v6"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="table-empty">
-                <div class="empty-state">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
-                       aria-hidden="true">
-                    <polygon points="23 7 16 12 23 17 23 7"/>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                  </svg>
-                  <p>Tu biblioteca está vacía</p>
-                  <span class="empty-hint">Usa el panel de arriba para subir tu primer vídeo.</span>
-                  <a routerLink="." fragment="upload-heading" class="btn-primary empty-cta"
-                     (click)="$event.preventDefault(); archivoInput.focus()">
-                    Subir primer vídeo
-                  </a>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="6" class="table-empty">
+                      <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"
+                          aria-hidden="true">
+                          <polygon points="23 7 16 12 23 17 23 7"/>
+                          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                        <p>Tu biblioteca está vacía</p>
+                        <span class="empty-hint">Usa el panel de arriba para subir tu primer vídeo.</span>
+                        <a routerLink="." fragment="upload-heading" class="btn-primary empty-cta"
+                          (click)="$event.preventDefault(); archivoInput.focus()">
+                          Subir primer vídeo
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
 
-    <!-- Paginación -->
-    @if (paginator.totalPages > 1) {
-      <nav class="pagination" aria-label="Paginación de vídeos">
-        <button class="page-btn"
+          <!-- Paginación -->
+          @if (paginator.totalPages > 1) {
+            <nav class="pagination" aria-label="Paginación de vídeos">
+              <button class="page-btn"
                 (click)="goToPage(paginator.page - 1)"
                 [disabled]="paginator.page === 1"
                 aria-label="Página anterior">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
 
-        @for (page of paginator.pages; track page) {
-          <button class="page-btn"
+              @for (page of paginator.pages; track page) {
+                <button class="page-btn"
                   [class.page-btn--active]="paginator.page === page"
                   (click)="goToPage(page)"
                   [attr.aria-label]="'Página ' + page"
                   [attr.aria-current]="paginator.page === page ? 'page' : null">
-            {{ page }}
-          </button>
-        }
+                  {{ page }}
+                </button>
+              }
 
-        <button class="page-btn"
+              <button class="page-btn"
                 (click)="goToPage(paginator.page + 1)"
                 [disabled]="paginator.page === paginator.totalPages"
                 aria-label="Página siguiente">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </button>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
 
-        <span class="page-info" aria-live="polite">
-          {{ paginator.page }} / {{ paginator.totalPages }}
-        </span>
-      </nav>
-    }
+              <span class="page-info" aria-live="polite">
+                {{ paginator.page }} / {{ paginator.totalPages }}
+              </span>
+            </nav>
+          }
 
-    } <!-- end @if (!cargando) -->
+          } <!-- end @if (!cargando) -->
 
-  </section>
+        </section>
 
-  <!-- ================================================================
-    VIDEO PLAYER MODAL
-    ================================================================ -->
-  <div class="modal-overlay"
-       *ngIf="videoReproduciendose"
-       (click)="cerrarReproductor()"
-       role="dialog"
-       aria-modal="true"
-       [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+        <!-- ================================================================
+        VIDEO PLAYER MODAL
+        ================================================================ -->
+        @if (videoReproduciendose) {
+          <div class="modal-overlay"
+            (click)="cerrarReproductor()"
+            role="dialog"
+            aria-modal="true"
+            [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+            <div class="modal-container" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+                <button class="modal-close"
+                  (click)="cerrarReproductor()"
+                  aria-label="Cerrar reproductor">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="modal-player">
+                <app-video-player
+                  [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
+                  [idVideo]="videoReproduciendose!.idVideo"
+                  (heartbeat)="onHeartbeat($event)">
+                </app-video-player>
+              </div>
+            </div>
+          </div>
+        }
 
-    <div class="modal-container" (click)="$event.stopPropagation()">
+        <!-- ================================================================
+        EDIT MODAL
+        ================================================================ -->
+        @if (videoEnEdicion) {
+          <div class="modal-overlay edit-overlay"
+            (click)="cancelarEdicion()"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-title">
+            <div class="edit-dialog" (click)="$event.stopPropagation()"
+              cdkTrapFocus cdkTrapFocusAutoCapture>
+              <div class="edit-header">
+                <h3 class="edit-title" id="edit-title">Editar vídeo</h3>
+                <button class="modal-close"
+                  (click)="cancelarEdicion()"
+                  aria-label="Cerrar editor">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="edit-body">
+                <div class="edit-field">
+                  <label class="form-label" for="edit-titulo">Título del vídeo</label>
+                  <input
+                    id="edit-titulo"
+                    class="form-input"
+                    type="text"
+                    [(ngModel)]="editTitulo"
+                    placeholder="Título descriptivo"
+                    maxlength="200"
+                    autocomplete="off">
+                  </div>
+                  <div class="edit-field">
+                    <label class="form-label" for="edit-grupo">Grupo asignado</label>
+                    <select
+                      id="edit-grupo"
+                      class="form-input form-select"
+                      [(ngModel)]="editIdGrupo">
+                      <option [ngValue]="null">Sin grupo (Privado)</option>
+                      @for (g of misGrupos; track g) {
+                        <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+                      }
+                    </select>
+                  </div>
+                  @if (estadoEdicion === 'error') {
+                    <p
+                      class="edit-error"
+                      role="alert">
+                      {{ mensajeEdicion }}
+                    </p>
+                  }
+                </div>
+                <div class="edit-actions">
+                  <button class="btn-confirm-cancel" (click)="cancelarEdicion()">
+                    Cancelar
+                  </button>
+                  <button class="btn-confirm-save"
+                    (click)="guardarEdicion()"
+                    [disabled]="estadoEdicion === 'saving' || !editTitulo.trim()">
+                    @if (estadoEdicion !== 'saving') {
+                      <svg viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    }
+                    {{ estadoEdicion === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
 
-      <div class="modal-header">
-        <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
-        <button class="modal-close"
-                (click)="cerrarReproductor()"
-                aria-label="Cerrar reproductor">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+          <!-- ================================================================
+          DELETE CONFIRMATION MODAL
+          ================================================================ -->
+          @if (videoAEliminar) {
+            <div class="modal-overlay confirm-overlay"
+              (click)="cancelarEliminacion()"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="confirm-title"
+              aria-describedby="confirm-desc">
+              <div class="confirm-dialog" (click)="$event.stopPropagation()">
+                <div class="confirm-icon-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                    aria-hidden="true">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/>
+                    <path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </div>
+                <div class="confirm-body">
+                  <h3 class="confirm-title" id="confirm-title">Eliminar vídeo</h3>
+                  <p class="confirm-video-name">{{ videoAEliminar.titulo }}</p>
+                  <p class="confirm-desc" id="confirm-desc">
+                    Esta acción eliminará el archivo de la nube, todos los permisos
+                    asociados y el historial de reproducción.
+                    <strong>No se puede deshacer.</strong>
+                  </p>
+                </div>
+                <div class="confirm-actions">
+                  <button class="btn-confirm-cancel" (click)="cancelarEliminacion()">
+                    Cancelar
+                  </button>
+                  <button class="btn-confirm-delete" (click)="confirmarEliminacion()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                    Eliminar permanentemente
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
 
-      <div class="modal-player">
-        <app-video-player
-          [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
-          [idVideo]="videoReproduciendose!.idVideo"
-          (heartbeat)="onHeartbeat($event)">
-        </app-video-player>
-      </div>
+          <!-- ================================================================
+          TOAST — Vídeo editado correctamente
+          ================================================================ -->
+          @if (exitoEdicionVisible) {
+            <div class="toast toast--success"
+              role="status"
+              aria-live="polite">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="toast-icon" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>Vídeo actualizado correctamente.</span>
+            </div>
+          }
 
-    </div>
-  </div>
+          <!-- ================================================================
+          TOAST — Error al eliminar vídeo
+          ================================================================ -->
+          @if (errorEliminacionVisible) {
+            <div class="toast toast--error"
+              role="alert"
+              aria-live="assertive">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="toast-icon" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>{{ errorEliminacion }}</span>
+            </div>
+          }
 
-  <!-- ================================================================
-    EDIT MODAL
-    ================================================================ -->
-  <div class="modal-overlay edit-overlay"
-       *ngIf="videoEnEdicion"
-       (click)="cancelarEdicion()"
-       role="dialog"
-       aria-modal="true"
-       aria-labelledby="edit-title">
-
-    <div class="edit-dialog" (click)="$event.stopPropagation()"
-         cdkTrapFocus cdkTrapFocusAutoCapture>
-
-      <div class="edit-header">
-        <h3 class="edit-title" id="edit-title">Editar vídeo</h3>
-        <button class="modal-close"
-                (click)="cancelarEdicion()"
-                aria-label="Cerrar editor">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="edit-body">
-
-        <div class="edit-field">
-          <label class="form-label" for="edit-titulo">Título del vídeo</label>
-          <input
-            id="edit-titulo"
-            class="form-input"
-            type="text"
-            [(ngModel)]="editTitulo"
-            placeholder="Título descriptivo"
-            maxlength="200"
-            autocomplete="off">
         </div>
-
-        <div class="edit-field">
-          <label class="form-label" for="edit-grupo">Grupo asignado</label>
-          <select
-            id="edit-grupo"
-            class="form-input form-select"
-            [(ngModel)]="editIdGrupo">
-            <option [ngValue]="null">Sin grupo (Privado)</option>
-            <option *ngFor="let g of misGrupos" [ngValue]="g.idGrupo">{{ g.nombre }}</option>
-          </select>
-        </div>
-
-        <p *ngIf="estadoEdicion === 'error'"
-           class="edit-error"
-           role="alert">
-          {{ mensajeEdicion }}
-        </p>
-
-      </div>
-
-      <div class="edit-actions">
-        <button class="btn-confirm-cancel" (click)="cancelarEdicion()">
-          Cancelar
-        </button>
-        <button class="btn-confirm-save"
-                (click)="guardarEdicion()"
-                [disabled]="estadoEdicion === 'saving' || !editTitulo.trim()">
-          <svg *ngIf="estadoEdicion !== 'saving'" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"
-               stroke-linejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          {{ estadoEdicion === 'saving' ? 'Guardando…' : 'Guardar cambios' }}
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================================================================
-    DELETE CONFIRMATION MODAL
-    ================================================================ -->
-  <div class="modal-overlay confirm-overlay"
-       *ngIf="videoAEliminar"
-       (click)="cancelarEliminacion()"
-       role="alertdialog"
-       aria-modal="true"
-       aria-labelledby="confirm-title"
-       aria-describedby="confirm-desc">
-
-    <div class="confirm-dialog" (click)="$event.stopPropagation()">
-
-      <div class="confirm-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6"/>
-          <path d="M14 11v6"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      </div>
-
-      <div class="confirm-body">
-        <h3 class="confirm-title" id="confirm-title">Eliminar vídeo</h3>
-        <p class="confirm-video-name">{{ videoAEliminar.titulo }}</p>
-        <p class="confirm-desc" id="confirm-desc">
-          Esta acción eliminará el archivo de la nube, todos los permisos
-          asociados y el historial de reproducción.
-          <strong>No se puede deshacer.</strong>
-        </p>
-      </div>
-
-      <div class="confirm-actions">
-        <button class="btn-confirm-cancel" (click)="cancelarEliminacion()">
-          Cancelar
-        </button>
-        <button class="btn-confirm-delete" (click)="confirmarEliminacion()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          </svg>
-          Eliminar permanentemente
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ================================================================
-    TOAST — Vídeo editado correctamente
-    ================================================================ -->
-  <div class="toast toast--success"
-       *ngIf="exitoEdicionVisible"
-       role="status"
-       aria-live="polite">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-         class="toast-icon" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-    <span>Vídeo actualizado correctamente.</span>
-  </div>
-
-  <!-- ================================================================
-    TOAST — Error al eliminar vídeo
-    ================================================================ -->
-  <div class="toast toast--error"
-       *ngIf="errorEliminacionVisible"
-       role="alert"
-       aria-live="assertive">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-         class="toast-icon" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/>
-      <line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    <span>{{ errorEliminacion }}</span>
-  </div>
-
-</div>

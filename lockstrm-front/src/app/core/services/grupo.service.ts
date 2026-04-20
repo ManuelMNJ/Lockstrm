@@ -14,6 +14,7 @@ export interface Miembro {
   idUsuario: number;
   username: string;
   email: string;
+  rol: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -66,7 +67,12 @@ export class GrupoService {
 
   crearGrupo(nombre: string): Observable<Grupo> {
     return this.http.post<Grupo>(this.apiUrl, { nombre }).pipe(
-      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; this.gruposDesplegableCache$ = null; }),
+      tap(() => {
+        this.misGruposCache$ = null;
+        this.gruposCreadosCache$ = null;
+        this.gruposDesplegableCache$ = null;
+        this.gruposMiembroCache$ = null;
+      }),
     );
   }
 
@@ -78,15 +84,28 @@ export class GrupoService {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}/miembros/${idUsuario}`);
   }
 
+  cambiarRolMiembro(idGrupo: number, idUsuario: number, rol: string): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${idGrupo}/miembros/${idUsuario}/rol`, { rol });
+  }
+
   eliminarGrupo(idGrupo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}`).pipe(
-      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; this.gruposDesplegableCache$ = null; }),
+      tap(() => {
+        this.misGruposCache$ = null;
+        this.gruposCreadosCache$ = null;
+        this.gruposDesplegableCache$ = null;
+        this.gruposMiembroCache$ = null;
+      }),
     );
   }
 
   renombrarGrupo(idGrupo: number, nombre: string): Observable<Grupo> {
     return this.http.put<Grupo>(`${this.apiUrl}/${idGrupo}`, { nombre }).pipe(
-      tap(() => { this.misGruposCache$ = null; this.gruposCreadosCache$ = null; }),
+      tap(() => {
+        this.misGruposCache$ = null;
+        this.gruposCreadosCache$ = null;
+        this.gruposMiembroCache$ = null;
+      }),
     );
   }
 }

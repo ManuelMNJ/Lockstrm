@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class UserService implements UserDetailsService {
         nuevo.setApellidos(request.getApellidos());
         nuevo.setEmail(request.getEmail());
         nuevo.setPassword(passwordEncoder.encode(request.getPassword()));
+        nuevo.setRolSistema("USER");
         return userRepository.save(nuevo);
     }
 
@@ -47,6 +49,7 @@ public class UserService implements UserDetailsService {
         return !userRepository.existsByEmail(email);
     }
 
+    @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
         Usuario usuario = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));

@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, finalize } from 'rxjs';
+import { forkJoin, finalize, of } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../core/services/video.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
@@ -14,7 +16,7 @@ import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialPipe, VideoDurationPipe, VideoPlayerComponent],
+  imports: [FormsModule, InitialPipe, VideoDurationPipe, VideoPlayerComponent],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,8 +24,12 @@ import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 export class GrupoDetalleComponent implements OnInit {
 
   grupo: Grupo | null = null;
-  esCreador = false;
   miembros: Miembro[] = [];
+
+  rolActual: string | null = null;
+  rolesDisponiblesParaAsignar: string[] = []; // Fix para el NG0100
+  cambiandoRoles = new Set<number>();
+  errorCambioRol = '';
 
   videosGrupo: Video[] = [];
   misVideosDisponibles: Video[] = [];
@@ -52,6 +58,27 @@ export class GrupoDetalleComponent implements OnInit {
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
 
+  errorVideos = '';
+
+  criterioOrden: 'fechaDesc' | 'fechaAsc' | 'duracionDesc' | 'duracionAsc' | 'nombreAsc' = 'fechaDesc';
+
+  get videosGrupoOrdenados(): Video[] {
+    return [...this.videosGrupo].sort((a, b) => {
+      switch (this.criterioOrden) {
+        case 'fechaDesc':    return new Date(b.fechaSubida ?? 0).getTime() - new Date(a.fechaSubida ?? 0).getTime();
+        case 'fechaAsc':     return new Date(a.fechaSubida ?? 0).getTime() - new Date(b.fechaSubida ?? 0).getTime();
+        case 'duracionDesc': return (b.duracion ?? 0) - (a.duracion ?? 0);
+        case 'duracionAsc':  return (a.duracion ?? 0) - (b.duracion ?? 0);
+        case 'nombreAsc':    return a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' });
+        default:             return 0;
+      }
+    });
+  }
+
+  onCambioOrden(): void {
+    this.cdr.markForCheck();
+  }
+
   videoStats: Video | null = null;
   estadisticas: VideoVistaEstadistica[] = [];
   cargandoStats = false;
@@ -65,8 +92,43 @@ export class GrupoDetalleComponent implements OnInit {
     private router: Router,
     private grupoService: GrupoService,
     protected videoService: VideoService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef,
   ) {}
+
+  get currentUserId(): number | null {
+    return this.authService.getUser()?.id ?? null;
+  }
+
+  get esSuperAdmin(): boolean {
+    return this.rolActual === 'SUPER_ADMIN';
+  }
+
+  get esAdmin(): boolean {
+    return this.rolActual === 'ADMIN' || this.rolActual === 'SUPER_ADMIN';
+  }
+
+  get puedeGestionarRoles(): boolean {
+    return this.esAdmin;
+  }
+
+  get puedeGestionarVideos(): boolean {
+    return this.rolActual === 'SUPER_ADMIN' || this.rolActual === 'ADMIN' || this.rolActual === 'EDITOR';
+  }
+
+  puedeActuarSobreRol(rolObjetivo: string): boolean {
+    if (this.esSuperAdmin) return true;
+    if (this.rolActual === 'ADMIN') {
+      return rolObjetivo !== 'SUPER_ADMIN' && rolObjetivo !== 'ADMIN';
+    }
+    return false;
+  }
+
+  puedeQuitarVideo(video: Video): boolean {
+    if (this.esAdmin) return true;
+    // Si es editor, en el HTML permitimos pulsar, pero el backend validará que sea suyo
+    return this.rolActual === 'EDITOR'; 
+  }
 
   private addEliminando(idUsuario: number): void {
     this.eliminandoMiembros = new Set(this.eliminandoMiembros).add(idUsuario);
@@ -84,57 +146,78 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   private cargarDatos(): void {
-    this.cargando   = true;
+    this.cargando = true;
     this.errorCarga = '';
 
-    forkJoin({
-      grupo:   this.grupoService.obtenerGrupoPorId(this.idGrupo),
-      creados: this.grupoService.obtenerGruposCreados(),
-    })
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => { this.cargando = false; this.cdr.markForCheck(); }),
-      )
+    // Primero obtenemos el grupo
+    this.grupoService.obtenerGrupoPorId(this.idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ grupo, creados }) => {
-          this.grupo         = grupo;
+        next: (grupo) => {
+          this.grupo = grupo;
           this.nombreEditado = grupo.nombre;
-          this.esCreador     = creados.some(g => g.idGrupo === this.idGrupo);
-          this.cdr.markForCheck();
-          this.cargarMiembros();
-          this.cargarVideos();
+          this.cargarMiembrosYVideos(); // Encadenamos para evitar Race Conditions
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la información del grupo.';
+          this.cargando = false;
+          this.cdr.markForCheck();
         },
       });
   }
 
-  private cargarMiembros(): void {
+  private cargarMiembrosYVideos(): void {
     this.grupoService.obtenerMiembros(this.idGrupo)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => { this.cargando = false; this.cdr.markForCheck(); })
+      )
       .subscribe({
-        next: (miembros) => { this.miembros = miembros; this.cdr.markForCheck(); },
-        error: () => {},
+        next: (miembros) => {
+          this.miembros = miembros;
+          const propio = miembros.find(m => m.idUsuario === this.currentUserId);
+          this.rolActual = propio?.rol ?? null;
+          
+          // Pre-calculamos los roles disponibles para evitar NG0100
+          if (this.esSuperAdmin) {
+            this.rolesDisponiblesParaAsignar = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MIEMBRO'];
+          } else if (this.rolActual === 'ADMIN') {
+            this.rolesDisponiblesParaAsignar = ['EDITOR', 'MIEMBRO'];
+          } else {
+            this.rolesDisponiblesParaAsignar = [];
+          }
+
+          this.cdr.markForCheck();
+          // Ahora que sabemos el rol con seguridad, cargamos los vídeos
+          this.cargarVideos();
+        },
+        error: () => {
+          this.errorCarga = 'No se pudieron cargar los miembros del grupo.';
+          this.cdr.markForCheck();
+        },
       });
   }
 
   private cargarVideos(): void {
-    const videos$ = this.esCreador
-      ? this.videoService.obtenerMisVideos()
-      : this.videoService.obtenerVideosCompartidos();
+    const videosGrupo$ = this.videoService.obtenerVideosPorGrupo(this.idGrupo);
+    const misVideos$   = this.puedeGestionarVideos
+      ? this.videoService.obtenerMisVideos().pipe(take(1))
+      : of([] as Video[]);
 
-    videos$
+    forkJoin({ videosGrupo: videosGrupo$, misVideos: misVideos$ })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (videos) => {
-          this.videosGrupo          = videos.filter(v => v.grupo?.idGrupo === this.idGrupo);
-          this.misVideosDisponibles = this.esCreador
-            ? videos.filter(v => !v.grupo || v.grupo.idGrupo !== this.idGrupo)
-            : [];
+        next: ({ videosGrupo, misVideos }) => {
+          this.videosGrupo          = videosGrupo;
+          this.misVideosDisponibles = misVideos.filter(
+            v => !v.grupo || v.grupo.idGrupo !== this.idGrupo
+          );
           this.cdr.markForCheck();
         },
-        error: () => {},
+        error: () => {
+          this.errorVideos = 'No se pudieron cargar los vídeos del grupo.';
+          this.cdr.markForCheck();
+        },
       });
   }
 
@@ -175,7 +258,7 @@ export class GrupoDetalleComponent implements OnInit {
           const next = new Set(this.quitandoVideos);
           next.delete(video.idVideo);
           this.quitandoVideos = next;
-          this.videosGrupo          = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
+          this.videosGrupo = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
           this.misVideosDisponibles = [...this.misVideosDisponibles, { ...video, grupo: undefined }];
           this.cdr.markForCheck();
         },
@@ -203,7 +286,7 @@ export class GrupoDetalleComponent implements OnInit {
           this.emailNuevoMiembro = '';
           this.estadoAnadir = 'success';
           this.cdr.markForCheck();
-          this.cargarMiembros();
+          this.cargarMiembrosYVideos();
           setTimeout(() => { this.estadoAnadir = 'idle'; this.cdr.markForCheck(); }, 3000);
         },
         error: (err) => {
@@ -230,6 +313,42 @@ export class GrupoDetalleComponent implements OnInit {
         error: (err) => {
           this.removeEliminando(miembro.idUsuario);
           this.errorEliminarMiembro = extractHttpErrorMessage(err, 'No se pudo eliminar el miembro.');
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  cambiarRolMiembro(miembro: Miembro, nuevoRol: string): void {
+    if (!nuevoRol || nuevoRol === miembro.rol) return;
+
+    const rolAnterior = miembro.rol;
+
+    // Actualización optimista: el select muestra el nuevo rol de inmediato y no rebota
+    this.miembros = this.miembros.map(m =>
+      m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
+    );
+    this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
+    this.errorCambioRol = '';
+    this.cdr.markForCheck();
+
+    this.grupoService.cambiarRolMiembro(this.idGrupo, miembro.idUsuario, nuevoRol)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          const next = new Set(this.cambiandoRoles);
+          next.delete(miembro.idUsuario);
+          this.cambiandoRoles = next;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          // Revertir al rol anterior si el servidor rechaza el cambio
+          this.miembros = this.miembros.map(m =>
+            m.idUsuario === miembro.idUsuario ? { ...m, rol: rolAnterior } : m
+          );
+          const next = new Set(this.cambiandoRoles);
+          next.delete(miembro.idUsuario);
+          this.cambiandoRoles = next;
+          this.errorCambioRol = extractHttpErrorMessage(err, 'No se pudo cambiar el rol.');
           this.cdr.markForCheck();
         },
       });

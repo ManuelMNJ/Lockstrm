@@ -1,35 +1,70 @@
 <!-- ==========================================================================
   Lockstrm — Home / Landing Page
   home.component.html
-
-  Estructura Hero: CSS Grid 2 columnas (1fr 1fr)
-    • Columna izquierda → eyebrow + h1 + subtítulo + CTAs
-    • Columna derecha   → Mockup abstracto del reproductor (HTML/CSS puro)
   ========================================================================== -->
 <div class="home-page">
 
   <!-- ================================================================
-    HERO SECTION — Split layout 50 / 50
+    HERO SECTION
     ================================================================ -->
   <section class="hero" aria-label="Presentación del producto">
+
+    <!-- Ambient glow background -->
+    <div class="hero-bg-glow" aria-hidden="true"></div>
 
     <!-- ── Columna izquierda: copy + CTAs ── -->
     <div class="hero-left">
 
-      <span class="hero-eyebrow">Plataforma de Streaming Privado B2B</span>
+      <span class="hero-eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        <!-- TODO: subtítulo eyebrow → ej. "Plataforma de Streaming Privado B2B" -->
+        Xxx Xxxxx Xxxxx Xxxxxxx X0X
+      </span>
 
       <h1 class="hero-title">
-        Gestión segura de<br>contenido audiovisual<br>corporativo
+        <!-- TODO: titular principal (3 líneas) -->
+        Xxxxxxx xxxxxx xx<br>
+        <span class="hero-title-accent">xxxxxxxxx xxxxxxxxxx</span><br>
+        xxxxxxxxx
       </h1>
 
       <p class="hero-subtitle">
-        Distribución privada de vídeo para equipos. Control total sobre
-        accesos, grupos de visualización y reproducciones en tiempo real.
+        <!-- TODO: subtítulo descriptivo del producto (~2 líneas) -->
+        Xxxxxxxxx xxxxxxx xx xxxxx xxxx xxxxxxx. Xxxxxxx xxxxx xxxxx
+        xxxxxxxx, xxxxxx xx xxxxxxxxxxxxxx x xxxxxxxxxxx xx xxxxxx xxxx.
       </p>
 
       <div class="hero-actions">
-        <a routerLink="/registro" class="btn-cta">Solicitar acceso</a>
-        <a routerLink="/login"    class="btn-ghost">Iniciar sesión</a>
+        <a routerLink="/registro" class="btn-cta">
+          <!-- TODO: texto CTA primario → ej. "Empezar gratis" -->
+          Xxxxxxx xxxxx
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="btn-cta-arrow">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+        <a routerLink="/login" class="btn-ghost">
+          <svg viewBox="0 0 24 24" fill="currentColor"
+               aria-hidden="true" class="btn-ghost-play">
+            <polygon points="6 3 20 12 6 21 6 3"/>
+          </svg>
+          <!-- TODO: texto CTA secundario → ej. "Ver demo" -->
+          Xxx xxxx
+        </a>
+      </div>
+
+      <div class="hero-social-hint">
+        <div class="social-avatars" aria-hidden="true">
+          <span class="sa sa--a">X</span>
+          <span class="sa sa--b">X</span>
+          <span class="sa sa--c">X</span>
+        </div>
+        <p class="social-hint-text">
+          <!-- TODO: prueba social → ej. "Más de 200 equipos ya gestionan su contenido con [Nombre]" -->
+          Xxx xx <strong>XXX xxxxxxx</strong> xx xxxxxxxx xx xxxxxxxxx xxx Xxxxxxxx
+        </p>
       </div>
 
     </div>
@@ -42,7 +77,7 @@
       <div class="mockup">
 
         <div class="mk-chrome">
-          <div class="mk-dots" aria-hidden="true">
+          <div class="mk-dots">
             <span class="mk-dot mk-dot--a"></span>
             <span class="mk-dot mk-dot--b"></span>
             <span class="mk-dot mk-dot--c"></span>
@@ -127,16 +162,54 @@
   </section>
 
   <!-- ================================================================
-    FEATURE CARDS
+    STATS BAR
+    ================================================================ -->
+  <!-- TODO: stats bar — rellena valor + etiqueta de cada métrica clave -->
+  <div class="stats-bar" aria-label="Métricas de la plataforma">
+    <div class="stat-item">
+      <span class="stat-value">XX.X%</span>       <!-- ej. 99.9% -->
+      <span class="stat-label">Xxxxx xxxxxxxxxx</span> <!-- ej. Uptime garantizado -->
+    </div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-item">
+      <span class="stat-value">XXX+</span>        <!-- ej. 200+ -->
+      <span class="stat-label">Xxxxxxx xxxxxxx</span>  <!-- ej. Equipos activos -->
+    </div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-item">
+      <span class="stat-value">XXX-XXX</span>     <!-- ej. AES-256 -->
+      <span class="stat-label">Xxxxxxx xx xxxxxx</span> <!-- ej. Cifrado en reposo -->
+    </div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-item">
+      <span class="stat-value">XXX</span>         <!-- ej. JWT -->
+      <span class="stat-label">Xxxx xxx xxxxxx</span>   <!-- ej. Auth por sesión -->
+    </div>
+  </div>
+
+  <!-- ================================================================
+    FEATURE CARDS — Grid 3×2
     ================================================================ -->
   <section class="features" aria-labelledby="features-heading">
 
-    <h2 class="features-title" id="features-heading">Funcionalidades principales</h2>
+    <div class="features-header">
+      <!-- TODO: etiqueta eyebrow de sección → ej. "Capacidades" -->
+      <span class="features-eyebrow">Xxxxxxxxxx</span>
+      <h2 class="features-title" id="features-heading">
+        <!-- TODO: titular de la sección features (2 líneas) -->
+        Xxx xx xxx xxxxxxxx<br>xx xxxxxx
+      </h2>
+      <p class="features-subtitle">
+        <!-- TODO: subtítulo de la sección features (~2 líneas) -->
+        Xxxxxxxx xxxx xxxxxxxxxxxxxxx xxx xxxxxxxxx xxxxxxx xxxx
+        xxxxx xxxxx xxx xx xxx, xxxxxx x xxxxx xxxxx.
+      </p>
+    </div>
 
     <div class="features-grid">
 
       <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">
+        <div class="feature-icon feature-icon--purple" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -145,42 +218,187 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </div>
-        <h3 class="feature-card-title">Grupos de acceso</h3>
+        <!-- TODO: feature 1 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxx xx xxxxxx</h3>
         <p class="feature-card-body">
-          Crea grupos privados y administra con precisión quién puede
-          visualizar cada contenido dentro de tu organización.
+          Xxxx xxxxxx xxxxxxxx x xxxxxxxxx xxx xxxxxxxxx xxxxx xxxxx
+          xxxxxxxxxx xxxx xxxxxxxxx xxxxx xx xx xxxxxxxxxxxx.
         </p>
       </article>
 
       <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">
+        <div class="feature-icon feature-icon--blue" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="23 7 16 12 23 17 23 7"/>
             <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
           </svg>
         </div>
-        <h3 class="feature-card-title">Biblioteca de vídeo</h3>
+        <!-- TODO: feature 2 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxxxxxx xx xxxxx</h3>
         <p class="feature-card-body">
-          Sube y organiza contenido audiovisual de hasta 95 MB por archivo.
-          Reproducción segura en streaming desde cualquier dispositivo.
+          Xxxx x xxxxxxxx xxxxxxxxx xxxxxxxxxx xx xxxx xxxxxxxx.
+          Xxxxxxxxxxxx xxxxxx xx xxxxxxxxx xxxxx xxxxxxxxx xxxxxxxxxxx.
         </p>
       </article>
 
       <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">
+        <div class="feature-icon feature-icon--green" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
-        <h3 class="feature-card-title">Cifrado y control</h3>
+        <!-- TODO: feature 3 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxxxx xxxxxxx x xxxxxxx</h3>
         <p class="feature-card-body">
-          Datos protegidos mediante cifrado en tránsito y en reposo.
-          Acceso gestionado por token de sesión y permisos por grupo.
+          Xxxxx xxxxxxxxxx xxxxxxxx XXX-XXX xx xxxxxxxx x xx xxxxxx.
+          Xxxxxx xxxxxxxxxx xxx xxxxx xx xxxxxx x xxxxxxx xxxxxxxxxxx.
         </p>
       </article>
 
+      <article class="feature-card">
+        <div class="feature-icon feature-icon--amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+        </div>
+        <!-- TODO: feature 4 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxx x xxxxxxxx XXXX</h3>
+        <p class="feature-card-body">
+          Xxxxxx xxxxx xxxxxxxxxxxxx: xxxxxxxxxxxxx, xxxxxx x xxxxxxxxxxx.
+          Xxxxxxx xx xxxxxx xxxxxxx xx xxxxx xxxx xxxx xxxxxxx.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon feature-icon--teal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+        </div>
+        <!-- TODO: feature 5 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxxxxxxxx xxxxxxxxxx</h3>
+        <p class="feature-card-body">
+          Xxxxxxxxxx xx xxxxxx xxxx xxxxxxxxxxx, xxxxxxxx xxxxxxx
+          xx xxxxxxxxxxx x xxxxxxxxx xxx xxxxx x xxxxxxx.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon feature-icon--rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+                     a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
+                     A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06
+                     a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15
+                     a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
+                     A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06
+                     a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68
+                     a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
+                     a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
+                     a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9
+                     a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
+                     a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <!-- TODO: feature 6 — título y descripción -->
+        <h3 class="feature-card-title">Xxxxxxx xxxxxxxxxxx</h3>
+        <p class="feature-card-body">
+          Xxxxx xxxxxxxxx xxxx xxxxxxxxxx xxxxxxxx, xxxxxxxxxx x xxxxxx.
+          Xxxx xx xxxxxxxxxxxx xx xx xxxxx xxxxx, xxx xxxxxxxxxx.
+        </p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ================================================================
+    SOCIAL PROOF
+    ================================================================ -->
+  <section class="social-proof" aria-labelledby="social-heading">
+
+    <!-- TODO: texto de la franja social proof → ej. "Con la confianza de equipos innovadores" -->
+    <p class="social-label" id="social-heading">
+      Xxx xx xxxxxxxxx xx xxxxxxx xxxxxxxxxx
+    </p>
+
+    <!-- TODO: sustituye cada chip por el nombre real de cliente/partner -->
+    <div class="social-logos" aria-label="Empresas que usan Lockstrm">
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4"/>
+          <path d="M9 12h6M12 9v6"/>
+        </svg>
+        Empresa A
+      </div>
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3v9l5 3"/>
+        </svg>
+        Empresa B
+      </div>
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+        </svg>
+        Empresa C
+      </div>
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        Empresa D
+      </div>
+      <div class="logo-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+        Empresa E
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================================================================
+    CTA FINAL BANNER
+    ================================================================ -->
+  <section class="cta-banner" aria-label="Llamada a la acción final">
+    <div class="cta-banner-glow" aria-hidden="true"></div>
+    <div class="cta-banner-content">
+      <!-- TODO: titular del banner CTA final (2 líneas) -->
+      <h2 class="cta-banner-title">
+        Xxxxxxx x xxxxxxxx<br>xx xxxxxxxxx xxx
+      </h2>
+      <!-- TODO: frase de apoyo del CTA → ej. "Sin tarjeta de crédito. Acceso inmediato." -->
+      <p class="cta-banner-sub">
+        Xxx xxxxxxx xx xxxxxxxx. Xxxxxx xxxxxxxxx. Xxxxxxx xxxxxx xxxxxxx.
+      </p>
+      <a routerLink="/registro" class="btn-cta btn-cta--lg">
+        <!-- TODO: texto del botón final → ej. "Crear cuenta gratis" -->
+        Xxxxx xxxxxx xxxxx
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" class="btn-cta-arrow">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
     </div>
   </section>
 

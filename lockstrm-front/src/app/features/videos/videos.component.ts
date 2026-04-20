@@ -56,6 +56,13 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // ── Espacio de almacenamiento (hardcoded hasta que el backend lo exponga) ──
+  readonly storageMB      = 1229;               // 1.2 GB
+  readonly storageLimitMB = 5120;               // 5 GB
+  readonly storagePercent = Math.round(this.storageMB / this.storageLimitMB * 100);
+  readonly storageUsedGB  = (this.storageMB / 1024).toFixed(1);
+  readonly storageLimitGB = (this.storageLimitMB / 1024).toFixed(0);
+
   readonly paginator = new Paginator<Video>(15);
 
   goToPage(page: number): void {
@@ -212,8 +219,8 @@ export class VideosComponent implements OnInit {
             miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
           };
 
-          this.videos              = [nuevoVideo, ...this.videos];
-          this.paginator.setItems(this.videos);
+          // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
+          this.videoService.prependVideo(nuevoVideo);
           this.estadoSubida        = 'success';
           this.progreso            = 0;
           this.tituloVideo         = '';
@@ -271,9 +278,8 @@ export class VideosComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.videos = this.videos.filter(v => v.idVideo !== video.idVideo);
-          this.paginator.setItems(this.videos);
-          this.cdr.markForCheck();
+          // El tap de eliminarVideo() actualizó el BehaviorSubject;
+          // la suscripción en cargarVideos() ya aplicó el nuevo array.
         },
         error: (err) => {
           console.error('[VideosComponent] Error al eliminar vídeo:', {
@@ -335,16 +341,8 @@ export class VideosComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          const grupoNuevo = this.editIdGrupo
-            ? this.misGrupos.find(g => g.idGrupo === this.editIdGrupo)
-            : null;
-
-          this.videos = this.videos.map(v =>
-            v.idVideo === video.idVideo
-              ? { ...v, titulo: this.editTitulo.trim(), grupo: grupoNuevo ? { idGrupo: grupoNuevo.idGrupo, nombre: grupoNuevo.nombre } : undefined }
-              : v
-          );
-          this.paginator.setItems(this.videos);
+          // El tap de editarVideo() actualizó el BehaviorSubject con los datos del servidor;
+          // la suscripción en cargarVideos() ya aplicó el nuevo array.
           this.videoEnEdicion = null;
           this.estadoEdicion  = 'idle';
           this.mostrarExitoEdicion();

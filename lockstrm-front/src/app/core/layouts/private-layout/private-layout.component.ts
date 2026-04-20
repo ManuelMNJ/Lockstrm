@@ -49,6 +49,7 @@ export class PrivateLayoutComponent {
     else if (url.startsWith('/mi-espacio/videos'))    this.pageTitle = 'Mis Vídeos';
     else if (url.startsWith('/mi-espacio/grupos'))    this.pageTitle = 'Mis Grupos';
     else if (url.startsWith('/compartido'))           this.pageTitle = 'Vídeos Disponibles';
+    else if (url.startsWith('/perfil'))               this.pageTitle = 'Mi Perfil';
     else if (url.startsWith('/ajustes'))              this.pageTitle = 'Ajustes';
     else                                              this.pageTitle = 'Lockstrm';
   }

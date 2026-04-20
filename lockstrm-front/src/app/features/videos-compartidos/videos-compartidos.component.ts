@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { VideoService, Video } from '../../core/services/video.service';
 import { VideoPlayerComponent } from '../videos/video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
@@ -9,7 +9,7 @@ import { Paginator } from '../../shared/utils/paginator';
 @Component({
   selector: 'app-videos-compartidos',
   standalone: true,
-  imports: [CommonModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [VideoPlayerComponent, VideoDurationPipe],
   templateUrl: './videos-compartidos.component.html',
   styleUrl: './videos-compartidos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

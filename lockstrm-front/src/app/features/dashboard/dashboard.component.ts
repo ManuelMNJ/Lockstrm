@@ -1,9 +1,8 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { VideoService, Video } from '../../core/services/video.service';
-import { GrupoService } from '../../core/services/grupo.service';
+import { DashboardService, DashboardStats } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 
@@ -13,43 +12,47 @@ import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
   imports: [CommonModule, RouterLink, VideoDurationPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
 
-  totalVideos  = 0;
-  totalGrupos  = 0;
-  videosRecientes: Video[] = [];
-  cargando = true;
-  gruposError = false;
+  stats:    DashboardStats | null = null;
+  cargando  = true;
+  error     = '';
 
+  private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
   constructor(
-    private videoService: VideoService,
-    private grupoService: GrupoService,
-    readonly authService: AuthService,
+    private dashboardService: DashboardService,
+    readonly authService:     AuthService,
   ) {}
 
   ngOnInit(): void {
-    this.videoService.obtenerMisVideos()
+    this.dashboardService.getStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (videos) => {
-          this.totalVideos     = videos.length;
-          this.videosRecientes = videos.slice(0, 4);
-          this.cargando        = false;
+        next: (data) => {
+          this.stats    = data;
+          this.cargando = false;
+          this.cdr.markForCheck();
         },
-        error: () => { this.cargando = false; }
-      });
-
-    this.grupoService.obtenerMisGrupos()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (grupos) => { this.totalGrupos = grupos.length; },
         error: () => {
-          this.cargando    = false;
-          this.gruposError = true;
+          this.error    = 'No se pudieron cargar las estadísticas. Recarga la página.';
+          this.cargando = false;
+          this.cdr.markForCheck();
         },
       });
   }
+
+  readonly skeletonItems = [1, 2, 3];
+
+  readonly activityFeed: { icon: 'group' | 'video' | 'views' | 'upload' | 'share'; text: string; time: string }[] = [
+    { icon: 'group',  text: 'Se te añadió al grupo <strong>Marketing Q4</strong>',          time: 'hace 2 h'  },
+    { icon: 'views',  text: '<strong>Presentación anual</strong> alcanzó 100 vistas',        time: 'hace 5 h'  },
+    { icon: 'upload', text: 'Subiste <strong>Demo producto v2.mp4</strong> correctamente',   time: 'ayer'       },
+    { icon: 'group',  text: 'Nuevo miembro en el grupo <strong>Ventas EMEA</strong>',        time: 'hace 2 d'  },
+    { icon: 'share',  text: '<strong>Tutorial onboarding</strong> compartido con 3 grupos',  time: 'hace 3 d'  },
+    { icon: 'video',  text: 'Grupo <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
+  ];
 }

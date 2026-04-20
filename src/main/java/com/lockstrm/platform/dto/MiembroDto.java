@@ -1,3 +1,5 @@
 package com.lockstrm.platform.dto;
 
-public record MiembroDto(Long idUsuario, String username, String email) {}
+import com.lockstrm.platform.enums.RolGrupo;
+
+public record MiembroDto(Long idUsuario, String username, String email, RolGrupo rol) {}

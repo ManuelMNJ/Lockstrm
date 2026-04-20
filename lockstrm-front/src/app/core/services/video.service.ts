@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, shareReplay, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { filter, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
@@ -59,8 +59,10 @@ export class VideoService {
 
   private readonly apiUrl = `${environment.apiUrl}/api/videos`;
 
-  private misVideosCache$:         Observable<Video[]> | null = null;
-  private videosCompartidosCache$: Observable<Video[]> | null = null;
+  // null = aún no cargado; [] = cargado sin vídeos; Video[] = datos reales
+  private readonly _misVideos$      = new BehaviorSubject<Video[] | null>(null);
+  private _misVideosLoaded          = false;
+  private _videosCompartidosCache$: Observable<Video[]> | null = null;
 
   constructor(
     private http:          HttpClient,
@@ -77,26 +79,51 @@ export class VideoService {
     );
   }
 
-  /** GET /api/videos/mios — vídeos del usuario autenticado (contexto Propietario). */
+  /**
+   * Devuelve el BehaviorSubject de "mis vídeos" como Observable vivo.
+   * Cualquier mutación (subir, borrar, editar) emite aquí automáticamente;
+   * todos los componentes suscritos (dashboard, biblioteca) se actualizan sin re-fetch.
+   */
   obtenerMisVideos(): Observable<Video[]> {
-    if (!this.misVideosCache$) {
-      this.misVideosCache$ = this.http.get<VideoRaw[]>(`${this.apiUrl}/mios`).pipe(
-        map(arr => arr.map(mapVideo)),
-        shareReplay(1),
-      );
+    if (!this._misVideosLoaded) {
+      this._misVideosLoaded = true;
+      this._fetchMisVideos();
     }
-    return this.misVideosCache$;
+    return this._misVideos$.pipe(
+      filter((v): v is Video[] => v !== null),
+    );
+  }
+
+  private _fetchMisVideos(): void {
+    this.http.get<VideoRaw[]>(`${this.apiUrl}/mios`).pipe(
+      map(arr => arr.map(mapVideo)),
+    ).subscribe({
+      next:  v  => this._misVideos$.next(v),
+      error: () => { this._misVideosLoaded = false; },
+    });
+  }
+
+  /** Inserta un vídeo al principio del sujeto (llamar tras subida exitosa). */
+  prependVideo(video: Video): void {
+    this._misVideos$.next([video, ...(this._misVideos$.value ?? [])]);
+  }
+
+  /** GET /api/grupos/{idGrupo}/videos — todos los vídeos asignados a un grupo. */
+  obtenerVideosPorGrupo(idGrupo: number): Observable<Video[]> {
+    return this.http.get<VideoRaw[]>(`${environment.apiUrl}/api/grupos/${idGrupo}/videos`).pipe(
+      map(arr => arr.map(mapVideo)),
+    );
   }
 
   /** GET /api/videos/compartidos — vídeos accesibles vía permisos de grupo (contexto Espectador). */
   obtenerVideosCompartidos(): Observable<Video[]> {
-    if (!this.videosCompartidosCache$) {
-      this.videosCompartidosCache$ = this.http.get<VideoRaw[]>(`${this.apiUrl}/compartidos`).pipe(
+    if (!this._videosCompartidosCache$) {
+      this._videosCompartidosCache$ = this.http.get<VideoRaw[]>(`${this.apiUrl}/compartidos`).pipe(
         map(arr => arr.map(mapVideo)),
         shareReplay(1),
       );
     }
-    return this.videosCompartidosCache$;
+    return this._videosCompartidosCache$;
   }
 
   subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null): Observable<HttpEvent<VideoUploadResponse>> {
@@ -108,18 +135,17 @@ export class VideoService {
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
       reportProgress: true,
     });
-    return this.http.request<VideoUploadResponse>(req).pipe(
-      tap(event => {
-        if (event.type === HttpEventType.Response) {
-          this.misVideosCache$ = null;
-        }
-      }),
-    );
+    // La actualización del BehaviorSubject la hace el componente vía prependVideo()
+    // porque solo él tiene acceso al nombre del grupo seleccionado.
+    return this.http.request<VideoUploadResponse>(req);
   }
 
   eliminarVideo(idVideo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idVideo}`).pipe(
-      tap(() => { this.misVideosCache$ = null; }),
+      tap(() => {
+        const current = this._misVideos$.value ?? [];
+        this._misVideos$.next(current.filter(v => v.idVideo !== idVideo));
+      }),
     );
   }
 
@@ -127,7 +153,10 @@ export class VideoService {
   editarVideo(idVideo: number, titulo: string, idGrupo: number | null): Observable<Video> {
     return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupo }).pipe(
       map(raw => mapVideo(raw)),
-      tap(() => { this.misVideosCache$ = null; }),
+      tap(updated => {
+        const current = this._misVideos$.value ?? [];
+        this._misVideos$.next(current.map(v => v.idVideo === idVideo ? updated : v));
+      }),
     );
   }
 
