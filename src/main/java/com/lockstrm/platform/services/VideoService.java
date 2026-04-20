@@ -1,7 +1,5 @@
 package com.lockstrm.platform.services;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.PermisosGrupo;
@@ -15,23 +13,30 @@ import com.lockstrm.platform.repositories.VideoRepository;
 import com.lockstrm.platform.repositories.VideoVistaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRange;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,44 +51,36 @@ public class VideoService {
     private final PermisosGrupoRepository permisosGrupoRepository;
     private final VideoVistaRepository    videoVistaRepository;
     private final LogService              logService;
-    private final Cloudinary              cloudinary;
 
-    private static final long MAX_FILE_SIZE = 100L * 1024 * 1024; // 100 MB
+    @Value("${lockstrm.upload.dir}")
+    private String uploadDir;
+
+    private static final long MAX_FILE_SIZE = 200L * 1024 * 1024; // 200 MB
 
     @Transactional
-    public Video subirVideo(MultipartFile file, String emailUsuario, String titulo, Long idGrupo, String miniaturaUrl) throws IOException {
+    public Video subirVideo(MultipartFile file, String emailUsuario, String titulo,
+                            Long idGrupo, String miniaturaUrl, Integer duracion) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (100 MB)");
+            throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (200 MB)");
         }
 
         Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
 
-        Map<?, ?> uploadResult = cloudinary.uploader().uploadLarge(
-                file.getInputStream(),
-                ObjectUtils.asMap("resource_type", "video", "chunk_size", 6_000_000));
+        // Generar nombre único conservando la extensión original
+        String originalName  = file.getOriginalFilename();
+        String ext           = (originalName != null && originalName.contains("."))
+                               ? originalName.substring(originalName.lastIndexOf('.'))
+                               : ".mp4";
+        String fileName      = UUID.randomUUID() + ext;
 
-        Object errorCloudinary = uploadResult.get("error");
-        if (errorCloudinary != null) {
-            throw new RuntimeException("Cloudinary: " + errorCloudinary.toString());
-        }
-
-        Object rawUrl = uploadResult.get("secure_url");
-        Object rawId  = uploadResult.get("public_id");
-        if (rawUrl == null || rawId == null) {
-            throw new RuntimeException("Cloudinary no devolvió URL o ID. Respuesta: " + uploadResult);
-        }
-
-        String urlSegura = rawUrl.toString();
-        String publicId  = rawId.toString();
-
-        Object rawDuration = uploadResult.get("duration");
-        int duracion = (rawDuration instanceof Number) ? ((Number) rawDuration).intValue() : 0;
+        Path dir  = Paths.get(uploadDir);
+        Files.createDirectories(dir);
+        Files.copy(file.getInputStream(), dir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
 
         Video nuevoVideo = new Video();
         nuevoVideo.setTitulo(titulo);
-        nuevoVideo.setDuracion(duracion);
-        nuevoVideo.setUrlCloudSecure(urlSegura);
-        nuevoVideo.setCloudinaryId(publicId);
+        nuevoVideo.setDuracion(duracion != null ? duracion : 0);
+        nuevoVideo.setFileName(fileName);
         nuevoVideo.setMiniaturaUrl(miniaturaUrl);
         nuevoVideo.setFechaSubida(LocalDateTime.now());
         nuevoVideo.setPropietario(autor);
@@ -99,66 +96,47 @@ public class VideoService {
     }
 
     /**
-     * Proxy de streaming HTTP 206.
-     * La verificación de acceso y el registro de auditoría se delegan a LogService
-     * para que la misma lógica sea compartida con el endpoint de heartbeat.
+     * Streaming HTTP 206 desde el sistema de archivos local.
+     * Siempre responde 206 Partial Content para compatibilidad con reproductores HTML5.
      */
-    public ResponseEntity<InputStreamResource> streamVideo(Long id, String rangeHeader, String emailUsuario) throws Exception {
-        Video video = videoRepository.getByIdOrThrow(id);
+    public ResponseEntity<ResourceRegion> streamVideoLocal(String fileName,
+                                                           HttpHeaders requestHeaders,
+                                                           String emailUsuario) throws IOException {
+        Video video = videoRepository.findByFileName(fileName)
+                .orElseThrow(() -> new NoSuchElementException("Vídeo no encontrado: " + fileName));
 
         logService.verificarAcceso(video, emailUsuario);
 
-        // Registra el acceso solo en la primera petición (sin Range o bytes=0-)
-        if (rangeHeader == null || rangeHeader.startsWith("bytes=0-")) {
+        Path filePath = Paths.get(uploadDir).resolve(fileName);
+        UrlResource resource = new UrlResource(filePath.toUri());
+        if (!resource.exists()) {
+            throw new RuntimeException("Archivo no encontrado en disco: " + fileName);
+        }
+
+        long contentLength = resource.contentLength();
+        MediaType mediaType = MediaTypeFactory.getMediaType(resource)
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
+        List<HttpRange> ranges = requestHeaders.getRange();
+        long start, end;
+
+        if (ranges.isEmpty()) {
+            start = 0;
+            end   = contentLength - 1;
             logService.registrarAcceso(video, emailUsuario);
+        } else {
+            HttpRange range = ranges.get(0);
+            start = range.getRangeStart(contentLength);
+            end   = range.getRangeEnd(contentLength);
+            if (start == 0) logService.registrarAcceso(video, emailUsuario);
         }
 
-        HttpURLConnection con = (HttpURLConnection) new URL(video.getUrlCloudSecure()).openConnection();
-        try {
-            con.setRequestMethod("GET");
-            con.setConnectTimeout(10_000);
-            con.setReadTimeout(30_000);
+        ResourceRegion region = new ResourceRegion(resource, start, end - start + 1);
 
-            if (rangeHeader != null && !rangeHeader.isBlank()) {
-                con.setRequestProperty("Range", rangeHeader);
-            }
-
-            con.connect();
-
-            int cloudinaryStatus = con.getResponseCode();
-
-            if (cloudinaryStatus >= 400) {
-                throw new RuntimeException("Error al obtener vídeo del almacenamiento: HTTP " + cloudinaryStatus);
-            }
-
-            HttpHeaders headers = new HttpHeaders();
-
-            String contentType = con.getHeaderField("Content-Type");
-            if (contentType != null) headers.set("Content-Type", contentType);
-
-            String contentLength = con.getHeaderField("Content-Length");
-            if (contentLength != null) headers.setContentLength(Long.parseLong(contentLength));
-
-            String contentRange = con.getHeaderField("Content-Range");
-            if (contentRange != null) headers.set("Content-Range", contentRange);
-
-            headers.set("Accept-Ranges", "bytes");
-
-            HttpStatus status = (cloudinaryStatus == 206) ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK;
-
-            // Envuelve el stream para que disconnect() se llame al cerrarlo
-            InputStream wrapped = new FilterInputStream(con.getInputStream()) {
-                @Override
-                public void close() throws IOException {
-                    try { super.close(); } finally { con.disconnect(); }
-                }
-            };
-
-            return ResponseEntity.status(status).headers(headers).body(new InputStreamResource(wrapped));
-        } catch (Exception e) {
-            con.disconnect();
-            throw e;
-        }
+        return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+                .contentType(mediaType)
+                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+                .body(region);
     }
 
     @Transactional(readOnly = true)
@@ -176,7 +154,6 @@ public class VideoService {
         return videoRepository.findByPropietario_Email(emailUsuario);
     }
 
-    /** Mis Vídeos: vídeos subidos por el usuario autenticado (contexto Propietario). */
     @Transactional(readOnly = true)
     public List<VideoDTO> obtenerMisVideos(String emailUsuario) {
         List<Video> videos = videoRepository.findByPropietario_Email(emailUsuario);
@@ -184,7 +161,6 @@ public class VideoService {
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
-    /** Vídeos Compartidos: vídeos accesibles vía permisos de grupo, excluyendo los propios (contexto Espectador). */
     @Transactional(readOnly = true)
     public List<VideoDTO> obtenerVideosCompartidos(String emailUsuario) {
         List<Video> videos = videoRepository.findVideosCompartidosConUsuario(emailUsuario);
@@ -192,13 +168,8 @@ public class VideoService {
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
-    /** Par (idGrupo, nombre) asociado a un vídeo; usado internamente para construir el DTO. */
     private record GrupoRef(Long idGrupo, String nombre) {}
 
-    /**
-     * Mapea una entidad {@link Video} al DTO de respuesta usando el mapa pre-cargado de
-     * videoId → GrupoRef para evitar el N+1. Ver {@link #buildGrupoMap(List)}.
-     */
     private VideoDTO toDTO(Video video, Map<Long, GrupoRef> grupoMap) {
         GrupoRef ref = grupoMap.get(video.getIdVideo());
         return new VideoDTO(
@@ -208,15 +179,11 @@ public class VideoService {
                 video.getFechaSubida(),
                 ref != null ? ref.idGrupo() : null,
                 ref != null ? ref.nombre()  : null,
-                video.getMiniaturaUrl()
+                video.getMiniaturaUrl(),
+                video.getFileName()   // nombre de fichero UUID, no URL directa
         );
     }
 
-    /**
-     * Construye en una única query el mapa videoId → GrupoRef para una lista de vídeos,
-     * eliminando el N+1 que antes ejecutaba una query por vídeo en {@code toDTO}.
-     * El JOIN FETCH en el repositorio carga los nombres de grupo en el mismo round-trip.
-     */
     private Map<Long, GrupoRef> buildGrupoMap(List<Video> videos) {
         if (videos.isEmpty()) return Map.of();
         List<Long> ids = videos.stream().map(Video::getIdVideo).toList();
@@ -224,7 +191,7 @@ public class VideoService {
                 .collect(Collectors.toMap(
                         pg -> pg.getId().getIdVideoId(),
                         pg -> new GrupoRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
-                        (a, b) -> a   // si un vídeo está en varios grupos, toma el primero
+                        (a, b) -> a
                 ));
     }
 
@@ -239,7 +206,6 @@ public class VideoService {
         video.setTitulo(titulo);
         videoRepository.save(video);
 
-        // Validar el grupo ANTES de borrar para evitar dejar el vídeo sin grupo si no existe
         Grupo grupo = null;
         if (idGrupo != null) {
             grupo = grupoRepository.getByIdOrThrow(idGrupo);
@@ -260,7 +226,8 @@ public class VideoService {
                 video.getFechaSubida(),
                 idGrupo,
                 grupoNombre,
-                video.getMiniaturaUrl()
+                video.getMiniaturaUrl(),
+                video.getFileName()
         );
     }
 
@@ -272,17 +239,20 @@ public class VideoService {
             throw new AccessDeniedException("No tienes permiso para eliminar este vídeo");
         }
 
-        String cloudinaryIdParaBorrar = video.getCloudinaryId();
+        String fileName = video.getFileName();
 
         permisosGrupoRepository.deleteByVideoId(idVideo);
         videoVistaRepository.deleteByVideoId(idVideo);
         logService.eliminarLogsPorVideo(idVideo);
         videoRepository.delete(video);
 
-        try {
-            cloudinary.uploader().destroy(cloudinaryIdParaBorrar, ObjectUtils.emptyMap());
-        } catch (Exception e) {
-            log.warn("No se pudo borrar el asset de Cloudinary '{}': {}", cloudinaryIdParaBorrar, e.getMessage());
+        // fileName puede ser null en vídeos subidos antes de la migración
+        if (fileName != null) {
+            try {
+                Files.deleteIfExists(Paths.get(uploadDir).resolve(fileName));
+            } catch (IOException e) {
+                log.warn("No se pudo eliminar el archivo '{}': {}", fileName, e.getMessage());
+            }
         }
     }
 }

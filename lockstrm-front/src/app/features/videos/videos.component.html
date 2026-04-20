@@ -350,11 +350,15 @@
                 </button>
               </div>
               <div class="modal-player">
-                <app-video-player
-                  [videoUrl]="videoService.buildStreamUrl(videoReproduciendose!.idVideo)"
-                  [idVideo]="videoReproduciendose!.idVideo"
-                  (heartbeat)="onHeartbeat($event)">
-                </app-video-player>
+                @if (videoReproduciendose.fileName) {
+                  <app-video-player
+                    [fileName]="videoReproduciendose.fileName"
+                    [idVideo]="videoReproduciendose.idVideo"
+                    (heartbeat)="onHeartbeat($event)">
+                  </app-video-player>
+                } @else {
+                  <p class="video-no-disponible">Vídeo no disponible. El archivo no está en el servidor.</p>
+                }
               </div>
             </div>
           </div>

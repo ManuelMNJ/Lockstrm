@@ -10,9 +10,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long> {
+
+    Optional<Video> findByFileName(String fileName);
 
     default Video getByIdOrThrow(Long id) {
         return findById(id)

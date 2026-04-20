@@ -359,10 +359,12 @@ export class GrupoDetalleComponent implements OnInit {
     this.estadoRenombrar = 'idle';
     this.errorRenombrar  = '';
     this.nombreEditado   = this.grupo?.nombre ?? '';
+    this.cdr.markForCheck();
   }
 
   cancelarEdicion(): void {
     this.editandoNombre = false;
+    this.cdr.markForCheck();
   }
 
   guardarNombre(): void {
@@ -399,10 +401,12 @@ export class GrupoDetalleComponent implements OnInit {
     this.confirmandoEliminarGrupo = true;
     this.estadoEliminarGrupo      = 'idle';
     this.errorEliminarGrupo       = '';
+    this.cdr.markForCheck();
   }
 
   cancelarEliminarGrupo(): void {
     this.confirmandoEliminarGrupo = false;
+    this.cdr.markForCheck();
   }
 
   confirmarEliminarGrupo(): void {
@@ -423,8 +427,9 @@ export class GrupoDetalleComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoReproduciendose) { this.cerrarReproductor(); return; }
-    if (this.videoStats)           { this.cerrarStats();       return; }
+    if (this.videoReproduciendose)    { this.cerrarReproductor();      return; }
+    if (this.videoStats)              { this.cerrarStats();             return; }
+    if (this.confirmandoEliminarGrupo){ this.cancelarEliminarGrupo();  return; }
   }
 
   abrirStats(video: Video): void {

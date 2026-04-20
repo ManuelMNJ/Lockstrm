@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
  * Incluye {@code idGrupo} cuando el vídeo está asociado a un grupo a través de PermisosGrupo;
  * será {@code null} si el vídeo no pertenece a ningún grupo.
  *
- * NOTA DE SEGURIDAD: urlCloudSecure y cloudinaryId se omiten deliberadamente.
- * La reproducción se realiza exclusivamente a través del proxy /api/videos/stream/{id},
- * que verifica el JWT y registra la auditoría. Exponer la URL directa de Cloudinary
- * permitiría bypassear los controles de acceso.
+ * NOTA DE SEGURIDAD: La ruta de disco real se omite deliberadamente.
+ * La reproducción se realiza exclusivamente a través del proxy /api/videos/stream/{fileName},
+ * que verifica el JWT y registra la auditoría. El frontend construye la URL del stream
+ * concatenando apiUrl + fileName + ?token=JWT, nunca se expone la ruta de disco directa.
  */
 public record VideoDTO(
         Long idVideo,
@@ -19,5 +19,6 @@ public record VideoDTO(
         LocalDateTime fechaSubida,
         Long idGrupo,
         String grupoNombre,
-        String miniaturaUrl
+        String miniaturaUrl,
+        String fileName
 ) {}

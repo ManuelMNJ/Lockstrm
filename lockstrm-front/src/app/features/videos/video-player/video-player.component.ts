@@ -4,16 +4,18 @@ import {
   DestroyRef,
   ElementRef,
   EventEmitter,
-  Input,
   OnInit,
   Output,
   ViewChild,
   computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { fromEvent, interval, timer } from 'rxjs';
+import { fromEvent, merge, timer } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { VideoService } from '../../../core/services/video.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
@@ -30,10 +32,14 @@ export class VideoPlayerComponent implements OnInit {
 
   // ── Inputs / Outputs ────────────────────────────────────────────────────────
 
-  /** Streaming URL already containing the JWT token as a query param. */
-  @Input({ required: true }) videoUrl!: string;
+  /**
+   * Nombre de fichero UUID devuelto por el backend (ej. "550e8400-e29b-41d4-a716.mp4").
+   * El componente construye la URL de streaming internamente usando environment.apiUrl
+   * y el JWT del usuario, para que funcione en local y en producción sin cambiar código.
+   */
+  readonly fileName = input.required<string>();
 
-  @Input() idVideo?: number;
+  readonly idVideo = input<number>();
 
   /**
    * Emits the video's currentTime (seconds) every 30 s while playing.
@@ -43,7 +49,7 @@ export class VideoPlayerComponent implements OnInit {
 
   // ── Template references ─────────────────────────────────────────────────────
 
-  @ViewChild('videoEl',        { static: true }) private videoRef!:     ElementRef<HTMLVideoElement>;
+  @ViewChild('videoEl',         { static: true }) private videoRef!:     ElementRef<HTMLVideoElement>;
   @ViewChild('playerContainer', { static: true }) private containerRef!: ElementRef<HTMLDivElement>;
 
   // ── DI ──────────────────────────────────────────────────────────────────────
@@ -51,6 +57,23 @@ export class VideoPlayerComponent implements OnInit {
   private readonly authService  = inject(AuthService);
   private readonly videoService = inject(VideoService);
   private readonly destroyRef   = inject(DestroyRef);
+
+  // ── Stream URL ──────────────────────────────────────────────────────────────
+
+  /**
+   * URL completa del stream, construida dinámicamente:
+   *   {environment.apiUrl}/api/videos/stream/{fileName}?token={jwt}
+   *
+   * - environment.apiUrl apunta a http://localhost:8080 en local y a la URL del VPS
+   *   en producción (sin tocar este fichero gracias al fichero environment.prod.ts).
+   * - El token JWT se lee del AuthService y se pasa como query param porque el tag
+   *   <video src="..."> no puede enviar cabeceras HTTP Authorization.
+   * - El JwtAuthenticationFilter del backend acepta ?token= exclusivamente en /stream/.
+   */
+  readonly streamUrl = computed(() => {
+    const token = this.authService.getToken() ?? '';
+    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(this.fileName())}?token=${token}`;
+  });
 
   // ── State signals ───────────────────────────────────────────────────────────
 
@@ -109,7 +132,6 @@ export class VideoPlayerComponent implements OnInit {
   constructor() {
     this.userIdentifier = this.resolveUserIdentifier();
 
-    // Clean up both timers when the component is destroyed.
     this.destroyRef.onDestroy(() => {
       if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
       if (this.clickFlashTimer)  clearTimeout(this.clickFlashTimer);
@@ -120,8 +142,9 @@ export class VideoPlayerComponent implements OnInit {
     this.initHeartbeat();
     this.initWatermark();
     this.initFullscreenListener();
-    if (this.idVideo != null) {
-      this.videoService.registrarVista(this.idVideo)
+    const id = this.idVideo();
+    if (id != null) {
+      this.videoService.registrarVista(id)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({ error: () => {} });
     }
@@ -130,17 +153,26 @@ export class VideoPlayerComponent implements OnInit {
   // ── Private init helpers ────────────────────────────────────────────────────
 
   /**
-   * Emits a heartbeat every 30 s, but ONLY while the video is playing.
-   * takeUntilDestroyed unsubscribes automatically when the component is destroyed.
+   * Pulso de telemetría reactivo gobernado por eventos DOM del <video>:
+   *   play  → arranca un timer(0, 5_000) que emite al padre.
+   *   pause / ended → switchMap corta el timer, así no seguimos "ping-eando"
+   *     al servidor mientras el vídeo está parado.
+   * El throttle natural del timer (5 s) garantiza como máximo 1 HTTP/5 s.
+   * timer(0, 5_000) dispara inmediatamente al hacer play para capturar
+   * sesiones muy cortas, y luego cada 5 s.
+   * takeUntilDestroyed se encarga de cerrar todo al destruir el componente.
    */
   private initHeartbeat(): void {
-    interval(30_000)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        if (this.isPlaying()) {
-          this.heartbeat.emit(this.currentTime());
-        }
-      });
+    const video  = this.videoRef.nativeElement;
+    const play$  = fromEvent(video, 'play');
+    const stop$  = merge(fromEvent(video, 'pause'), fromEvent(video, 'ended'));
+
+    play$.pipe(
+      switchMap(() => timer(0, 5_000).pipe(takeUntil(stop$))),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      this.heartbeat.emit(Math.round(video.currentTime));
+    });
   }
 
   /**
@@ -315,7 +347,6 @@ export class VideoPlayerComponent implements OnInit {
   onMouseMove(): void {
     this.showControls.set(true);
     if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
-    // Only auto-hide while the video is actually playing.
     if (this.isPlaying()) {
       this.hideControlsTimer = setTimeout(() => this.showControls.set(false), 3000);
     }

@@ -5,14 +5,12 @@ import { environment } from '../../../environments/environment';
 /**
  * Gestiona el Service Worker proxy para streaming seguro.
  *
- * En lugar de exponer el JWT en la query string (?token=...) — que queda
- * registrado en los logs del servidor — el servicio:
- *   1. Registra un SW que intercepta peticiones a /video-proxy/{id}
- *   2. El SW reescribe la URL al backend real e inyecta Authorization: Bearer
- *   3. Los componentes obtienen URLs del tipo /video-proxy/{id} (same-origin)
+ * El SW intercepta peticiones a /video-proxy/{fileName}, reescribe la URL
+ * al backend e inyecta Authorization: Bearer sin exponer el token en la URL.
  *
- * Fallback automático si SW no está disponible (entorno sin HTTPS, SSR, etc.):
- * buildUrl() retorna la URL con token en query string.
+ * Fallback automático si SW no está disponible (HTTP, SSR, etc.):
+ * buildUrl() devuelve la URL con ?token= en query string, que el filtro
+ * JwtAuthenticationFilter acepta exclusivamente en rutas /stream/.
  */
 @Injectable({ providedIn: 'root' })
 export class VideoStreamService {
@@ -33,12 +31,12 @@ export class VideoStreamService {
     });
   }
 
-  buildUrl(idVideo: number): string {
+  buildUrl(fileName: string): string {
     if (this.swReady) {
-      return `/video-proxy/${idVideo}`;
+      return `/video-proxy/${encodeURIComponent(fileName)}`;
     }
     const token = this.authService.getToken() ?? '';
-    return `${environment.apiUrl}/api/videos/stream/${idVideo}?token=${token}`;
+    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(fileName)}?token=${token}`;
   }
 
   private async registerSW(): Promise<void> {
@@ -53,7 +51,6 @@ export class VideoStreamService {
       this.postMessage({ type: 'LOCKSTRM_INIT', token, apiBase: environment.apiUrl });
 
     } catch (err) {
-      // SW no disponible (HTTP en producción, CSP restrictiva, etc.) → fallback silencioso
       console.warn('[VideoStream] Service Worker no registrado; usando fallback con token en URL.', err);
     }
   }

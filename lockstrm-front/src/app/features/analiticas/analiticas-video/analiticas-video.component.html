@@ -1,0 +1,138 @@
+<div class="analiticas-page">
+
+  <!-- ── Cabecera ── -->
+  <header class="page-header">
+    <div class="header-left">
+      <a routerLink="/mi-espacio/analiticas" class="back-link" aria-label="Volver al panel general">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Volver
+      </a>
+      <h2 class="page-title">
+        @if (cargando) { <span class="skeleton-line skeleton-line--title"></span> }
+        @else { {{ video?.titulo ?? 'Vídeo' }} }
+      </h2>
+      <p class="page-sub">Registro de cada sesión de visualización</p>
+    </div>
+
+    @if (video?.miniaturaUrl) {
+      <div class="header-thumb" aria-hidden="true">
+        <img [src]="video!.miniaturaUrl" [alt]="video!.titulo" loading="lazy"/>
+      </div>
+    }
+  </header>
+
+  @if (error) {
+    <p class="dash-error" role="alert">{{ error }}</p>
+  }
+
+  <!-- ── KPIs ── -->
+  <section class="kpi-grid">
+
+    <div class="kpi-card kpi-card--purple">
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value">{{ totalRegistros }}</span>
+          <span class="kpi-label">Registros</span>
+        }
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--blue">
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value">{{ espectadoresUnicos }}</span>
+          <span class="kpi-label">Espectadores únicos</span>
+        }
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-card--green">
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value kpi-value--green">{{ tiempoTotalVisto | videoDuration:true }}</span>
+          <span class="kpi-label">Tiempo total visto</span>
+        }
+      </div>
+    </div>
+
+    @if (video?.duracion) {
+      <div class="kpi-card kpi-card--neutral">
+        <div class="kpi-body">
+          <span class="kpi-value">{{ video!.duracion | videoDuration:true }}</span>
+          <span class="kpi-label">Duración del vídeo</span>
+        </div>
+      </div>
+    }
+
+  </section>
+
+  <!-- ── Tabla de registros ── -->
+  <section class="top-section">
+    <header class="section-header">
+      <h3 class="section-title">Todas las visualizaciones</h3>
+    </header>
+
+    @if (cargando) {
+      <p class="loading">Cargando registros…</p>
+    } @else if (!logs.length) {
+      <div class="empty-state">
+        <p>Aún no hay visualizaciones registradas para este vídeo.</p>
+      </div>
+    } @else {
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Espectador</th>
+            <th>Fecha</th>
+            <th>Tiempo visto</th>
+            <th class="retention-col">Retención</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of logs; track l.idLog) {
+            <tr>
+              <td>
+                <div class="stats-member">
+                  <div class="member-avatar" aria-hidden="true">{{ l.nombre.charAt(0).toUpperCase() }}</div>
+                  <div class="member-info">
+                    <span class="member-name">{{ l.nombre }}</span>
+                    <span class="member-email">{{ l.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="log-date">{{ l.fechaHora | date:'dd MMM yyyy, HH:mm' }}</span>
+              </td>
+              <td>
+                <span class="stats-badge">
+                  {{ (l.segundosVistos ?? 0) | videoDuration:true }}
+                </span>
+              </td>
+              <td class="retention-col">
+                <div class="retention-cell">
+                  <div class="retention-track retention-track--inline">
+                    <div class="retention-fill" [style.width.%]="retencionPct(l.segundosVistos)"></div>
+                  </div>
+                  <span class="retention-pct">{{ retencionPct(l.segundosVistos) }}%</span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+</div>

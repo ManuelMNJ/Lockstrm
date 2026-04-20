@@ -4,6 +4,7 @@ import com.lockstrm.platform.dto.VideoVistaEstadisticaDto;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.entities.VideoVista;
+import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
@@ -14,16 +15,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class VideoVistaService {
 
-    private final VideoVistaRepository videoVistaRepository;
-    private final VideoRepository videoRepository;
-    private final UserRepository userRepository;
+    private final VideoVistaRepository    videoVistaRepository;
+    private final VideoRepository         videoRepository;
+    private final UserRepository          userRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
-    private final LogService logService;
+    private final LogRepository           logRepository;
+    private final LogService              logService;
 
     @Transactional
     public void incrementarVista(Long idVideo, String email) {
@@ -56,11 +60,20 @@ public class VideoVistaService {
             throw new AccessDeniedException("Solo el creador del grupo puede ver las estadísticas");
         }
 
+        // Mapa email → MAX(segundosVistos) desde la tabla logs (alimentada por heartbeat).
+        Map<String, Integer> segundosPorEmail = logRepository.findSegundosVistosByVideoId(idVideo).stream()
+                .collect(Collectors.toMap(
+                        LogRepository.SegundosPorUsuario::getEmail,
+                        LogRepository.SegundosPorUsuario::getSegundos,
+                        (a, b) -> a
+                ));
+
         return videoVistaRepository.findByVideoIdWithUsuario(idVideo).stream()
                 .map(vv -> new VideoVistaEstadisticaDto(
                         vv.getUsuario().getNombreCompleto(),
                         vv.getUsuario().getEmail(),
-                        vv.getContador()
+                        vv.getContador(),
+                        segundosPorEmail.getOrDefault(vv.getUsuario().getEmail(), 0)
                 ))
                 .toList();
     }

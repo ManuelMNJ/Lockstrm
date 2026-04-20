@@ -29,6 +29,7 @@ export class VideosComponent implements OnInit {
   tituloVideo = '';
   idGrupoSeleccionado: number | null = null;
   miniaturaDataUrl: string | null = null;
+  private duracionVideo = 0;
   private objectUrl: string | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
@@ -118,6 +119,7 @@ export class VideosComponent implements OnInit {
 
     this.archivoSeleccionado = file;
     this.miniaturaDataUrl    = null;
+    this.duracionVideo       = 0;
     if (this.estadoSubida === 'error') {
       this.estadoSubida = 'idle';
       this.mensajeError = '';
@@ -138,7 +140,8 @@ export class VideosComponent implements OnInit {
     video.playsInline = true;
 
     video.onloadedmetadata = () => {
-      video.currentTime = Math.min(2, video.duration * 0.1);
+      this.duracionVideo = Math.round(video.duration);
+      video.currentTime  = Math.min(2, video.duration * 0.1);
     };
 
     video.onseeked = () => {
@@ -171,8 +174,7 @@ export class VideosComponent implements OnInit {
       return;
     }
 
-    // 95 MB y no 100 para dejar margen: el contenedor multipart añade algo de peso extra
-    // y Cloudinary nos corta la subida si llegamos justo al límite.
+    // 95 MB y no 200 para dejar margen al contenedor multipart y al cliente de red lento.
     const LIMITE_MB    = 95;
     const LIMITE_BYTES = LIMITE_MB * 1024 * 1024;
 
@@ -186,7 +188,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl, this.duracionVideo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -217,6 +219,7 @@ export class VideosComponent implements OnInit {
             fechaSubida:  new Date().toISOString(),
             grupo:        grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
             miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
+            fileName:     res.fileName,
           };
 
           // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan

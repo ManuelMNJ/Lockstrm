@@ -330,11 +330,15 @@
       </div>
 
       <div class="modal-player">
-        <app-video-player
-          [videoUrl]="videoService.buildStreamUrl(videoReproduciendose.idVideo)"
-          [idVideo]="videoReproduciendose.idVideo"
-          (heartbeat)="onHeartbeat($event)">
-        </app-video-player>
+        @if (videoReproduciendose.fileName) {
+          <app-video-player
+            [fileName]="videoReproduciendose.fileName"
+            [idVideo]="videoReproduciendose.idVideo"
+            (heartbeat)="onHeartbeat($event)">
+          </app-video-player>
+        } @else {
+          <p class="video-no-disponible">Vídeo no disponible. El archivo no está en el servidor.</p>
+        }
       </div>
 
     </div>
@@ -397,6 +401,7 @@
                 <tr>
                   <th>Miembro</th>
                   <th class="stats-col-views">Vistas</th>
+                  <th class="stats-col-views">Tiempo visto</th>
                 </tr>
               </thead>
               <tbody>
@@ -413,6 +418,9 @@
                     </td>
                     <td class="stats-col-views">
                       <span class="stats-badge">{{ s.contador }}</span>
+                    </td>
+                    <td class="stats-col-views">
+                      <span class="stats-badge">{{ s.segundosVistos | videoDuration:true }}</span>
                     </td>
                   </tr>
                 }
