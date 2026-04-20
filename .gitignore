@@ -34,3 +34,6 @@ build/
 
 ### Variables de entorno (nunca subir al repo) ###
 .env
+
+
+.uploads/
