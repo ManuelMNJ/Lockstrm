@@ -15,14 +15,11 @@ import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,43 +41,18 @@ public class VideoController {
             @RequestParam(value = "idGrupo",      required = false) Long    idGrupo,
             @RequestParam(value = "miniaturaUrl",  required = false) String  miniaturaUrl,
             @RequestParam(value = "duracion",      required = false) Integer duracion
-    ) {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("video/")) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "status",  "error",
-                    "mensaje", "El archivo debe ser un video"
-            ));
-        }
-
-        Map<String, Object> respuesta = new HashMap<>();
-        try {
-            Video guardado = videoService.subirVideo(
-                    file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl, duracion);
-            respuesta.put("status",       "exito");
-            respuesta.put("mensaje",      "Video subido correctamente");
-            respuesta.put("id_video",     guardado.getIdVideo());
-            respuesta.put("titulo",       guardado.getTitulo());
-            respuesta.put("fileName",     guardado.getFileName());
-            respuesta.put("duracion",     guardado.getDuracion());
-            respuesta.put("miniaturaUrl", guardado.getMiniaturaUrl());
-            return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
-        } catch (IOException e) {
-            log.error("Error de I/O al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
-            respuesta.put("status",  "error");
-            respuesta.put("mensaje", "Error al guardar el archivo: " + e.getMessage());
-            return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            log.error("Error al subir vídeo para usuario {}: {}", userDetails.getUsername(), e.getMessage(), e);
-            respuesta.put("status",  "error");
-            respuesta.put("mensaje", e.getMessage() != null ? e.getMessage() : "Error interno al subir el vídeo");
-            return new ResponseEntity<>(respuesta, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<VideoDTO>> listarVideos(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
+    ) throws Exception {
+        Video guardado = videoService.subirVideo(
+                file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl, duracion);
+        return new ResponseEntity<>(Map.of(
+                "status",       "exito",
+                "mensaje",      "Video subido correctamente",
+                "id_video",     guardado.getIdVideo(),
+                "titulo",       guardado.getTitulo(),
+                "fileName",     guardado.getFileName(),
+                "duracion",     guardado.getDuracion() != null ? guardado.getDuracion() : 0,
+                "miniaturaUrl", guardado.getMiniaturaUrl() != null ? guardado.getMiniaturaUrl() : ""
+        ), HttpStatus.CREATED);
     }
 
     @GetMapping("/mios")
@@ -93,11 +65,6 @@ public class VideoController {
         return ResponseEntity.ok(videoService.obtenerVideosCompartidos(userDetails.getUsername()));
     }
 
-    /**
-     * Streaming HTTP 206 desde sistema de archivos local.
-     * El reproductor HTML5 debe pasar el JWT via ?token= ya que <video src> no envía cabeceras.
-     * Ejemplo: /api/videos/stream/uuid.mp4?token=eyJ...
-     */
     @GetMapping("/stream/{fileName:.+}")
     public ResponseEntity<ResourceRegion> streamVideo(
             @PathVariable String fileName,
@@ -131,44 +98,22 @@ public class VideoController {
     public ResponseEntity<Void> registrarVista(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            videoVistaService.incrementarVista(id, userDetails.getUsername());
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            HttpStatus status = msg.contains("no encontrado") ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
-            return ResponseEntity.status(status).build();
-        }
+        videoVistaService.incrementarVista(id, userDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}/estadisticas")
-    public ResponseEntity<?> obtenerEstadisticas(
+    public ResponseEntity<List<VideoVistaEstadisticaDto>> obtenerEstadisticas(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            List<VideoVistaEstadisticaDto> stats = videoVistaService.obtenerEstadisticas(id, userDetails.getUsername());
-            return ResponseEntity.ok(stats);
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "";
-            HttpStatus status = msg.contains("no encontrado") ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
-            return ResponseEntity.status(status).body(Map.of("error", msg));
-        }
+        return ResponseEntity.ok(videoVistaService.obtenerEstadisticas(id, userDetails.getUsername()));
     }
 
     @DeleteMapping("/{idVideo}")
-    public ResponseEntity<?> eliminarVideo(
+    public ResponseEntity<Map<String, String>> eliminarVideo(
             @PathVariable Long idVideo,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            videoService.eliminarVideo(idVideo, userDetails.getUsername());
-            return ResponseEntity.ok(Map.of("mensaje", "Vídeo eliminado correctamente"));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Error al eliminar el vídeo"));
-        }
+        videoService.eliminarVideo(idVideo, userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("mensaje", "Vídeo eliminado correctamente"));
     }
 }

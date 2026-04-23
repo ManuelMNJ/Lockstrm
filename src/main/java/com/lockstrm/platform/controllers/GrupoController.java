@@ -8,7 +8,6 @@ import com.lockstrm.platform.services.GrupoService;
 import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -69,14 +68,10 @@ public class GrupoController {
     }
 
     @GetMapping("/{idGrupo}/videos")
-    public ResponseEntity<?> obtenerVideosDelGrupo(
+    public ResponseEntity<List<VideoDTO>> obtenerVideosDelGrupo(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            return ResponseEntity.ok(videoService.obtenerVideosPorGrupo(idGrupo, userDetails.getUsername()));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(videoService.obtenerVideosPorGrupo(idGrupo, userDetails.getUsername()));
     }
 
     @GetMapping("/{idGrupo}/miembros")

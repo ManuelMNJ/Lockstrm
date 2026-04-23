@@ -34,6 +34,24 @@ build/
 
 ### Variables de entorno (nunca subir al repo) ###
 .env
+.env.*
+!.env.example
 
+### Backups y temporales ###
+*.bak
+*.orig
+*.tmp
+*~
 
-.uploads/
+### Vídeos subidos por usuarios (no versionar contenido) ###
+uploads/
+!uploads/.gitkeep
+
+### Logs ###
+*.log
+logs/
+
+### Node / front ###
+node_modules/
+lockstrm-front/.angular/
+lockstrm-front/dist/

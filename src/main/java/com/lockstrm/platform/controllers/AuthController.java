@@ -8,7 +8,6 @@ import com.lockstrm.platform.security.JwtService;
 import com.lockstrm.platform.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,30 +30,21 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<Map<String, String>> registrarUsuario(@Valid @RequestBody RegisterRequest request) {
         if (!userService.emailDisponible(request.getEmail())) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El email ya está registrado"));
+            throw new com.lockstrm.platform.exceptions.BusinessException("El email ya está registrado");
         }
-        try {
-            userService.registrarUsuario(request);
-            return ResponseEntity.ok(Map.of("mensaje", "Usuario registrado con exito"));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno al registrar el usuario"));
-        }
+        userService.registrarUsuario(request);
+        return ResponseEntity.ok(Map.of("mensaje", "Usuario registrado con exito"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         Usuario usuario = userService.buscarPorEmail(request.getEmail());
 
         if (usuario == null || !passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Credenciales incorrectas o usuario no encontrado"));
+            throw new org.springframework.security.authentication.BadCredentialsException(
+                    "Credenciales incorrectas");
         }
 
         UserDetails userDetails = userService.loadUserByUsername(usuario.getEmail());

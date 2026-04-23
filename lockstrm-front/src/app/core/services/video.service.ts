@@ -78,12 +78,6 @@ export class VideoService {
     return this.streamService.buildUrl(fileName);
   }
 
-  obtenerVideos(): Observable<Video[]> {
-    return this.http.get<VideoRaw[]>(this.apiUrl).pipe(
-      map(arr => arr.map(mapVideo)),
-    );
-  }
-
   /**
    * Devuelve el BehaviorSubject de "mis vídeos" como Observable vivo.
    * Cualquier mutación (subir, borrar, editar) emite aquí automáticamente;

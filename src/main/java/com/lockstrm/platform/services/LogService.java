@@ -12,6 +12,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class LogService {
@@ -21,9 +25,24 @@ public class LogService {
     private final VideoRepository          videoRepository;
     private final MiembrosGrupoRepository  miembrosGrupoRepository;
 
+    /**
+     * Ventana durante la cual peticiones sucesivas de un mismo usuario sobre el
+     * mismo vídeo se consideran parte de la misma sesión y NO generan un Log
+     * nuevo. Esto permite llamar a registrarAcceso() en cada range request del
+     * streaming sin inflar el contador de visualizaciones.
+     */
+    private static final Duration SESSION_WINDOW = Duration.ofMinutes(30);
+
     @Transactional
     public void registrarAcceso(Video video, String emailUsuario) {
         Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
+
+        LocalDateTime threshold = LocalDateTime.now().minus(SESSION_WINDOW);
+        Optional<Log> ultimo = logRepository
+                .findTopByUsuarioAndVideoOrderByFechaHoraDesc(usuario, video);
+        if (ultimo.isPresent() && ultimo.get().getFechaHora().isAfter(threshold)) {
+            return;
+        }
 
         Log log = new Log();
         log.setUsuario(usuario);

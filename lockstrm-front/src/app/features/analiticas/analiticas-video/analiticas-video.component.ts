@@ -7,9 +7,10 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { VideoService, Video } from '../../../core/services/video.service';
 import { AnaliticasService, VideoLog } from '../../../core/services/analiticas.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
@@ -30,6 +31,7 @@ export class AnaliticasVideoComponent implements OnInit {
   error      = '';
 
   private readonly route             = inject(ActivatedRoute);
+  private readonly router            = inject(Router);
   private readonly videoService      = inject(VideoService);
   private readonly analiticasService = inject(AnaliticasService);
   private readonly cdr               = inject(ChangeDetectorRef);
@@ -49,17 +51,35 @@ export class AnaliticasVideoComponent implements OnInit {
     ]).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ([videos, logs]) => {
-          this.video    = videos.find(v => v.idVideo === idVideo) ?? null;
+          const propio = videos.find(v => v.idVideo === idVideo) ?? null;
+          if (!propio) {
+            // Seguridad en profundidad: el back ya devuelve 403, pero si por
+            // cualquier motivo los logs llegaron sin el vídeo en la lista
+            // propia, no mostramos analíticas de un vídeo que no es nuestro.
+            this.redirigirNoAutorizado();
+            return;
+          }
+          this.video    = propio;
           this.logs     = logs;
           this.cargando = false;
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 403 || err.status === 404) {
+            this.redirigirNoAutorizado();
+            return;
+          }
           this.error    = 'No se pudieron cargar las analíticas del vídeo.';
           this.cargando = false;
           this.cdr.markForCheck();
         },
       });
+  }
+
+  private redirigirNoAutorizado(): void {
+    this.router.navigate(['/mi-espacio/videos'], {
+      queryParams: { aviso: 'sin-acceso-analiticas' },
+    });
   }
 
   /** % de retención individual: segundos vistos en esta sesión / duración. */

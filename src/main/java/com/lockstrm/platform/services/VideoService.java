@@ -51,6 +51,7 @@ public class VideoService {
     private final PermisosGrupoRepository permisosGrupoRepository;
     private final VideoVistaRepository    videoVistaRepository;
     private final LogService              logService;
+    private final VideoMimeValidator      mimeValidator;
 
     @Value("${lockstrm.upload.dir}")
     private String uploadDir;
@@ -61,21 +62,23 @@ public class VideoService {
     public Video subirVideo(MultipartFile file, String emailUsuario, String titulo,
                             Long idGrupo, String miniaturaUrl, Integer duracion) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("El archivo excede el tamaño máximo permitido (200 MB)");
+            throw new com.lockstrm.platform.exceptions.InvalidFileException(
+                    "El archivo excede el tamaño máximo permitido (200 MB)");
         }
+
+        String ext = mimeValidator.validateAndGetExtension(file);
 
         Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
 
-        // Generar nombre único conservando la extensión original
-        String originalName  = file.getOriginalFilename();
-        String ext           = (originalName != null && originalName.contains("."))
-                               ? originalName.substring(originalName.lastIndexOf('.'))
-                               : ".mp4";
-        String fileName      = UUID.randomUUID() + ext;
+        String fileName = UUID.randomUUID() + "." + ext;
 
-        Path dir  = Paths.get(uploadDir);
+        Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(dir);
-        Files.copy(file.getInputStream(), dir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+        Path target = dir.resolve(fileName).normalize();
+        if (!target.startsWith(dir)) {
+            throw new com.lockstrm.platform.exceptions.InvalidFileException("Ruta de archivo no válida");
+        }
+        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
         Video nuevoVideo = new Video();
         nuevoVideo.setTitulo(titulo);
@@ -88,11 +91,19 @@ public class VideoService {
         Video guardado = videoRepository.save(nuevoVideo);
 
         if (idGrupo != null) {
-            Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
+            Grupo grupo = resolverGrupoPropio(idGrupo, emailUsuario);
             permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
         }
 
         return guardado;
+    }
+
+    private Grupo resolverGrupoPropio(Long idGrupo, String emailUsuario) {
+        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
+        if (!grupo.getCreador().getEmail().equals(emailUsuario)) {
+            throw new AccessDeniedException("No puedes asignar un vídeo a un grupo que no has creado");
+        }
+        return grupo;
     }
 
     /**
@@ -107,10 +118,14 @@ public class VideoService {
 
         logService.verificarAcceso(video, emailUsuario);
 
-        Path filePath = Paths.get(uploadDir).resolve(fileName);
+        Path baseDir  = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path filePath = baseDir.resolve(fileName).normalize();
+        if (!filePath.startsWith(baseDir)) {
+            throw new com.lockstrm.platform.exceptions.InvalidFileException("Ruta de archivo no válida");
+        }
         UrlResource resource = new UrlResource(filePath.toUri());
         if (!resource.exists()) {
-            throw new RuntimeException("Archivo no encontrado en disco: " + fileName);
+            throw new NoSuchElementException("Archivo no encontrado en disco: " + fileName);
         }
 
         long contentLength = resource.contentLength();
@@ -123,13 +138,14 @@ public class VideoService {
         if (ranges.isEmpty()) {
             start = 0;
             end   = contentLength - 1;
-            logService.registrarAcceso(video, emailUsuario);
         } else {
             HttpRange range = ranges.get(0);
             start = range.getRangeStart(contentLength);
             end   = range.getRangeEnd(contentLength);
-            if (start == 0) logService.registrarAcceso(video, emailUsuario);
         }
+        // Registramos siempre; LogService deduplica por ventana de sesión
+        // para que range requests sucesivos no inflen el contador.
+        logService.registrarAcceso(video, emailUsuario);
 
         ResourceRegion region = new ResourceRegion(resource, start, end - start + 1);
 
@@ -147,11 +163,6 @@ public class VideoService {
         List<Video> videos = videoRepository.findByGrupoId(idGrupo);
         Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<Video> obtenerPorEmailUsuario(String emailUsuario) {
-        return videoRepository.findByPropietario_Email(emailUsuario);
     }
 
     @Transactional(readOnly = true)
@@ -208,7 +219,7 @@ public class VideoService {
 
         Grupo grupo = null;
         if (idGrupo != null) {
-            grupo = grupoRepository.getByIdOrThrow(idGrupo);
+            grupo = resolverGrupoPropio(idGrupo, emailUsuario);
         }
 
         permisosGrupoRepository.deleteByVideoId(idVideo);

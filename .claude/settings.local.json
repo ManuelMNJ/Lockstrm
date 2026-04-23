@@ -5,7 +5,11 @@
       "Bash(xargs grep:*)",
       "Bash(grep -E \"\\\\.\\(yml|yaml|json|properties|xml\\)$\")",
       "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/src/main/java -type f -name \"*.java\" -exec wc -l {} +)",
-      "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/lockstrm-front/src/app -type f \\\\\\( -name \"*.ts\" -o -name \"*.component.ts\" \\\\\\) ! -path \"*/node_modules/*\" -exec wc -l {} +)"
+      "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/lockstrm-front/src/app -type f \\\\\\( -name \"*.ts\" -o -name \"*.component.ts\" \\\\\\) ! -path \"*/node_modules/*\" -exec wc -l {} +)",
+      "Bash(./mvnw -q -DskipTests compile)",
+      "Bash(mvn -q -DskipTests compile)",
+      "Bash(./mvnw -q -o compile)",
+      "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/lockstrm-front/src -name \"*.component.ts\" -exec grep -l \"editar\\\\|delete\\\\|borrar\" {} \\\\;)"
     ]
   }
 }

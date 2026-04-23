@@ -117,9 +117,11 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   puedeActuarSobreRol(rolObjetivo: string): boolean {
+    // El SUPER_ADMIN (creador) es inmutable: nadie puede cambiar su rol ni expulsarlo.
+    if (rolObjetivo === 'SUPER_ADMIN') return false;
     if (this.esSuperAdmin) return true;
     if (this.rolActual === 'ADMIN') {
-      return rolObjetivo !== 'SUPER_ADMIN' && rolObjetivo !== 'ADMIN';
+      return rolObjetivo !== 'ADMIN';
     }
     return false;
   }
@@ -178,9 +180,9 @@ export class GrupoDetalleComponent implements OnInit {
           const propio = miembros.find(m => m.idUsuario === this.currentUserId);
           this.rolActual = propio?.rol ?? null;
           
-          // Pre-calculamos los roles disponibles para evitar NG0100
+          // SUPER_ADMIN es inmutable (el creador del grupo), no se ofrece como rol asignable.
           if (this.esSuperAdmin) {
-            this.rolesDisponiblesParaAsignar = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MIEMBRO'];
+            this.rolesDisponiblesParaAsignar = ['ADMIN', 'EDITOR', 'MIEMBRO'];
           } else if (this.rolActual === 'ADMIN') {
             this.rolesDisponiblesParaAsignar = ['EDITOR', 'MIEMBRO'];
           } else {

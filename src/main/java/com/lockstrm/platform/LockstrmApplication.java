@@ -8,6 +8,6 @@ public class LockstrmApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(LockstrmApplication.class, args);
-        System.out.println("Lockstrm is running...");
+        System.out.println("Lockstrm Platform API is running...");
     }
 }

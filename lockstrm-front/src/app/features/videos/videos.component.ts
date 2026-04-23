@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Elem
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -45,6 +45,10 @@ export class VideosComponent implements OnInit {
   errorEliminacionVisible = false;
   private errorEliminacionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  avisoAcceso = '';
+  avisoAccesoVisible = false;
+  private avisoAccesoTimer: ReturnType<typeof setTimeout> | null = null;
+
   videoAEliminar: Video | null = null;
   videoReproduciendose: Video | null = null;
 
@@ -79,6 +83,7 @@ export class VideosComponent implements OnInit {
   constructor(
     protected videoService: VideoService,
     private  grupoService:  GrupoService,
+    private  route:         ActivatedRoute,
   ) {}
 
   private refresh(): void {
@@ -93,6 +98,11 @@ export class VideosComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const aviso = this.route.snapshot.queryParamMap.get('aviso');
+    if (aviso === 'sin-acceso-analiticas') {
+      this.mostrarAvisoAcceso('No tienes permiso para ver las analíticas de ese vídeo.');
+    }
+
     this.cargarVideos();
     this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -174,8 +184,9 @@ export class VideosComponent implements OnInit {
       return;
     }
 
-    // 95 MB y no 200 para dejar margen al contenedor multipart y al cliente de red lento.
-    const LIMITE_MB    = 95;
+    // Debe coincidir con spring.servlet.multipart.max-file-size en application.properties
+    // (el back admite 10 MB extra en max-request-size para el overhead multipart).
+    const LIMITE_MB    = 200;
     const LIMITE_BYTES = LIMITE_MB * 1024 * 1024;
 
     if (this.archivoSeleccionado.size > LIMITE_BYTES) {
@@ -315,6 +326,17 @@ export class VideosComponent implements OnInit {
     this.refresh();
     this.errorEliminacionTimer = setTimeout(() => {
       this.errorEliminacionVisible = false;
+      this.refresh();
+    }, 6000);
+  }
+
+  private mostrarAvisoAcceso(mensaje: string): void {
+    if (this.avisoAccesoTimer) clearTimeout(this.avisoAccesoTimer);
+    this.avisoAcceso = mensaje;
+    this.avisoAccesoVisible = true;
+    this.refresh();
+    this.avisoAccesoTimer = setTimeout(() => {
+      this.avisoAccesoVisible = false;
       this.refresh();
     }, 6000);
   }

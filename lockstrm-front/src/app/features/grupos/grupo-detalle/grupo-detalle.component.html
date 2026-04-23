@@ -139,18 +139,36 @@
                     <span class="member-email">{{ m.email }}</span>
                   </div>
 
-                  @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol)) {
-                    <select class="rol-select-custom"
-                            [ngModel]="m.rol"
-                            (ngModelChange)="cambiarRolMiembro(m, $event)"
-                            [disabled]="cambiandoRoles.has(m.idUsuario) || m.idUsuario === currentUserId"
-                            [attr.aria-label]="'Rol de ' + m.username">
-                      @for (r of rolesDisponiblesParaAsignar; track r) {
-                        <option [value]="r">{{ r }}</option>
-                      }
-                    </select>
+                  @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
+                    <div class="rol-select-wrap">
+                      <select class="rol-select-custom"
+                              [ngModel]="m.rol"
+                              (ngModelChange)="cambiarRolMiembro(m, $event)"
+                              [disabled]="cambiandoRoles.has(m.idUsuario)"
+                              [attr.aria-label]="'Rol de ' + m.username">
+                        @for (r of rolesDisponiblesParaAsignar; track r) {
+                          <option [value]="r">{{ r }}</option>
+                        }
+                      </select>
+                      <svg class="rol-select-caret" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="4 6 8 10 12 6"/>
+                      </svg>
+                    </div>
                   } @else {
-                    <span class="rol-badge">{{ m.rol }}</span>
+                    <span class="rol-badge"
+                          [class.rol-badge--super]="m.rol === 'SUPER_ADMIN'"
+                          [class.rol-badge--admin]="m.rol === 'ADMIN'"
+                          [class.rol-badge--editor]="m.rol === 'EDITOR'"
+                          [attr.title]="m.rol === 'SUPER_ADMIN' ? 'Creador del grupo · rol inmutable' : null">
+                      @if (m.rol === 'SUPER_ADMIN') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 2l3 6 6 1-4.5 4.4 1 6.1L12 17l-5.5 2.5 1-6.1L3 9l6-1z"/>
+                        </svg>
+                      }
+                      {{ m.rol === 'SUPER_ADMIN' ? 'PROPIETARIO' : m.rol }}
+                    </span>
                   }
 
                   @if (esAdmin && puedeActuarSobreRol(m.rol)) {

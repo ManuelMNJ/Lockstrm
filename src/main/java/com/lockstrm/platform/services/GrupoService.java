@@ -162,11 +162,12 @@ public class GrupoService {
         if (rolSolicitante != RolGrupo.SUPER_ADMIN && rolSolicitante != RolGrupo.ADMIN) {
             throw new AccessDeniedException("Se requiere rol ADMIN o superior para eliminar miembros");
         }
-        if (rolSolicitante == RolGrupo.ADMIN) {
-            MiembrosGrupo objetivo = getTargetMiembroOrThrow(idUsuario, idGrupo);
-            if (objetivo.getRol() == RolGrupo.ADMIN || objetivo.getRol() == RolGrupo.SUPER_ADMIN) {
-                throw new AccessDeniedException("Un ADMIN no puede expulsar a un ADMIN o SUPER_ADMIN");
-            }
+        MiembrosGrupo objetivo = getTargetMiembroOrThrow(idUsuario, idGrupo);
+        if (objetivo.getRol() == RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("El SUPER_ADMIN (creador del grupo) no puede ser expulsado");
+        }
+        if (rolSolicitante == RolGrupo.ADMIN && objetivo.getRol() == RolGrupo.ADMIN) {
+            throw new AccessDeniedException("Un ADMIN no puede expulsar a otro ADMIN");
         }
         miembrosGrupoRepository.deleteByGrupoIdAndUsuarioId(idGrupo, idUsuario);
     }
@@ -202,11 +203,17 @@ public class GrupoService {
 
         MiembrosGrupo objetivo = getTargetMiembroOrThrow(idUsuarioObjetivo, idGrupo);
 
-        if (rolAdmin == RolGrupo.ADMIN && objetivo.getRol() == RolGrupo.SUPER_ADMIN) {
-            throw new AccessDeniedException("Un ADMIN no puede modificar al SUPER_ADMIN");
+        if (objetivo.getRol() == RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("El rol SUPER_ADMIN (creador del grupo) es inmutable");
         }
-        if (rolAdmin == RolGrupo.ADMIN && (nuevoRol == RolGrupo.SUPER_ADMIN || nuevoRol == RolGrupo.ADMIN)) {
-            throw new AccessDeniedException("Un ADMIN no puede asignar el rol ADMIN o SUPER_ADMIN");
+        if (nuevoRol == RolGrupo.SUPER_ADMIN) {
+            throw new AccessDeniedException("No se puede asignar el rol SUPER_ADMIN: hay uno único por grupo (el creador)");
+        }
+        if (rolAdmin == RolGrupo.ADMIN && objetivo.getRol() == RolGrupo.ADMIN) {
+            throw new AccessDeniedException("Un ADMIN no puede modificar a otro ADMIN");
+        }
+        if (rolAdmin == RolGrupo.ADMIN && nuevoRol == RolGrupo.ADMIN) {
+            throw new AccessDeniedException("Un ADMIN no puede asignar el rol ADMIN");
         }
 
         objetivo.setRol(nuevoRol);

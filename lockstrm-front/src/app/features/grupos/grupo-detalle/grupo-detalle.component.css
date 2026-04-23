@@ -444,6 +444,40 @@
 .video-select {
   flex: 1;
   min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  padding-right: 34px;
+  transition:
+    border-color     var(--transition-fast),
+    background-image var(--transition-fast),
+    box-shadow       var(--transition-fast);
+}
+
+.video-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C3AED' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+.video-select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ghost);
+}
+
+.video-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.video-select option {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
 }
 
 /* ==========================================================================
@@ -514,36 +548,40 @@
 .sort-select {
   appearance: none;
   -webkit-appearance: none;
-  font-size: 11px;
+  -moz-appearance: none;
+  font-size: 12px;
   font-weight: 600;
   font-family: inherit;
-  padding: 4px 26px 4px 8px;
-  border-radius: var(--radius-sm);
+  height: 30px;
+  padding: 0 28px 0 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-soft);
-  background-color: var(--bg-surface-active);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%237C3AED' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-color: var(--bg-main);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%239CA3AF' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 6px center;
+  background-position: right 8px center;
   background-size: 12px 12px;
-  color: var(--text-muted);
+  color: var(--text-main);
   cursor: pointer;
   transition:
     border-color     var(--transition-fast),
     background-color var(--transition-fast),
+    color            var(--transition-fast),
     box-shadow       var(--transition-fast);
 }
 
 .sort-select option {
-  background-color: var(--bg-surface-active);
+  background-color: var(--bg-surface);
   color: var(--text-main);
 }
 
 .sort-select:hover {
   border-color: var(--color-primary);
   background-color: var(--bg-surface-hover);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%237C3AED' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-.sort-select:focus {
+.sort-select:focus-visible {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-ghost);
@@ -660,59 +698,111 @@
 /* ==========================================================================
    ROL SELECT / BADGE
    ========================================================================== */
+.rol-select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .rol-select-custom {
   appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   font-family: inherit;
-  padding: 4px 26px 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-soft);
-  background-color: var(--bg-surface-active);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%237C3AED' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  background-size: 12px 12px;
-  color: var(--text-main);
+  letter-spacing: 0.03em;
+  height: 28px;
+  padding: 0 26px 0 10px;
+  min-width: 108px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-primary);
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary);
   cursor: pointer;
   flex-shrink: 0;
   transition:
     border-color     var(--transition-fast),
     background-color var(--transition-fast),
+    color            var(--transition-fast),
     box-shadow       var(--transition-fast);
 }
 
 .rol-select-custom option {
-  background-color: var(--bg-surface-active);
+  background-color: var(--bg-surface);
   color: var(--text-main);
+  font-weight: 600;
 }
 
 .rol-select-custom:hover {
-  border-color: var(--color-primary);
-  background-color: var(--bg-surface-hover);
+  background-color: rgba(124, 58, 237, 0.25);
+  border-color: var(--color-primary-hover);
 }
 
-.rol-select-custom:focus {
+.rol-select-custom:focus-visible {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-ghost);
 }
 
 .rol-select-custom:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+  opacity: 0.55;
+  cursor: progress;
 }
 
+.rol-select-caret {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  pointer-events: none;
+}
+
+/* ── Rol badge (inmutable) ───────────────────────────────────────────── */
 .rol-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   border-radius: 9999px;
+  border: 1px solid var(--border-soft);
   background-color: var(--bg-surface-active);
-  color: var(--text-subtle);
+  color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.rol-badge svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.rol-badge--super {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10));
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.15) inset;
+}
+
+.rol-badge--admin {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: var(--color-secondary-light);
+}
+
+.rol-badge--editor {
+  background-color: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.40);
+  color: var(--color-success);
 }
 
 /* ==========================================================================
