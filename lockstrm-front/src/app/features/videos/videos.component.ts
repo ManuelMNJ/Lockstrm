@@ -412,10 +412,10 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(currentTime: number): void {
+  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, currentTime)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),

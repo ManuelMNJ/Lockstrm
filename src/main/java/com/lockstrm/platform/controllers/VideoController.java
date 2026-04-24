@@ -80,7 +80,8 @@ public class VideoController {
             @Valid @RequestBody HeartbeatRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        logService.registrarHeartbeat(idVideo, userDetails.getUsername(), request.currentTime());
+        logService.registrarHeartbeat(idVideo, userDetails.getUsername(),
+                request.currentTime(), request.sessionId());
         return ResponseEntity.ok().build();
     }
 

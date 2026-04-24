@@ -42,10 +42,21 @@ export class VideoPlayerComponent implements OnInit {
   readonly idVideo = input<number>();
 
   /**
-   * Emits the video's currentTime (seconds) every 30 s while playing.
-   * The parent component is responsible for sending this to the backend.
+   * Emits the video's currentTime (seconds) plus the player-instance sessionId
+   * every 5 s while playing. The parent component forwards the payload to the
+   * backend heartbeat endpoint; the backend uses sessionId to guarantee that
+   * every player mount produces exactly one row in `logs`, so each viewing
+   * session is recorded independently in the analytics panel.
    */
-  @Output() heartbeat = new EventEmitter<number>();
+  @Output() heartbeat = new EventEmitter<{ currentTime: number; sessionId: string }>();
+
+  /**
+   * UUID generado una sola vez por instancia del reproductor. Dos aperturas
+   * distintas del <video-player> (por ejemplo: abrir, cerrar, volver a abrir)
+   * producen dos sessionId diferentes, y por tanto dos filas separadas en la
+   * analítica del vídeo con su propio timestamp y tiempo visto.
+   */
+  private readonly sessionId: string = this.generateSessionId();
 
   // ── Template references ─────────────────────────────────────────────────────
 
@@ -171,8 +182,34 @@ export class VideoPlayerComponent implements OnInit {
       switchMap(() => timer(0, 5_000).pipe(takeUntil(stop$))),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => {
-      this.heartbeat.emit(Math.round(video.currentTime));
+      this.heartbeat.emit({
+        currentTime: Math.round(video.currentTime),
+        sessionId:   this.sessionId,
+      });
     });
+  }
+
+  /**
+   * Produce un UUID v4. Usa crypto.randomUUID cuando está disponible (Chrome 92+,
+   * Firefox 95+, Safari 15.4+); si no — p. ej. contextos HTTP antiguos —, genera
+   * un UUID compatible a partir de crypto.getRandomValues. Solo se necesita
+   * unicidad práctica: colisiones entre sesiones del mismo usuario/vídeo son
+   * astronómicamente improbables en ambos caminos.
+   */
+  private generateSessionId(): string {
+    const cryptoObj = (globalThis as { crypto?: Crypto }).crypto;
+    if (cryptoObj?.randomUUID) {
+      return cryptoObj.randomUUID();
+    }
+    if (cryptoObj?.getRandomValues) {
+      const bytes = new Uint8Array(16);
+      cryptoObj.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+    return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
   }
 
   /**

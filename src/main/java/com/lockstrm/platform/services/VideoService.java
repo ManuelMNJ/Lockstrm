@@ -143,9 +143,11 @@ public class VideoService {
             start = range.getRangeStart(contentLength);
             end   = range.getRangeEnd(contentLength);
         }
-        // Registramos siempre; LogService deduplica por ventana de sesión
-        // para que range requests sucesivos no inflen el contador.
-        logService.registrarAcceso(video, emailUsuario);
+        // La telemetría por sesión la gestiona exclusivamente el heartbeat
+        // del cliente (ver LogService.registrarHeartbeat): la primera fila de
+        // `logs` se crea con el primer ping, identificada por sessionId.
+        // Mantener aquí una creación paralela produciría filas sin sessionId
+        // y rompería la correspondencia "una sesión = una fila".
 
         ResourceRegion region = new ResourceRegion(resource, start, end - start + 1);
 

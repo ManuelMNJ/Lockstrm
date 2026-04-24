@@ -12,10 +12,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class LogService {
@@ -26,72 +22,40 @@ public class LogService {
     private final MiembrosGrupoRepository  miembrosGrupoRepository;
 
     /**
-     * Ventana durante la cual peticiones sucesivas de un mismo usuario sobre el
-     * mismo vídeo se consideran parte de la misma sesión y NO generan un Log
-     * nuevo. Esto permite llamar a registrarAcceso() en cada range request del
-     * streaming sin inflar el contador de visualizaciones.
-     */
-    private static final Duration SESSION_WINDOW = Duration.ofMinutes(30);
-
-    @Transactional
-    public void registrarAcceso(Video video, String emailUsuario) {
-        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
-
-        LocalDateTime threshold = LocalDateTime.now().minus(SESSION_WINDOW);
-        Optional<Log> ultimo = logRepository
-                .findTopByUsuarioAndVideoOrderByFechaHoraDesc(usuario, video);
-        if (ultimo.isPresent() && ultimo.get().getFechaHora().isAfter(threshold)) {
-            return;
-        }
-
-        Log log = new Log();
-        log.setUsuario(usuario);
-        log.setVideo(video);
-        // segundosVistos se deja null: se rellenará con el primer heartbeat
-        logRepository.save(log);
-    }
-
-    /**
-     * Intervalo con el que el cliente emite heartbeats mientras el vídeo reproduce
-     * (ver VideoPlayerComponent.initHeartbeat). Cada ping representa 5 s reales
-     * de visualización, ya que el timer está vinculado a los eventos play/pause
-     * del <video> y se detiene cuando el usuario pausa.
+     * Segundos reales de reproducción que representa cada ping del cliente.
+     * El reproductor dispara el timer en `play` y lo detiene en `pause`/`ended`,
+     * por lo que cada pulso equivale a este intervalo fijo. Sumar una constante
+     * en lugar del `currentTime` reportado neutraliza la trampa de arrastrar
+     * la barra al final del vídeo.
      */
     private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
 
     /**
-     * Upsert diario del tiempo acumulado de visualización.
+     * Acumula segundos de reproducción sobre la fila de `logs` que identifica
+     * esta sesión del reproductor. La clave de sesión la genera el cliente al
+     * montar el <video-player> (UUID en `sessionId`), de modo que cada apertura
+     * del reproductor produce exactamente una fila independiente: la analítica
+     * por sesión es atómica, sin heurísticas de ventana temporal.
      *
-     * El servidor IGNORA el currentTime del payload para el cálculo: suma 5 s
-     * fijos por ping. Esto hace el contador inmune a la trampa de arrastrar
-     * la barra al final (el cliente mandaría currentTime = duracion pero solo
-     * sumaría los 5 s correspondientes al propio ping). El parámetro currentTime
-     * se conserva por si en el futuro queremos guardar la posición más lejana
-     * alcanzada en otra columna.
-     *
-     * Como el cliente solo dispara el timer mientras el vídeo reproduce, cada
-     * ping corresponde efectivamente a 5 s de reproducción real. Si el usuario
-     * vuelve a ver el vídeo, los segundos se siguen acumulando (el mismo row
-     * del día suma), reflejando el tiempo total visto en la sesión.
+     * Si el ping llega con un sessionId aún no visto (primer heartbeat de la
+     * sesión), se crea la fila y se suman los 5 s del propio pulso.
      */
     @Transactional
-    public void registrarHeartbeat(Long idVideo, String emailUsuario, Double currentTime) {
+    public void registrarHeartbeat(Long idVideo, String emailUsuario,
+                                   Double currentTime, String sessionId) {
 
-        Video video = videoRepository.getByIdOrThrow(idVideo);
+        Video   video   = videoRepository.getByIdOrThrow(idVideo);
         Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         verificarAcceso(video, emailUsuario);
 
-        // El heartbeat acumula sobre la sesión más reciente (la creada por
-        // registrarAcceso al iniciar el streaming). Si no existe ninguna —
-        // caso extremo: heartbeat llega antes del primer byte del vídeo —,
-        // se crea una nueva fila para no perder la telemetría.
         Log log = logRepository
-                .findTopByUsuarioAndVideoOrderByFechaHoraDesc(usuario, video)
+                .findByUsuarioAndVideoAndSessionId(usuario, video, sessionId)
                 .orElseGet(() -> {
                     Log nuevoLog = new Log();
                     nuevoLog.setUsuario(usuario);
                     nuevoLog.setVideo(video);
+                    nuevoLog.setSessionId(sessionId);
                     return nuevoLog;
                 });
 

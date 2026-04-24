@@ -28,12 +28,24 @@ public class Log {
     private String ipAcceso;
 
     /**
-     * Segundos de vídeo visualizados en esta sesión, actualizado por heartbeat.
-     * Es null en el registro de acceso inicial y se rellena con el primer heartbeat.
-     * ddl-auto=update añade la columna automáticamente al arrancar la aplicación.
+     * Segundos de vídeo visualizados en esta sesión, acumulados por heartbeat.
+     * El primer pulso de la sesión crea la fila con 5 s; los siguientes suman
+     * 5 s cada uno. ddl-auto=update añade la columna automáticamente al
+     * arrancar la aplicación.
      */
     @Column(name = "segundos_vistos")
     private Integer segundosVistos;
+
+    /**
+     * Identificador único de la sesión de reproducción (UUID generado en el
+     * cliente al montar el reproductor). Cada instancia del <video-player>
+     * genera un sessionId nuevo, de modo que cada apertura del reproductor
+     * produce una fila independiente en `logs`. El heartbeat del cliente
+     * envía este id en cada ping; el backend acumula segundos sobre la fila
+     * que casa con (usuario, video, sessionId).
+     */
+    @Column(name = "session_id", length = 36)
+    private String sessionId;
 
     @PrePersist
     protected void onCreate() {

@@ -160,8 +160,11 @@ export class VideoService {
     );
   }
 
-  registrarHeartbeat(idVideo: number, currentTime: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { currentTime: Math.floor(currentTime) });
+  registrarHeartbeat(idVideo: number, currentTime: number, sessionId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, {
+      currentTime: Math.floor(currentTime),
+      sessionId,
+    });
   }
 
   registrarVista(idVideo: number): Observable<void> {

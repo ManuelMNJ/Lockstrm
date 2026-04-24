@@ -18,12 +18,12 @@ public interface LogRepository extends JpaRepository<Log, Long> {
     List<Log> findByUsuario(Usuario usuario);
 
     /**
-     * Sesión de visualización más reciente de este usuario para este vídeo.
-     * `registrarAcceso()` crea un nuevo Log cada vez que el usuario arranca el
-     * streaming; el heartbeat acumula segundos sobre esta última fila hasta que
-     * otra reproducción abra una nueva sesión.
+     * Fila de `logs` correspondiente a una sesión concreta del reproductor.
+     * El cliente genera un UUID al montar el <video-player> y lo envía con
+     * cada heartbeat; esto hace que cada apertura del reproductor produzca
+     * una fila distinta y que los segundos se acumulen únicamente sobre ella.
      */
-    Optional<Log> findTopByUsuarioAndVideoOrderByFechaHoraDesc(Usuario usuario, Video video);
+    Optional<Log> findByUsuarioAndVideoAndSessionId(Usuario usuario, Video video, String sessionId);
 
     @Modifying
     @Query("DELETE FROM Log l WHERE l.video.idVideo = :idVideo")
