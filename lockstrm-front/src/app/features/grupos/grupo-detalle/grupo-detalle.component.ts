@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  HostListener,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
@@ -60,7 +68,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   errorVideos = '';
 
-  criterioOrden: 'fechaDesc' | 'fechaAsc' | 'duracionDesc' | 'duracionAsc' | 'nombreAsc' = 'fechaDesc';
+  criterioOrden: string = 'fechaDesc';
 
   get videosGrupoOrdenados(): Video[] {
     return [...this.videosGrupo].sort((a, b) => {
@@ -75,7 +83,8 @@ export class GrupoDetalleComponent implements OnInit {
     });
   }
 
-  onCambioOrden(): void {
+  onCambioOrden(valor: string): void {
+    this.criterioOrden = valor;
     this.cdr.markForCheck();
   }
 
@@ -117,11 +126,9 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   puedeActuarSobreRol(rolObjetivo: string): boolean {
-    // El SUPER_ADMIN (creador) es inmutable: nadie puede cambiar su rol ni expulsarlo.
-    if (rolObjetivo === 'SUPER_ADMIN') return false;
     if (this.esSuperAdmin) return true;
     if (this.rolActual === 'ADMIN') {
-      return rolObjetivo !== 'ADMIN';
+      return rolObjetivo !== 'SUPER_ADMIN' && rolObjetivo !== 'ADMIN';
     }
     return false;
   }
@@ -180,9 +187,9 @@ export class GrupoDetalleComponent implements OnInit {
           const propio = miembros.find(m => m.idUsuario === this.currentUserId);
           this.rolActual = propio?.rol ?? null;
           
-          // SUPER_ADMIN es inmutable (el creador del grupo), no se ofrece como rol asignable.
+          // Pre-calculamos los roles disponibles para evitar NG0100
           if (this.esSuperAdmin) {
-            this.rolesDisponiblesParaAsignar = ['ADMIN', 'EDITOR', 'MIEMBRO'];
+            this.rolesDisponiblesParaAsignar = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MIEMBRO'];
           } else if (this.rolActual === 'ADMIN') {
             this.rolesDisponiblesParaAsignar = ['EDITOR', 'MIEMBRO'];
           } else {
@@ -201,8 +208,14 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   private cargarVideos(): void {
+    // 1. LA LISTA DEL GRUPO: endpoint dedicado — devuelve todos los vídeos del grupo
+    //    independientemente de quién los subió (funciona para miembros, editores y admins).
     const videosGrupo$ = this.videoService.obtenerVideosPorGrupo(this.idGrupo);
-    const misVideos$   = this.puedeGestionarVideos
+
+    // 2. EL DESPLEGABLE "añadir vídeo existente": solo tiene sentido si el usuario puede gestionar.
+    //    obtenerMisVideos() devuelve un BehaviorSubject vivo; con take(1) lo convertimos en
+    //    un stream que completa tras la primera emisión — imprescindible para forkJoin.
+    const misVideos$ = this.puedeGestionarVideos
       ? this.videoService.obtenerMisVideos().pipe(take(1))
       : of([] as Video[]);
 
@@ -210,7 +223,7 @@ export class GrupoDetalleComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ videosGrupo, misVideos }) => {
-          this.videosGrupo          = videosGrupo;
+          this.videosGrupo = videosGrupo;
           this.misVideosDisponibles = misVideos.filter(
             v => !v.grupo || v.grupo.idGrupo !== this.idGrupo
           );
@@ -323,12 +336,6 @@ export class GrupoDetalleComponent implements OnInit {
   cambiarRolMiembro(miembro: Miembro, nuevoRol: string): void {
     if (!nuevoRol || nuevoRol === miembro.rol) return;
 
-    const rolAnterior = miembro.rol;
-
-    // Actualización optimista: el select muestra el nuevo rol de inmediato y no rebota
-    this.miembros = this.miembros.map(m =>
-      m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
-    );
     this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
     this.errorCambioRol = '';
     this.cdr.markForCheck();
@@ -337,16 +344,15 @@ export class GrupoDetalleComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.miembros = this.miembros.map(m =>
+            m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
+          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;
           this.cdr.markForCheck();
         },
         error: (err) => {
-          // Revertir al rol anterior si el servidor rechaza el cambio
-          this.miembros = this.miembros.map(m =>
-            m.idUsuario === miembro.idUsuario ? { ...m, rol: rolAnterior } : m
-          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;
@@ -361,12 +367,10 @@ export class GrupoDetalleComponent implements OnInit {
     this.estadoRenombrar = 'idle';
     this.errorRenombrar  = '';
     this.nombreEditado   = this.grupo?.nombre ?? '';
-    this.cdr.markForCheck();
   }
 
   cancelarEdicion(): void {
     this.editandoNombre = false;
-    this.cdr.markForCheck();
   }
 
   guardarNombre(): void {
@@ -403,12 +407,10 @@ export class GrupoDetalleComponent implements OnInit {
     this.confirmandoEliminarGrupo = true;
     this.estadoEliminarGrupo      = 'idle';
     this.errorEliminarGrupo       = '';
-    this.cdr.markForCheck();
   }
 
   cancelarEliminarGrupo(): void {
     this.confirmandoEliminarGrupo = false;
-    this.cdr.markForCheck();
   }
 
   confirmarEliminarGrupo(): void {
@@ -429,9 +431,8 @@ export class GrupoDetalleComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoReproduciendose)    { this.cerrarReproductor();      return; }
-    if (this.videoStats)              { this.cerrarStats();             return; }
-    if (this.confirmandoEliminarGrupo){ this.cancelarEliminarGrupo();  return; }
+    if (this.videoReproduciendose) { this.cerrarReproductor(); return; }
+    if (this.videoStats)           { this.cerrarStats();       return; }
   }
 
   abrirStats(video: Video): void {

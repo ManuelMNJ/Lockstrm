@@ -1,7 +1,11 @@
+/* Navbar legacy — tokenizado al design system global.
+   NOTA: el navbar principal vive en app-shell.component.css. Este componente
+   es el fallback legacy; se mantiene funcional pero usa las variables de marca. */
+
 .navbar-root {
-  background-color: #333;
+  background-color: var(--bg-surface);
   padding: 1rem;
-  color: white;
+  color: var(--text-main);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -19,29 +23,29 @@
 }
 
 .navbar-link {
-  color: white;
+  color: var(--text-main);
   text-decoration: none;
   cursor: pointer;
 }
 
 .navbar-welcome {
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 .navbar-logout {
-  background: red;
-  color: white;
+  background: var(--color-error);
+  color: var(--color-white);
   border: none;
   padding: 5px 10px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .navbar-register {
-  background: #007bff;
+  background: var(--color-secondary);
   padding: 5px 10px;
-  border-radius: 4px;
-  color: white;
+  border-radius: var(--radius-sm);
+  color: var(--color-white);
   text-decoration: none;
   cursor: pointer;
 }

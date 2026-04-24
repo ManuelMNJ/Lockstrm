@@ -49,12 +49,12 @@
 }
 
 .section-icon--blue {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
+  background-color: var(--color-secondary-ghost);
+  color: var(--color-secondary-light);
 }
 
 .section-icon--green {
-  background-color: rgba(16, 185, 129, 0.12);
+  background-color: var(--color-success-ghost);
   color: var(--color-success);
 }
 
@@ -163,14 +163,14 @@
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-success);
-  background-color: rgba(16, 185, 129, 0.08);
+  background-color: var(--color-success-ghost-soft);
   color: var(--color-success);
   margin: 0;
 }
 
 .feedback-msg--error {
   border-left-color: var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
 }
 
@@ -262,14 +262,14 @@
 .pw-checklist li.req--fail         { color: var(--text-subtle); }
 .pw-checklist li.req--fail::before {
   content: '✕';
-  background-color: rgba(239, 68, 68, 0.12);
+  background-color: var(--color-error-ghost);
   color: var(--color-error);
 }
 
 .pw-checklist li.req--ok           { color: var(--color-success); }
 .pw-checklist li.req--ok::before {
   content: '✓';
-  background-color: rgba(16, 185, 129, 0.12);
+  background-color: var(--color-success-ghost);
   color: var(--color-success);
 }
 
@@ -346,5 +346,5 @@
 
 .toggle-switch--on .toggle-thumb {
   transform: translateX(20px);
-  background-color: #fff;
+  background-color: var(--color-white);
 }

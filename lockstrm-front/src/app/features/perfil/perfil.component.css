@@ -92,13 +92,13 @@
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-success);
-  background-color: rgba(16, 185, 129, 0.08);
+  background-color: var(--color-success-ghost-soft);
   color: var(--color-success);
   margin: 0;
 }
 
 .feedback-msg--error {
   border-left-color: var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
 }

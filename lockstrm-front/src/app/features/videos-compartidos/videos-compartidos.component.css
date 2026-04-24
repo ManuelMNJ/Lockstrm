@@ -28,7 +28,7 @@
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
   margin: 0;
 }
@@ -150,7 +150,7 @@
 
 .video-card:hover {
   border-color: var(--color-primary);
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 4px 20px var(--color-primary-ghost);
   transform: translateY(-2px);
 }
 
@@ -195,7 +195,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: var(--overlay-black-45);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -203,8 +203,8 @@
 .play-overlay svg {
   width: 36px;
   height: 36px;
-  color: #fff;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  color: var(--color-white);
+  filter: drop-shadow(0 2px 8px var(--overlay-black-50));
 }
 
 .video-card:hover .play-overlay {
@@ -222,8 +222,8 @@
   right: 8px;
   font-size: 10px;
   font-weight: 700;
-  color: #fff;
-  background-color: rgba(0, 0, 0, 0.72);
+  color: var(--color-white);
+  background-color: var(--overlay-black-72);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   letter-spacing: 0.02em;
@@ -344,13 +344,13 @@
 .page-btn--active {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-white);
   font-weight: 600;
 }
 
 .page-btn--active:hover {
   background-color: var(--color-primary) !important;
-  color: #fff !important;
+  color: var(--color-white) !important;
 }
 
 .page-btn:disabled {
@@ -377,7 +377,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.82);
+  background-color: var(--overlay-black-82);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -398,8 +398,8 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.6),
-    0 4px 16px  rgba(0, 0, 0, 0.4);
+    0 24px 64px var(--overlay-black-60),
+    0 4px 16px  var(--overlay-black-40);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -466,7 +466,7 @@
 }
 
 .modal-player {
-  background-color: #000;
+  background-color: var(--color-black);
   line-height: 0;
 }
 

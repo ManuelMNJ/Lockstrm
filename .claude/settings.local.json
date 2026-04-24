@@ -9,7 +9,12 @@
       "Bash(./mvnw -q -DskipTests compile)",
       "Bash(mvn -q -DskipTests compile)",
       "Bash(./mvnw -q -o compile)",
-      "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/lockstrm-front/src -name \"*.component.ts\" -exec grep -l \"editar\\\\|delete\\\\|borrar\" {} \\\\;)"
+      "Bash(find /c/Users/manue/Desktop/GithubMNJ/Lockstrm/lockstrm-front/src -name \"*.component.ts\" -exec grep -l \"editar\\\\|delete\\\\|borrar\" {} \\\\;)",
+      "Bash(grep -oE '#[0-9a-fA-F]{3,8}|rgba?\\\\\\([^\\)]+\\\\\\)')",
+      "Bash(xargs -0 grep -oh 'var\\(--[a-zA-Z0-9-]*')",
+      "Bash(npx ng *)",
+      "Bash(npx tsc *)",
+      "Bash(tasklist)"
     ]
   }
 }

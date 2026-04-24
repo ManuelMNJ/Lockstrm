@@ -53,9 +53,9 @@
   font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-error, #f87171);
-  background-color: rgba(239, 68, 68, 0.08);
-  color: var(--color-error, #f87171);
+  border-left: 3px solid var(--color-error, var(--color-error-light));
+  background-color: var(--color-error-ghost-soft);
+  color: var(--color-error, var(--color-error-light));
   margin: 0;
 }
 
@@ -99,8 +99,8 @@
 }
 
 .stat-icon--purple { background-color: var(--color-primary-ghost); color: var(--color-primary); }
-.stat-icon--blue   { background-color: rgba(59, 130, 246, 0.15);   color: var(--color-secondary-light); }
-.stat-icon--green  { background-color: rgba(16, 185, 129, 0.12);   color: var(--color-success); }
+.stat-icon--blue   { background-color: var(--color-secondary-ghost);   color: var(--color-secondary-light); }
+.stat-icon--green  { background-color: var(--color-success-ghost);   color: var(--color-success); }
 
 .stat-body {
   display: flex;
@@ -293,7 +293,7 @@
 }
 
 .badge--views {
-  background-color: rgba(59, 130, 246, 0.12);
+  background-color: var(--color-secondary-a12);
   color: var(--color-secondary-light);
 }
 
@@ -415,28 +415,28 @@
 }
 
 .quick-action-card--upload::before {
-  background: radial-gradient(ellipse at 0% 50%, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 0% 50%, var(--color-primary-a08) 0%, transparent 70%);
 }
 
 .quick-action-card--group::before {
-  background: radial-gradient(ellipse at 0% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 0% 50%, var(--color-secondary-ghost-soft) 0%, transparent 70%);
 }
 
 .quick-action-card--profile::before {
-  background: radial-gradient(ellipse at 0% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 0% 50%, var(--color-success-ghost-soft) 0%, transparent 70%);
 }
 
 .quick-action-card:hover {
-  border-color: rgba(124, 58, 237, 0.25);
+  border-color: var(--color-primary-a25);
   background-color: var(--bg-surface-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px var(--overlay-black-20);
 }
 
 .quick-action-card:hover::before { opacity: 1; }
 
-.quick-action-card--group:hover  { border-color: rgba(59,  130, 246, 0.25); }
-.quick-action-card--profile:hover { border-color: rgba(16, 185, 129, 0.25); }
+.quick-action-card--group:hover  { border-color: var(--color-secondary-ghost-strong); }
+.quick-action-card--profile:hover { border-color: var(--color-success-ghost-strong); }
 
 .qa-icon-wrap {
   display: flex;
@@ -452,18 +452,18 @@
 .qa-icon-wrap svg { width: 22px; height: 22px; }
 
 .quick-action-card--upload .qa-icon-wrap {
-  background-color: rgba(124, 58, 237, 0.15);
-  color: #a78bfa;
+  background-color: var(--color-primary-ghost);
+  color: var(--color-primary-lighter);
 }
 
 .quick-action-card--group .qa-icon-wrap {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background-color: var(--color-secondary-ghost);
+  color: var(--color-secondary-light);
 }
 
 .quick-action-card--profile .qa-icon-wrap {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #34d399;
+  background-color: var(--color-success-ghost);
+  color: var(--color-success-light);
 }
 
 .qa-body {
@@ -573,11 +573,11 @@
 
 .activity-dot svg { width: 13px; height: 13px; }
 
-.activity-dot--purple { background-color: rgba(124, 58, 237, 0.15); color: #a78bfa; }
-.activity-dot--blue   { background-color: rgba(59,  130, 246, 0.15); color: #60a5fa; }
-.activity-dot--green  { background-color: rgba(16,  185, 129, 0.12); color: #34d399; }
-.activity-dot--teal   { background-color: rgba(20,  184, 166, 0.15); color: #2dd4bf; }
-.activity-dot--amber  { background-color: rgba(245, 158, 11,  0.15); color: #fbbf24; }
+.activity-dot--purple { background-color: var(--color-primary-ghost); color: var(--color-primary-lighter); }
+.activity-dot--blue   { background-color: var(--color-secondary-ghost); color: var(--color-secondary-light); }
+.activity-dot--green  { background-color: var(--color-success-ghost); color: var(--color-success-light); }
+.activity-dot--teal   { background-color: var(--accent-teal-ghost); color: var(--accent-teal); }
+.activity-dot--amber  { background-color: var(--color-warning-ghost); color: var(--color-warning-light); }
 
 /* Línea vertical entre items */
 .activity-line {

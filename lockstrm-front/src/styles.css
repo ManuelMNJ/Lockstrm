@@ -13,30 +13,146 @@
   --bg-surface-hover:   #22263A;   /* Hover sobre superficie */
   --bg-surface-active:  #2A2F45;   /* Estado activo/presionado */
 
+  /* ── Pure colors ── */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
   /* ── Brand / Primary ── */
-  --color-primary:        #7C3AED;
-  --color-primary-hover:  #6D28D9;
-  --color-primary-active: #5B21B6;
-  --color-primary-ghost:  rgba(124, 58, 237, 0.15);
+  --color-primary:         #7C3AED;
+  --color-primary-hover:   #6D28D9;
+  --color-primary-active:  #5B21B6;
+  --color-primary-light:   #8b5cf6;
+  --color-primary-lighter: #a78bfa;
+  --color-primary-lightest:#c4b5fd;
+  --color-primary-ghost:   rgba(124, 58, 237, 0.15);
+
+  /* Primary alpha scale — para glows, hovers sutiles, bordes, sombras */
+  --color-primary-a02: rgba(124, 58, 237, 0.02);
+  --color-primary-a04: rgba(124, 58, 237, 0.04);
+  --color-primary-a06: rgba(124, 58, 237, 0.06);
+  --color-primary-a08: rgba(124, 58, 237, 0.08);
+  --color-primary-a10: rgba(124, 58, 237, 0.10);
+  --color-primary-a12: rgba(124, 58, 237, 0.12);
+  --color-primary-a15: rgba(124, 58, 237, 0.15);
+  --color-primary-a18: rgba(124, 58, 237, 0.18);
+  --color-primary-a20: rgba(124, 58, 237, 0.20);
+  --color-primary-a25: rgba(124, 58, 237, 0.25);
+  --color-primary-a30: rgba(124, 58, 237, 0.30);
+  --color-primary-a35: rgba(124, 58, 237, 0.35);
+  --color-primary-a40: rgba(124, 58, 237, 0.40);
+  --color-primary-a50: rgba(124, 58, 237, 0.50);
+  --color-primary-a70: rgba(124, 58, 237, 0.70);
+  --color-primary-a85: rgba(124, 58, 237, 0.85);
 
   /* ── Text ── */
   --text-main:    #F3F4F6;
   --text-muted:   #9CA3AF;
   --text-subtle:  #6B7280;
+  --text-inverse: #111827;  /* para fondos claros/chips */
 
   /* ── Borders ── */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-soft:   rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
 
   /* ── Status ── */
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error:   #EF4444;
-  --color-error-hover: #DC2626;
+  --color-success:        #10B981;
+  --color-success-light:  #34d399;
+  --color-success-ghost:       rgba(16, 185, 129, 0.12);
+  --color-success-ghost-soft:  rgba(16, 185, 129, 0.08);
+  --color-success-ghost-strong:rgba(16, 185, 129, 0.25);
+
+  --color-warning:        #F59E0B;
+  --color-warning-light:  #fbbf24;
+  --color-warning-ghost:       rgba(245, 158, 11, 0.15);
+  --color-warning-ghost-soft:  rgba(245, 158, 11, 0.08);
+  --color-warning-ghost-strong:rgba(245, 158, 11, 0.25);
+
+  --color-error:          #EF4444;
+  --color-error-hover:    #DC2626;
+  --color-error-light:    #f87171;
+  --color-error-ghost:         rgba(239, 68, 68, 0.12);
+  --color-error-ghost-soft:    rgba(239, 68, 68, 0.08);
+  --color-error-ghost-strong:  rgba(239, 68, 68, 0.25);
 
   /* ── Secondary / Blue accent ── */
-  --color-secondary:       #3B82F6;
-  --color-secondary-light: #60A5FA;
+  --color-secondary:         #3B82F6;
+  --color-secondary-light:   #60A5FA;
+  --color-secondary-lighter: #93c5fd;
+  --color-secondary-ghost:        rgba(59, 130, 246, 0.15);
+  --color-secondary-ghost-soft:   rgba(59, 130, 246, 0.08);
+  --color-secondary-ghost-strong: rgba(59, 130, 246, 0.25);
+  --color-secondary-a10: rgba(59, 130, 246, 0.10);
+  --color-secondary-a12: rgba(59, 130, 246, 0.12);
+  --color-secondary-a35: rgba(59, 130, 246, 0.35);
+  --color-secondary-a45: rgba(59, 130, 246, 0.45);
+
+  /* ── Accent palette (analytics, feature cards) ── */
+  --accent-purple:       #a78bfa;
+  --accent-blue:         #60a5fa;
+  --accent-green:        #34d399;
+  --accent-green-bright: #4ade80;
+  --accent-green-soft:   #6ee7b7;
+  --accent-amber:        #fbbf24;
+  --accent-amber-warm:   #c47c3b;
+  --accent-teal:         #2dd4bf;
+  --accent-cyan:         #22d3ee;
+  --accent-rose:         #fb7185;
+  --accent-indigo:       #6366f1;
+  --accent-slate:        #94a3b8;
+
+  --accent-purple-ghost: rgba(139, 92, 246, 0.15);
+  --accent-blue-ghost:   rgba(59, 130, 246, 0.15);
+  --accent-green-ghost:  rgba(16, 185, 129, 0.12);
+  --accent-amber-ghost:  rgba(245, 158, 11, 0.15);
+  --accent-amber-warm-ghost: rgba(180, 120, 60, 0.18);
+  --accent-teal-ghost:   rgba(20, 184, 166, 0.15);
+  --accent-rose-ghost:   rgba(244, 63, 94, 0.12);
+  --accent-slate-ghost:  rgba(148, 163, 184, 0.15);
+
+  /* ── Overlay blacks (vignettes, shadows, video overlays) ── */
+  --overlay-black-05:  rgba(0, 0, 0, 0.05);
+  --overlay-black-06:  rgba(0, 0, 0, 0.06);
+  --overlay-black-10:  rgba(0, 0, 0, 0.10);
+  --overlay-black-20:  rgba(0, 0, 0, 0.20);
+  --overlay-black-25:  rgba(0, 0, 0, 0.25);
+  --overlay-black-30:  rgba(0, 0, 0, 0.30);
+  --overlay-black-40:  rgba(0, 0, 0, 0.40);
+  --overlay-black-45:  rgba(0, 0, 0, 0.45);
+  --overlay-black-50:  rgba(0, 0, 0, 0.50);
+  --overlay-black-55:  rgba(0, 0, 0, 0.55);
+  --overlay-black-60:  rgba(0, 0, 0, 0.60);
+  --overlay-black-65:  rgba(0, 0, 0, 0.65);
+  --overlay-black-72:  rgba(0, 0, 0, 0.72);
+  --overlay-black-75:  rgba(0, 0, 0, 0.75);
+  --overlay-black-80:  rgba(0, 0, 0, 0.80);
+  --overlay-black-82:  rgba(0, 0, 0, 0.82);
+  --overlay-black-90:  rgba(0, 0, 0, 0.90);
+
+  /* ── Overlay whites (glass, highlights) ── */
+  --overlay-white-015: rgba(255, 255, 255, 0.015);
+  --overlay-white-02:  rgba(255, 255, 255, 0.02);
+  --overlay-white-03:  rgba(255, 255, 255, 0.03);
+  --overlay-white-04:  rgba(255, 255, 255, 0.04);
+  --overlay-white-06:  rgba(255, 255, 255, 0.06);
+  --overlay-white-07:  rgba(255, 255, 255, 0.07);
+  --overlay-white-08:  rgba(255, 255, 255, 0.08);
+  --overlay-white-09:  rgba(255, 255, 255, 0.09);
+  --overlay-white-10:  rgba(255, 255, 255, 0.10);
+  --overlay-white-12:  rgba(255, 255, 255, 0.12);
+  --overlay-white-15:  rgba(255, 255, 255, 0.15);
+  --overlay-white-18:  rgba(255, 255, 255, 0.18);
+  --overlay-white-20:  rgba(255, 255, 255, 0.20);
+  --overlay-white-22:  rgba(255, 255, 255, 0.22);
+  --overlay-white-75:  rgba(255, 255, 255, 0.75);
+  --overlay-white-78:  rgba(255, 255, 255, 0.78);
+  --overlay-white-82:  rgba(255, 255, 255, 0.82);
+  --overlay-white-85:  rgba(255, 255, 255, 0.85);
+  --overlay-white-92:  rgba(255, 255, 255, 0.92);
+
+  /* ── Screen / media backgrounds (video players, mockups) ── */
+  --bg-screen:       #07090F;
+  --bg-screen-deep:  #0d0d0d;
 
   /* ── Layout ── */
   --sidebar-width: 240px;
@@ -50,6 +166,8 @@
   --space-6:  24px;
   --space-8:  32px;
   --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 
   /* ── Border radius ── */
   --radius-sm: 4px;
@@ -82,9 +200,29 @@ body.light-mode {
   --text-main:    #111827;
   --text-muted:   #6B7280;
   --text-subtle:  #9CA3AF;
+  --text-inverse: #F3F4F6;
 
   --border-subtle: rgba(0, 0, 0, 0.07);
   --border-soft:   rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.20);
+
+  /* En modo claro, los "overlay-white" (highlights sobre oscuro) pierden
+     sentido — los mapeamos a overlays negros equivalentes para que los
+     glass/separadores sigan siendo visibles. */
+  --overlay-white-015: rgba(0, 0, 0, 0.015);
+  --overlay-white-02:  rgba(0, 0, 0, 0.02);
+  --overlay-white-03:  rgba(0, 0, 0, 0.03);
+  --overlay-white-04:  rgba(0, 0, 0, 0.04);
+  --overlay-white-06:  rgba(0, 0, 0, 0.06);
+  --overlay-white-07:  rgba(0, 0, 0, 0.07);
+  --overlay-white-08:  rgba(0, 0, 0, 0.08);
+  --overlay-white-09:  rgba(0, 0, 0, 0.09);
+  --overlay-white-10:  rgba(0, 0, 0, 0.10);
+  --overlay-white-12:  rgba(0, 0, 0, 0.12);
+  --overlay-white-15:  rgba(0, 0, 0, 0.15);
+  --overlay-white-18:  rgba(0, 0, 0, 0.18);
+  --overlay-white-20:  rgba(0, 0, 0, 0.20);
+  --overlay-white-22:  rgba(0, 0, 0, 0.22);
 }
 
 /* ==========================================================================
@@ -153,7 +291,7 @@ video {
   gap: var(--space-2);
   padding: 9px 18px;
   background-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-white);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -205,7 +343,7 @@ video {
 
 .btn-secondary:hover {
   background-color: var(--bg-surface-hover);
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-strong);
 }
 
 .btn-secondary:focus-visible {
@@ -226,10 +364,10 @@ video {
   letter-spacing: 0.03em;
 }
 
-.badge-primary { background: var(--color-primary-ghost); color: var(--color-primary); }
-.badge-success { background: rgba(16, 185, 129, 0.15);    color: var(--color-success); }
-.badge-warning { background: rgba(245, 158, 11, 0.15);    color: var(--color-warning); }
-.badge-error   { background: rgba(239, 68, 68, 0.15);     color: var(--color-error);   }
+.badge-primary { background: var(--color-primary-ghost);  color: var(--color-primary); }
+.badge-success { background: var(--color-success-ghost);  color: var(--color-success); }
+.badge-warning { background: var(--color-warning-ghost);  color: var(--color-warning); }
+.badge-error   { background: var(--color-error-ghost);    color: var(--color-error);   }
 
 /* ==========================================================================
    CUSTOM SCROLLBAR
@@ -244,12 +382,12 @@ video {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.10);
+  background: var(--overlay-white-10);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.20);
+  background: var(--overlay-white-20);
 }
 
 /* ==========================================================================

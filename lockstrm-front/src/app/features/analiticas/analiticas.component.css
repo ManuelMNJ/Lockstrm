@@ -40,9 +40,9 @@
   font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--color-error, #f87171);
-  background-color: rgba(239, 68, 68, 0.08);
-  color: var(--color-error, #f87171);
+  border-left: 3px solid var(--color-error);
+  background-color: var(--color-error-ghost-soft);
+  color: var(--color-error);
   margin: 0;
 }
 
@@ -85,18 +85,18 @@
 }
 
 .kpi-card--purple:hover {
-  border-color: rgba(124, 58, 237, 0.35);
-  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
+  border-color: var(--color-primary-a35);
+  box-shadow: 0 8px 32px var(--color-primary-a12);
 }
 
 .kpi-card--blue:hover {
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.10);
+  border-color: var(--color-secondary-a35);
+  box-shadow: 0 8px 32px var(--color-secondary-a10);
 }
 
 .kpi-card--green:hover {
-  border-color: rgba(16, 185, 129, 0.35);
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.10);
+  border-color: var(--color-success-ghost-strong);
+  box-shadow: 0 8px 32px var(--color-success-ghost-soft);
 }
 
 /* Glow decorativo en esquina */
@@ -111,15 +111,15 @@
 .kpi-card:hover .kpi-glow { opacity: 0.6; }
 
 .kpi-glow--purple {
-  background: radial-gradient(ellipse at 100% 0%, rgba(124, 58, 237, 0.18) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 100% 0%, var(--color-primary-a18) 0%, transparent 65%);
 }
 
 .kpi-glow--blue {
-  background: radial-gradient(ellipse at 100% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 100% 0%, var(--color-secondary-ghost) 0%, transparent 65%);
 }
 
 .kpi-glow--green {
-  background: radial-gradient(ellipse at 100% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 100% 0%, var(--color-success-ghost) 0%, transparent 65%);
 }
 
 /* Icono */
@@ -143,12 +143,12 @@
 }
 
 .kpi-icon--blue {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background-color: var(--color-secondary-ghost);
+  color: var(--color-secondary-light);
 }
 
 .kpi-icon--green {
-  background-color: rgba(16, 185, 129, 0.12);
+  background-color: var(--color-success-ghost);
   color: var(--color-success);
 }
 
@@ -187,7 +187,7 @@
   margin-top: var(--space-2);
   height: 5px;
   border-radius: 9999px;
-  background-color: rgba(16, 185, 129, 0.15);
+  background-color: var(--color-success-ghost);
   overflow: hidden;
   width: 100%;
 }
@@ -195,7 +195,7 @@
 .retention-fill {
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #10B981, #34d399);
+  background: linear-gradient(90deg, var(--color-success), var(--color-success-light));
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -283,9 +283,9 @@
   flex-shrink: 0;
 }
 
-.rank-badge--gold   { background-color: rgba(245, 158, 11, 0.18); color: #fbbf24; }
-.rank-badge--silver { background-color: rgba(148, 163, 184, 0.15); color: #94a3b8; }
-.rank-badge--bronze { background-color: rgba(180, 120, 60, 0.18);  color: #c47c3b; }
+.rank-badge--gold   { background-color: var(--color-warning-ghost); color: var(--color-warning-light); }
+.rank-badge--silver { background-color: var(--accent-slate-ghost); color: var(--accent-slate); }
+.rank-badge--bronze { background-color: var(--accent-amber-warm-ghost);  color: var(--accent-amber-warm); }
 
 /* Miniatura */
 .top-thumb {
@@ -343,7 +343,7 @@
 .bar-track {
   height: 4px;
   border-radius: 9999px;
-  background-color: rgba(124, 58, 237, 0.12);
+  background-color: var(--color-primary-a12);
   overflow: hidden;
   width: 100%;
   max-width: 280px;
@@ -352,7 +352,7 @@
 .bar-fill {
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, var(--color-primary), #a78bfa);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-lighter));
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -373,8 +373,8 @@
 .badge svg { width: 10px; height: 10px; }
 
 .badge--views {
-  background-color: rgba(59, 130, 246, 0.12);
-  color: #60a5fa;
+  background-color: var(--color-secondary-a12);
+  color: var(--color-secondary-light);
 }
 
 .badge--date {
@@ -472,10 +472,10 @@
   transition: background-color .15s ease, transform .15s ease;
 }
 .top-row--clickable:hover {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: var(--overlay-white-04);
   transform: translateX(2px);
 }
 .top-row--clickable:focus-visible {
-  outline: 2px solid #8b5cf6;
+  outline: 2px solid var(--color-primary-light);
   outline-offset: 2px;
 }
