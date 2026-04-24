@@ -14,6 +14,8 @@ import { GruposComponent }            from './features/grupos/grupos.component';
 import { GrupoDetalleComponent }      from './features/grupos/grupo-detalle/grupo-detalle.component';
 import { AjustesComponent }           from './features/ajustes/ajustes.component';
 import { PerfilComponent }            from './features/perfil/perfil.component';
+import { AnaliticasComponent }        from './features/analiticas/analiticas.component';
+import { AnaliticasVideoComponent }   from './features/analiticas/analiticas-video/analiticas-video.component';
 
 import { authGuard }   from './core/guards/auth.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
@@ -57,10 +59,12 @@ export const routes: Routes = [
           {
             path: 'mi-espacio',
             children: [
-              { path: '',          redirectTo: 'videos', pathMatch: 'full' },
-              { path: 'videos',    component: VideosComponent },
-              { path: 'grupos',    component: GruposComponent },
+              { path: '',           redirectTo: 'videos', pathMatch: 'full' },
+              { path: 'videos',     component: VideosComponent },
+              { path: 'grupos',     component: GruposComponent },
               { path: 'grupos/:id', component: GrupoDetalleComponent },
+              { path: 'analiticas',          component: AnaliticasComponent },
+              { path: 'analiticas/:idVideo', component: AnaliticasVideoComponent },
             ],
           },
 

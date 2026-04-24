@@ -4,16 +4,18 @@ import {
   DestroyRef,
   ElementRef,
   EventEmitter,
-  Input,
   OnInit,
   Output,
   ViewChild,
   computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { fromEvent, interval, timer } from 'rxjs';
+import { fromEvent, merge, timer } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { VideoService } from '../../../core/services/video.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
@@ -30,20 +32,35 @@ export class VideoPlayerComponent implements OnInit {
 
   // ── Inputs / Outputs ────────────────────────────────────────────────────────
 
-  /** Streaming URL already containing the JWT token as a query param. */
-  @Input({ required: true }) videoUrl!: string;
+  /**
+   * Nombre de fichero UUID devuelto por el backend (ej. "550e8400-e29b-41d4-a716.mp4").
+   * El componente construye la URL de streaming internamente usando environment.apiUrl
+   * y el JWT del usuario, para que funcione en local y en producción sin cambiar código.
+   */
+  readonly fileName = input.required<string>();
 
-  @Input() idVideo?: number;
+  readonly idVideo = input<number>();
 
   /**
-   * Emits the video's currentTime (seconds) every 30 s while playing.
-   * The parent component is responsible for sending this to the backend.
+   * Emits the video's currentTime (seconds) plus the player-instance sessionId
+   * every 5 s while playing. The parent component forwards the payload to the
+   * backend heartbeat endpoint; the backend uses sessionId to guarantee that
+   * every player mount produces exactly one row in `logs`, so each viewing
+   * session is recorded independently in the analytics panel.
    */
-  @Output() heartbeat = new EventEmitter<number>();
+  @Output() heartbeat = new EventEmitter<{ currentTime: number; sessionId: string }>();
+
+  /**
+   * UUID generado una sola vez por instancia del reproductor. Dos aperturas
+   * distintas del <video-player> (por ejemplo: abrir, cerrar, volver a abrir)
+   * producen dos sessionId diferentes, y por tanto dos filas separadas en la
+   * analítica del vídeo con su propio timestamp y tiempo visto.
+   */
+  private readonly sessionId: string = this.generateSessionId();
 
   // ── Template references ─────────────────────────────────────────────────────
 
-  @ViewChild('videoEl',        { static: true }) private videoRef!:     ElementRef<HTMLVideoElement>;
+  @ViewChild('videoEl',         { static: true }) private videoRef!:     ElementRef<HTMLVideoElement>;
   @ViewChild('playerContainer', { static: true }) private containerRef!: ElementRef<HTMLDivElement>;
 
   // ── DI ──────────────────────────────────────────────────────────────────────
@@ -51,6 +68,23 @@ export class VideoPlayerComponent implements OnInit {
   private readonly authService  = inject(AuthService);
   private readonly videoService = inject(VideoService);
   private readonly destroyRef   = inject(DestroyRef);
+
+  // ── Stream URL ──────────────────────────────────────────────────────────────
+
+  /**
+   * URL completa del stream, construida dinámicamente:
+   *   {environment.apiUrl}/api/videos/stream/{fileName}?token={jwt}
+   *
+   * - environment.apiUrl apunta a http://localhost:8080 en local y a la URL del VPS
+   *   en producción (sin tocar este fichero gracias al fichero environment.prod.ts).
+   * - El token JWT se lee del AuthService y se pasa como query param porque el tag
+   *   <video src="..."> no puede enviar cabeceras HTTP Authorization.
+   * - El JwtAuthenticationFilter del backend acepta ?token= exclusivamente en /stream/.
+   */
+  readonly streamUrl = computed(() => {
+    const token = this.authService.getToken() ?? '';
+    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(this.fileName())}?token=${token}`;
+  });
 
   // ── State signals ───────────────────────────────────────────────────────────
 
@@ -109,7 +143,6 @@ export class VideoPlayerComponent implements OnInit {
   constructor() {
     this.userIdentifier = this.resolveUserIdentifier();
 
-    // Clean up both timers when the component is destroyed.
     this.destroyRef.onDestroy(() => {
       if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
       if (this.clickFlashTimer)  clearTimeout(this.clickFlashTimer);
@@ -120,8 +153,9 @@ export class VideoPlayerComponent implements OnInit {
     this.initHeartbeat();
     this.initWatermark();
     this.initFullscreenListener();
-    if (this.idVideo != null) {
-      this.videoService.registrarVista(this.idVideo)
+    const id = this.idVideo();
+    if (id != null) {
+      this.videoService.registrarVista(id)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({ error: () => {} });
     }
@@ -130,17 +164,52 @@ export class VideoPlayerComponent implements OnInit {
   // ── Private init helpers ────────────────────────────────────────────────────
 
   /**
-   * Emits a heartbeat every 30 s, but ONLY while the video is playing.
-   * takeUntilDestroyed unsubscribes automatically when the component is destroyed.
+   * Pulso de telemetría reactivo gobernado por eventos DOM del <video>:
+   *   play  → arranca un timer(0, 5_000) que emite al padre.
+   *   pause / ended → switchMap corta el timer, así no seguimos "ping-eando"
+   *     al servidor mientras el vídeo está parado.
+   * El throttle natural del timer (5 s) garantiza como máximo 1 HTTP/5 s.
+   * timer(0, 5_000) dispara inmediatamente al hacer play para capturar
+   * sesiones muy cortas, y luego cada 5 s.
+   * takeUntilDestroyed se encarga de cerrar todo al destruir el componente.
    */
   private initHeartbeat(): void {
-    interval(30_000)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        if (this.isPlaying()) {
-          this.heartbeat.emit(this.currentTime());
-        }
+    const video  = this.videoRef.nativeElement;
+    const play$  = fromEvent(video, 'play');
+    const stop$  = merge(fromEvent(video, 'pause'), fromEvent(video, 'ended'));
+
+    play$.pipe(
+      switchMap(() => timer(0, 5_000).pipe(takeUntil(stop$))),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => {
+      this.heartbeat.emit({
+        currentTime: Math.round(video.currentTime),
+        sessionId:   this.sessionId,
       });
+    });
+  }
+
+  /**
+   * Produce un UUID v4. Usa crypto.randomUUID cuando está disponible (Chrome 92+,
+   * Firefox 95+, Safari 15.4+); si no — p. ej. contextos HTTP antiguos —, genera
+   * un UUID compatible a partir de crypto.getRandomValues. Solo se necesita
+   * unicidad práctica: colisiones entre sesiones del mismo usuario/vídeo son
+   * astronómicamente improbables en ambos caminos.
+   */
+  private generateSessionId(): string {
+    const cryptoObj = (globalThis as { crypto?: Crypto }).crypto;
+    if (cryptoObj?.randomUUID) {
+      return cryptoObj.randomUUID();
+    }
+    if (cryptoObj?.getRandomValues) {
+      const bytes = new Uint8Array(16);
+      cryptoObj.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+    return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
   }
 
   /**
@@ -315,7 +384,6 @@ export class VideoPlayerComponent implements OnInit {
   onMouseMove(): void {
     this.showControls.set(true);
     if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
-    // Only auto-hide while the video is actually playing.
     if (this.isPlaying()) {
       this.hideControlsTimer = setTimeout(() => this.showControls.set(false), 3000);
     }

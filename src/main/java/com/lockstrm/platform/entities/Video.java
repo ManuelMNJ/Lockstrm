@@ -16,8 +16,9 @@ public class Video {
 
     private String titulo;
     private Integer duracion;
-    private String urlCloudSecure;
-    private String cloudinaryId;
+    @Column(name = "file_name")
+    private String fileName;
+
     @Column(columnDefinition = "LONGTEXT")
     private String miniaturaUrl;
     private LocalDateTime fechaSubida;

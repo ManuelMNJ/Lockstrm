@@ -89,21 +89,21 @@
 .storage-bar {
   flex: 1;
   height: 6px;
-  background-color: var(--bg-surface-active, rgba(255,255,255,0.07));
+  background-color: var(--bg-surface-active);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .storage-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary) 0%, #a78bfa 100%);
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
   border-radius: 9999px;
   transition: width 0.4s ease;
 }
 
 /* Aviso si supera el 80% */
 .storage-fill--warn {
-  background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%);
+  background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-error) 100%);
 }
 
 .storage-pct {
@@ -252,20 +252,20 @@
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-success);
-  background-color: rgba(16, 185, 129, 0.08);
+  background-color: var(--color-success-ghost-soft);
   color: var(--color-success);
   margin: 0;
 }
 
 .upload-message--warning {
   border-left-color: var(--color-warning);
-  background-color: rgba(245, 158, 11, 0.08);
+  background-color: var(--color-warning-ghost-soft);
   color: var(--color-warning);
 }
 
 .upload-message--error {
   border-left-color: var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
 }
 
@@ -474,7 +474,7 @@
   height: 90px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid var(--border, #333);
+  border: 1px solid var(--border);
   display: block;
 }
 
@@ -538,7 +538,7 @@
 
 .btn-view:hover {
   background-color: var(--color-primary-ghost);
-  border-color: rgba(124, 58, 237, 0.4);
+  border-color: var(--color-primary-a40);
 }
 
 .btn-view:focus-visible {
@@ -566,8 +566,8 @@
 }
 
 .btn-delete:hover {
-  background-color: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
+  background-color: var(--color-error-ghost-soft);
+  border-color: var(--color-error-ghost-strong);
   color: var(--color-error);
 }
 
@@ -673,13 +673,13 @@
 .page-btn--active {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-white);
   font-weight: 600;
 }
 
 .page-btn--active:hover {
   background-color: var(--color-primary) !important;
-  color: #fff !important;
+  color: var(--color-white) !important;
 }
 
 .page-btn:disabled {
@@ -708,7 +708,7 @@
   position: fixed;
   inset: 0;                          /* top/right/bottom/left: 0 */
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.82);
+  background-color: var(--overlay-black-82);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -730,8 +730,8 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.6),
-    0 4px 16px  rgba(0, 0, 0, 0.4);
+    0 24px 64px var(--overlay-black-60),
+    0 4px 16px  var(--overlay-black-40);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -800,7 +800,7 @@
 
 /* ── Player ── */
 .modal-player {
-  background-color: #000;
+  background-color: var(--color-black);
   line-height: 0;    /* elimina espacio bajo el <video> */
 }
 
@@ -828,8 +828,8 @@
   border-top: 3px solid var(--color-error);
   border-radius: var(--radius-lg);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.6),
-    0 4px 16px  rgba(0, 0, 0, 0.4);
+    0 24px 64px var(--overlay-black-60),
+    0 4px 16px  var(--overlay-black-40);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -845,8 +845,8 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background-color: var(--color-error-ghost);
+  border: 1px solid var(--color-error-ghost-strong);
   color: var(--color-error);
   flex-shrink: 0;
 }
@@ -875,8 +875,8 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--color-error);
-  background-color: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.15);
+  background-color: var(--color-error-ghost-soft);
+  border: 1px solid var(--color-error-ghost);
   border-radius: var(--radius-sm);
   padding: 5px 10px;
   margin: 0;
@@ -942,7 +942,7 @@
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
-  color: #fff;
+  color: var(--color-white);
   background-color: var(--color-error);
   border: 1px solid var(--color-error);
   border-radius: var(--radius-md);
@@ -954,7 +954,7 @@
 
 .btn-confirm-delete:hover {
   background-color: var(--color-error-hover);
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+  box-shadow: 0 2px 8px var(--color-error-ghost-strong);
 }
 
 .btn-confirm-delete:focus-visible {
@@ -995,7 +995,7 @@
 
 .btn-edit:hover {
   background-color: var(--color-primary-ghost);
-  border-color: rgba(124, 58, 237, 0.25);
+  border-color: var(--color-primary-a25);
   color: var(--color-primary);
 }
 
@@ -1025,8 +1025,8 @@
   border-top: 3px solid var(--color-primary);
   border-radius: var(--radius-lg);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.6),
-    0 4px 16px  rgba(0, 0, 0, 0.4);
+    0 24px 64px var(--overlay-black-60),
+    0 4px 16px  var(--overlay-black-40);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -1067,7 +1067,7 @@
   padding: 8px 12px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
   margin: 0;
 }
@@ -1089,7 +1089,7 @@
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
-  color: #fff;
+  color: var(--color-white);
   background-color: var(--color-primary);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
@@ -1100,8 +1100,8 @@
 }
 
 .btn-confirm-save:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-primary) 85%, black);
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  background-color: color-mix(in srgb, var(--color-primary) 85%, var(--color-black));
+  box-shadow: 0 2px 8px var(--color-primary-a35);
 }
 
 .btn-confirm-save:disabled {
@@ -1123,10 +1123,40 @@
 .form-select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
-  padding-right: 32px;
+  background-size: 14px 14px;
+  padding-right: 34px;
+  transition:
+    border-color     var(--transition-fast),
+    background-color var(--transition-fast),
+    background-image var(--transition-fast),
+    box-shadow       var(--transition-fast);
+}
+
+.form-select:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237C3AED' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+.form-select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-ghost);
+}
+
+.form-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.form-select option {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  padding: 8px;
 }
 
 /* ==========================================================================

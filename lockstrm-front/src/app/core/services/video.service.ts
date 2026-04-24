@@ -6,15 +6,17 @@ import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
 export interface VideoVistaEstadistica {
-  nombre:   string;
-  email:    string;
-  contador: number;
+  nombre:         string;
+  email:          string;
+  contador:       number;
+  /** MAX(segundos_vistos) en la tabla logs para este usuario/vídeo. 0 si nunca envió heartbeat. */
+  segundosVistos: number;
 }
 
 export interface VideoUploadResponse {
   id_video:     number;
   titulo:       string;
-  url:          string;
+  fileName:     string;   // nombre UUID del fichero en el servidor (ej. "uuid.mp4")
   duracion:     number;
   status:       string;
   mensaje:      string;
@@ -28,6 +30,7 @@ export interface Video {
   fechaSubida:  string | null;
   grupo?:       { idGrupo?: number; nombre: string };
   miniaturaUrl: string | null;
+  fileName:     string | null;  // nombre UUID del fichero; null si el vídeo es antiguo/migrado
 }
 
 /** Forma exacta que devuelve VideoDTO del backend. */
@@ -39,6 +42,7 @@ interface VideoRaw {
   idGrupo:      number | null;
   grupoNombre:  string | null;
   miniaturaUrl: string | null;
+  fileName:     string | null;
 }
 
 function mapVideo(raw: VideoRaw): Video {
@@ -51,6 +55,7 @@ function mapVideo(raw: VideoRaw): Video {
                     ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
                     : undefined,
     miniaturaUrl: raw.miniaturaUrl ?? null,
+    fileName:     raw.fileName ?? null,
   };
 }
 
@@ -69,14 +74,8 @@ export class VideoService {
     private streamService: VideoStreamService,
   ) {}
 
-  buildStreamUrl(idVideo: number): string {
-    return this.streamService.buildUrl(idVideo);
-  }
-
-  obtenerVideos(): Observable<Video[]> {
-    return this.http.get<VideoRaw[]>(this.apiUrl).pipe(
-      map(arr => arr.map(mapVideo)),
-    );
+  buildStreamUrl(fileName: string): string {
+    return this.streamService.buildUrl(fileName);
   }
 
   /**
@@ -126,12 +125,13 @@ export class VideoService {
     return this._videosCompartidosCache$;
   }
 
-  subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null): Observable<HttpEvent<VideoUploadResponse>> {
+  subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null, duracion?: number): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
     formData.append('file',   archivo);
     formData.append('titulo', titulo);
     if (idGrupo     != null) formData.append('idGrupo',      idGrupo.toString());
     if (miniaturaUrl != null) formData.append('miniaturaUrl', miniaturaUrl);
+    if (duracion     != null && duracion > 0) formData.append('duracion', duracion.toString());
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
       reportProgress: true,
     });
@@ -160,8 +160,11 @@ export class VideoService {
     );
   }
 
-  registrarHeartbeat(idVideo: number, currentTime: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, { currentTime: Math.floor(currentTime) });
+  registrarHeartbeat(idVideo: number, currentTime: number, sessionId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, {
+      currentTime: Math.floor(currentTime),
+      sessionId,
+    });
   }
 
   registrarVista(idVideo: number): Observable<void> {

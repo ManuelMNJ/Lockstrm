@@ -20,8 +20,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final JwtService          jwtService;
+    private final UserDetailsService  userDetailsService;
 
     public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
         this.jwtService         = jwtService;
@@ -30,18 +30,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
+            @NonNull HttpServletRequest  request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
+            @NonNull FilterChain         filterChain
     ) throws ServletException, IOException {
 
-        // Extraer JWT: primero de la cabecera Authorization, luego del query param ?token=
-        // El segundo caso es necesario para el tag <video src>, que no puede enviar cabeceras.
         String jwt = null;
+
+        // 1. Intenta extraer el token de la cabecera Authorization (flujo normal)
         final String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
-        } else {
+        }
+
+        // 2. Para el endpoint de streaming, el tag <video src="..."> no puede enviar cabeceras HTTP.
+        //    Aceptamos el token como query param ?token= exclusivamente en rutas /stream/.
+        if (jwt == null && request.getRequestURI().contains("/stream/")) {
             String paramToken = request.getParameter("token");
             if (paramToken != null && !paramToken.isBlank()) {
                 jwt = paramToken;

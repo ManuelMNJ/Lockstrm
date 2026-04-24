@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Elem
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -29,6 +29,7 @@ export class VideosComponent implements OnInit {
   tituloVideo = '';
   idGrupoSeleccionado: number | null = null;
   miniaturaDataUrl: string | null = null;
+  private duracionVideo = 0;
   private objectUrl: string | null = null;
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
@@ -43,6 +44,10 @@ export class VideosComponent implements OnInit {
   errorEliminacion = '';
   errorEliminacionVisible = false;
   private errorEliminacionTimer: ReturnType<typeof setTimeout> | null = null;
+
+  avisoAcceso = '';
+  avisoAccesoVisible = false;
+  private avisoAccesoTimer: ReturnType<typeof setTimeout> | null = null;
 
   videoAEliminar: Video | null = null;
   videoReproduciendose: Video | null = null;
@@ -78,6 +83,7 @@ export class VideosComponent implements OnInit {
   constructor(
     protected videoService: VideoService,
     private  grupoService:  GrupoService,
+    private  route:         ActivatedRoute,
   ) {}
 
   private refresh(): void {
@@ -92,6 +98,11 @@ export class VideosComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const aviso = this.route.snapshot.queryParamMap.get('aviso');
+    if (aviso === 'sin-acceso-analiticas') {
+      this.mostrarAvisoAcceso('No tienes permiso para ver las analíticas de ese vídeo.');
+    }
+
     this.cargarVideos();
     this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -118,6 +129,7 @@ export class VideosComponent implements OnInit {
 
     this.archivoSeleccionado = file;
     this.miniaturaDataUrl    = null;
+    this.duracionVideo       = 0;
     if (this.estadoSubida === 'error') {
       this.estadoSubida = 'idle';
       this.mensajeError = '';
@@ -138,7 +150,8 @@ export class VideosComponent implements OnInit {
     video.playsInline = true;
 
     video.onloadedmetadata = () => {
-      video.currentTime = Math.min(2, video.duration * 0.1);
+      this.duracionVideo = Math.round(video.duration);
+      video.currentTime  = Math.min(2, video.duration * 0.1);
     };
 
     video.onseeked = () => {
@@ -171,9 +184,9 @@ export class VideosComponent implements OnInit {
       return;
     }
 
-    // 95 MB y no 100 para dejar margen: el contenedor multipart añade algo de peso extra
-    // y Cloudinary nos corta la subida si llegamos justo al límite.
-    const LIMITE_MB    = 95;
+    // Debe coincidir con spring.servlet.multipart.max-file-size en application.properties
+    // (el back admite 10 MB extra en max-request-size para el overhead multipart).
+    const LIMITE_MB    = 200;
     const LIMITE_BYTES = LIMITE_MB * 1024 * 1024;
 
     if (this.archivoSeleccionado.size > LIMITE_BYTES) {
@@ -186,7 +199,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl, this.duracionVideo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -217,6 +230,7 @@ export class VideosComponent implements OnInit {
             fechaSubida:  new Date().toISOString(),
             grupo:        grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
             miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
+            fileName:     res.fileName,
           };
 
           // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
@@ -316,6 +330,17 @@ export class VideosComponent implements OnInit {
     }, 6000);
   }
 
+  private mostrarAvisoAcceso(mensaje: string): void {
+    if (this.avisoAccesoTimer) clearTimeout(this.avisoAccesoTimer);
+    this.avisoAcceso = mensaje;
+    this.avisoAccesoVisible = true;
+    this.refresh();
+    this.avisoAccesoTimer = setTimeout(() => {
+      this.avisoAccesoVisible = false;
+      this.refresh();
+    }, 6000);
+  }
+
   iniciarEdicion(video: Video): void {
     this.videoEnEdicion = video;
     this.editTitulo     = video.titulo;
@@ -387,10 +412,10 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(currentTime: number): void {
+  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, currentTime)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),

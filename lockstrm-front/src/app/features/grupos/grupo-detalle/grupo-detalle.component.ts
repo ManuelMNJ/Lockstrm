@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  HostListener,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
@@ -60,7 +68,7 @@ export class GrupoDetalleComponent implements OnInit {
 
   errorVideos = '';
 
-  criterioOrden: 'fechaDesc' | 'fechaAsc' | 'duracionDesc' | 'duracionAsc' | 'nombreAsc' = 'fechaDesc';
+  criterioOrden: string = 'fechaDesc';
 
   get videosGrupoOrdenados(): Video[] {
     return [...this.videosGrupo].sort((a, b) => {
@@ -75,7 +83,8 @@ export class GrupoDetalleComponent implements OnInit {
     });
   }
 
-  onCambioOrden(): void {
+  onCambioOrden(valor: string): void {
+    this.criterioOrden = valor;
     this.cdr.markForCheck();
   }
 
@@ -199,8 +208,14 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   private cargarVideos(): void {
+    // 1. LA LISTA DEL GRUPO: endpoint dedicado — devuelve todos los vídeos del grupo
+    //    independientemente de quién los subió (funciona para miembros, editores y admins).
     const videosGrupo$ = this.videoService.obtenerVideosPorGrupo(this.idGrupo);
-    const misVideos$   = this.puedeGestionarVideos
+
+    // 2. EL DESPLEGABLE "añadir vídeo existente": solo tiene sentido si el usuario puede gestionar.
+    //    obtenerMisVideos() devuelve un BehaviorSubject vivo; con take(1) lo convertimos en
+    //    un stream que completa tras la primera emisión — imprescindible para forkJoin.
+    const misVideos$ = this.puedeGestionarVideos
       ? this.videoService.obtenerMisVideos().pipe(take(1))
       : of([] as Video[]);
 
@@ -208,7 +223,7 @@ export class GrupoDetalleComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ videosGrupo, misVideos }) => {
-          this.videosGrupo          = videosGrupo;
+          this.videosGrupo = videosGrupo;
           this.misVideosDisponibles = misVideos.filter(
             v => !v.grupo || v.grupo.idGrupo !== this.idGrupo
           );
@@ -321,12 +336,6 @@ export class GrupoDetalleComponent implements OnInit {
   cambiarRolMiembro(miembro: Miembro, nuevoRol: string): void {
     if (!nuevoRol || nuevoRol === miembro.rol) return;
 
-    const rolAnterior = miembro.rol;
-
-    // Actualización optimista: el select muestra el nuevo rol de inmediato y no rebota
-    this.miembros = this.miembros.map(m =>
-      m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
-    );
     this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
     this.errorCambioRol = '';
     this.cdr.markForCheck();
@@ -335,16 +344,15 @@ export class GrupoDetalleComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.miembros = this.miembros.map(m =>
+            m.idUsuario === miembro.idUsuario ? { ...m, rol: nuevoRol } : m
+          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;
           this.cdr.markForCheck();
         },
         error: (err) => {
-          // Revertir al rol anterior si el servidor rechaza el cambio
-          this.miembros = this.miembros.map(m =>
-            m.idUsuario === miembro.idUsuario ? { ...m, rol: rolAnterior } : m
-          );
           const next = new Set(this.cambiandoRoles);
           next.delete(miembro.idUsuario);
           this.cambiandoRoles = next;
@@ -465,10 +473,10 @@ export class GrupoDetalleComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(currentTime: number): void {
+  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, currentTime)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ error: () => {} });
   }

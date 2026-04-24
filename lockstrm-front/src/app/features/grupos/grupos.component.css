@@ -47,14 +47,14 @@
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-success);
-  background-color: rgba(16, 185, 129, 0.08);
+  background-color: var(--color-success-ghost-soft);
   color: var(--color-success);
   margin: 0;
 }
 
 .feedback-msg--error {
   border-left-color: var(--color-error);
-  background-color: rgba(239, 68, 68, 0.08);
+  background-color: var(--color-error-ghost-soft);
   color: var(--color-error);
 }
 
@@ -345,7 +345,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: var(--overlay-black-75);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
