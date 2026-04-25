@@ -86,11 +86,11 @@ public class GrupoController {
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El email del nuevo miembro es obligatorio"));
+        String identificador = body.getOrDefault("identificador", body.get("email"));
+        if (identificador == null || identificador.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El identificador del nuevo miembro es obligatorio"));
         }
-        grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), email.trim());
+        grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), identificador.trim());
         return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
     }
 

@@ -6,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
-import { VideoService, Video } from '../../core/services/video.service';
+import { VideoService, Video, EspacioInfo } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
@@ -61,12 +61,13 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Espacio de almacenamiento (hardcoded hasta que el backend lo exponga) ──
-  readonly storageMB      = 1229;               // 1.2 GB
-  readonly storageLimitMB = 5120;               // 5 GB
-  readonly storagePercent = Math.round(this.storageMB / this.storageLimitMB * 100);
-  readonly storageUsedGB  = (this.storageMB / 1024).toFixed(1);
-  readonly storageLimitGB = (this.storageLimitMB / 1024).toFixed(0);
+  espacio: EspacioInfo | null = null;
+
+  get storageMB()      { return this.espacio ? this.espacio.usedBytes  / (1024 * 1024) : 0; }
+  get storageLimitMB() { return this.espacio ? this.espacio.limitBytes / (1024 * 1024) : 5120; }
+  get storagePercent() { return this.storageLimitMB ? Math.round(this.storageMB / this.storageLimitMB * 100) : 0; }
+  get storageUsedGB()  { return (this.storageMB  / 1024).toFixed(1); }
+  get storageLimitGB() { return (this.storageLimitMB / 1024).toFixed(0); }
 
   readonly paginator = new Paginator<Video>(15);
 
@@ -104,6 +105,12 @@ export class VideosComponent implements OnInit {
     }
 
     this.cargarVideos();
+    this.videoService.obtenerEspacio()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (info) => { this.espacio = info; this.cdr.markForCheck(); },
+        error: (err)  => console.error('[VideosComponent] Error al cargar espacio:', err),
+      });
     this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -235,6 +242,8 @@ export class VideosComponent implements OnInit {
 
           // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
           this.videoService.prependVideo(nuevoVideo);
+          this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: (info) => { this.espacio = info; this.cdr.markForCheck(); } });
           this.estadoSubida        = 'success';
           this.progreso            = 0;
           this.tituloVideo         = '';
@@ -292,8 +301,8 @@ export class VideosComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // El tap de eliminarVideo() actualizó el BehaviorSubject;
-          // la suscripción en cargarVideos() ya aplicó el nuevo array.
+          this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: (info) => { this.espacio = info; this.cdr.markForCheck(); } });
         },
         error: (err) => {
           console.error('[VideosComponent] Error al eliminar vídeo:', {

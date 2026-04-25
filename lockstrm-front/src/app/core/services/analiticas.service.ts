@@ -20,8 +20,9 @@ export interface AnaliticasGlobales {
 
 export interface VideoLog {
   idLog:          number;
-  nombre:         string;
-  email:          string;
+  idUsuario:      number;
+  username:       string;
+  tag:            string;
   /** ISO-8601 — fecha/hora del registro (inicio de la sesión/día). */
   fechaHora:      string;
   segundosVistos: number | null;

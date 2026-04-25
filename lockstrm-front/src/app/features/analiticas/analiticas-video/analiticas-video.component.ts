@@ -95,7 +95,7 @@ export class AnaliticasVideoComponent implements OnInit {
   }
 
   get espectadoresUnicos(): number {
-    return new Set(this.logs.map(l => l.email)).size;
+    return new Set(this.logs.map(l => l.idUsuario)).size;
   }
 
   get tiempoTotalVisto(): number {

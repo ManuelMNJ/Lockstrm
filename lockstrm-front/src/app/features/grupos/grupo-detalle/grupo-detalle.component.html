@@ -94,14 +94,14 @@
               <div class="add-row">
                 <input
                   class="form-input add-input"
-                  type="email"
-                  [(ngModel)]="emailNuevoMiembro"
-                  placeholder="correo@ejemplo.com"
+                  type="text"
+                  [(ngModel)]="identificadorNuevoMiembro"
+                  placeholder="correo@ejemplo.com o Usuario#1234"
                   autocomplete="off"
                   (keydown.enter)="aniadirMiembro()">
                 <button class="btn-primary"
                         (click)="aniadirMiembro()"
-                        [disabled]="estadoAnadir === 'loading' || !emailNuevoMiembro.trim()">
+                        [disabled]="estadoAnadir === 'loading' || !identificadorNuevoMiembro.trim()">
                   {{ estadoAnadir === 'loading' ? 'Añadiendo…' : 'Añadir' }}
                 </button>
               </div>
@@ -135,8 +135,7 @@
                     {{ m.username.charAt(0).toUpperCase() }}
                   </div>
                   <div class="member-info">
-                    <span class="member-name">{{ m.username }}</span>
-                    <span class="member-email">{{ m.email }}</span>
+                    <span class="member-name">{{ m.username }}#{{ m.tag }}</span>
                   </div>
 
                   @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
@@ -423,14 +422,13 @@
                 </tr>
               </thead>
               <tbody>
-                @for (s of estadisticas; track s.email) {
+                @for (s of estadisticas; track s.username + '#' + s.tag) {
                   <tr>
                     <td>
                       <div class="stats-member">
-                        <div class="member-avatar stats-avatar" aria-hidden="true">{{ s.nombre.charAt(0).toUpperCase() }}</div>
+                        <div class="member-avatar stats-avatar" aria-hidden="true">{{ s.username.charAt(0).toUpperCase() }}</div>
                         <div class="member-info">
-                          <span class="member-name">{{ s.nombre }}</span>
-                          <span class="member-email">{{ s.email }}</span>
+                          <span class="member-name">{{ s.username }}#{{ s.tag }}</span>
                         </div>
                       </div>
                     </td>

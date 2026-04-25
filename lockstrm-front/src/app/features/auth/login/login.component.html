@@ -41,25 +41,20 @@
 
     <form [formGroup]="form" (ngSubmit)="hacerLogin()" novalidate class="auth-form">
 
-      <!-- Email -->
+      <!-- Identificador: email o nombre#tag -->
       <div class="form-field">
-        <label class="form-label" for="login-email">Correo electrónico</label>
+        <label class="form-label" for="login-identificador">Email o Usuario</label>
         <input
-          id="login-email"
-          type="email"
+          id="login-identificador"
+          type="text"
           class="form-input"
-          [class.form-input--error]="email.invalid && email.touched"
-          formControlName="email"
-          autocomplete="email"
-          placeholder="tu@empresa.com">
-        @if (email.touched && email.errors?.['required']) {
+          [class.form-input--error]="identificador.invalid && identificador.touched"
+          formControlName="identificador"
+          autocomplete="username"
+          placeholder="tu@empresa.com o Manuel#8492">
+        @if (identificador.touched && identificador.errors?.['required']) {
           <span class="field-error" role="alert">
-            El email es obligatorio.
-          </span>
-        }
-        @if (email.touched && email.errors?.['email']) {
-          <span class="field-error" role="alert">
-            Introduce un email válido.
+            El identificador es obligatorio.
           </span>
         }
       </div>

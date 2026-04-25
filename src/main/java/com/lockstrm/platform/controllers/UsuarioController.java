@@ -27,6 +27,8 @@ public class UsuarioController {
         return ResponseEntity.ok(Map.of(
             "nombre",         usuario.getNombre()        != null ? usuario.getNombre()        : "",
             "apellidos",      usuario.getApellidos()     != null ? usuario.getApellidos()     : "",
+            "username",       usuario.getUsername()      != null ? usuario.getUsername()      : "",
+            "tag",            usuario.getTag()           != null ? usuario.getTag()           : "",
             "email",          usuario.getEmail(),
             "fechaRegistro",  usuario.getFechaRegistro(),
             "rolSistema",     usuario.getRolSistema()    != null ? usuario.getRolSistema()    : "USER"

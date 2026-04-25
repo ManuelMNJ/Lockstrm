@@ -9,7 +9,13 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "usuarios")
+@Table(
+        name = "usuarios",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_usuarios_username_tag",
+                columnNames = {"username", "tag"}
+        )
+)
 public class Usuario {
 
     @Id
@@ -20,8 +26,14 @@ public class Usuario {
 
     private String apellidos;
 
+    @Column(length = 30, nullable = false)
+    private String username;
+
     @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(length = 4, nullable = false)
+    private String tag;
 
     private String password;
 
@@ -33,6 +45,10 @@ public class Usuario {
     @JsonIgnore
     @ToString.Exclude
     private List<Video> videosSubidos;
+
+    public String getDisplayTag() {
+        return (username != null ? username : "") + "#" + (tag != null ? tag : "");
+    }
 
     public String getNombreCompleto() {
         String n = nombre    != null ? nombre    : "";

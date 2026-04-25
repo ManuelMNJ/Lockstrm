@@ -71,7 +71,10 @@
             </div>
 
             <div class="grupo-card-body">
-              <span class="grupo-card-name">{{ g.nombre }}</span>
+              <div class="grupo-card-header-row">
+                <span class="grupo-card-name">{{ g.nombre }}</span>
+                <span class="role-badge role-badge--owner" title="Eres el creador del grupo">Propietario</span>
+              </div>
               <span class="grupo-card-date">Creado el {{ g.fechaCreacion | dateLocale }}</span>
 
               <div class="grupo-card-stats" aria-label="Estadísticas del grupo">
@@ -168,7 +171,10 @@
             </div>
 
             <div class="grupo-card-body">
-              <span class="grupo-card-name">{{ g.nombre }}</span>
+              <div class="grupo-card-header-row">
+                <span class="grupo-card-name">{{ g.nombre }}</span>
+                <span class="role-badge role-badge--member" title="Eres miembro del grupo">Miembro</span>
+              </div>
               <span class="grupo-card-date">Creado el {{ g.fechaCreacion | dateLocale }}</span>
 
               <div class="grupo-card-stats" aria-label="Estadísticas del grupo">

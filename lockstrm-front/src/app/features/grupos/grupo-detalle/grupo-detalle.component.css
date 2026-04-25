@@ -63,11 +63,12 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.28), rgba(124, 58, 237, 0.12));
+  color: var(--color-primary-lighter);
   font-size: 16px;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .page-title {
@@ -278,9 +279,10 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.22), rgba(124, 58, 237, 0.09));
+  color: var(--color-primary-lighter);
   flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
 }
 
 .video-icon svg {
@@ -318,9 +320,9 @@
 }
 
 .video-card:hover {
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 16px var(--overlay-black-25);
-  transform: translateY(-2px);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 4px 24px rgba(124, 58, 237, 0.22), 0 0 0 1px var(--color-primary-a10);
+  transform: translateY(-3px);
 }
 
 .video-card-thumb {
@@ -344,8 +346,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.06));
+  color: var(--color-primary-lighter);
 }
 
 .video-card-placeholder svg {
@@ -484,13 +486,15 @@
    SECTION CARDS
    ========================================================================== */
 .section-card {
-  background-color: var(--bg-surface);
+  background: linear-gradient(160deg, var(--bg-surface) 65%, rgba(124, 58, 237, 0.04) 100%);
   border: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--color-primary-a18);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 .section-title {
@@ -510,11 +514,12 @@
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10));
+  color: var(--color-primary-lighter);
   font-size: 11px;
   font-weight: 700;
   border-radius: 999px;
+  border: 1px solid rgba(124, 58, 237, 0.15);
 }
 
 /* ==========================================================================
@@ -625,7 +630,8 @@
 }
 
 .member-item:hover {
-  border-color: var(--border-soft);
+  border-color: rgba(124, 58, 237, 0.20);
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.04), transparent);
 }
 
 .member-avatar {
@@ -635,11 +641,12 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
+  color: var(--color-white);
   font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.20);
 }
 
 .member-info {
@@ -1133,8 +1140,9 @@
   min-width: 28px;
   height: 22px;
   padding: 0 8px;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10));
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  color: var(--color-primary-lighter);
   font-size: 12px;
   font-weight: 700;
   border-radius: 999px;

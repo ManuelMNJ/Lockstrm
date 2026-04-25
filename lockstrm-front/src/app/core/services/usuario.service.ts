@@ -6,7 +6,9 @@ import { environment } from '../../../environments/environment';
 export interface PerfilUsuario {
   nombre: string;
   apellidos: string;
+  username: string;
   email: string;
+  tag: string;
   fechaRegistro: string;
   rolSistema: string;
 }

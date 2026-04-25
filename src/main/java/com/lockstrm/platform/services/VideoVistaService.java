@@ -70,8 +70,8 @@ public class VideoVistaService {
 
         return videoVistaRepository.findByVideoIdWithUsuario(idVideo).stream()
                 .map(vv -> new VideoVistaEstadisticaDto(
-                        vv.getUsuario().getNombreCompleto(),
-                        vv.getUsuario().getEmail(),
+                        vv.getUsuario().getUsername(),
+                        vv.getUsuario().getTag(),
                         vv.getContador(),
                         segundosPorEmail.getOrDefault(vv.getUsuario().getEmail(), 0)
                 ))

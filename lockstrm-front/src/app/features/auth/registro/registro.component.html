@@ -68,6 +68,44 @@
 
       </div>
 
+      <!-- Nombre de usuario (handle público) -->
+      <div class="form-field">
+        <label class="form-label" for="reg-username">Nombre de usuario</label>
+        <input
+          id="reg-username"
+          type="text"
+          class="form-input"
+          [class.form-input--error]="username.invalid && username.touched"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Ej. Manu_Dev">
+        @if (username.touched && username.errors?.['required']) {
+          <span class="field-error" role="alert">
+            El nombre de usuario es obligatorio.
+          </span>
+        }
+        @if (username.touched && (username.errors?.['minlength'] || username.errors?.['maxlength'])) {
+          <span class="field-error" role="alert">
+            Debe tener entre 3 y 20 caracteres.
+          </span>
+        }
+        @if (username.touched && username.errors?.['pattern']) {
+          <span class="field-error" role="alert">
+            Solo letras, números, guion (-) y guion bajo (_).
+          </span>
+        }
+        @if (username.dirty && username.errors?.['usernameSaturado']) {
+          <span class="field-error" role="alert">
+            No quedan tags libres para este nombre de usuario. Prueba otro.
+          </span>
+        }
+        @if (!username.errors && username.dirty && !username.pending) {
+          <p class="password-hint">
+            Será tu identificador público. Se te asignará un tag único al crear la cuenta (ej. {{ username.value }}#1234).
+          </p>
+        }
+      </div>
+
       <!-- Email -->
       <div class="form-field">
         <label class="form-label" for="reg-email">Correo electrónico</label>

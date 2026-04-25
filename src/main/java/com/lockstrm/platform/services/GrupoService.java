@@ -29,6 +29,7 @@ public class GrupoService {
     private final UserRepository          userRepository;
     private final MiembrosGrupoRepository miembrosGrupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final UserService             userService;
 
     @Transactional(readOnly = true)
     public List<Grupo> obtenerGruposDelUsuario(String email) {
@@ -117,8 +118,8 @@ public class GrupoService {
                 .stream()
                 .map(mg -> new MiembroDto(
                         mg.getUsuario().getIdUsuario(),
-                        mg.getUsuario().getNombreCompleto(),
-                        mg.getUsuario().getEmail(),
+                        mg.getUsuario().getUsername(),
+                        mg.getUsuario().getTag(),
                         mg.getRol()))
                 .toList();
     }
@@ -138,10 +139,13 @@ public class GrupoService {
     }
 
     @Transactional
-    public void aniadirMiembro(Long idGrupo, String emailSolicitante, String emailInvitado) {
+    public void aniadirMiembro(Long idGrupo, String emailSolicitante, String identificadorInvitado) {
         verifyRolMinimo(idGrupo, emailSolicitante, RolGrupo.ADMIN, "añadir miembros");
 
-        Usuario invitado = userRepository.getByEmailOrThrow(emailInvitado);
+        Usuario invitado = userService.buscarPorIdentificador(identificadorInvitado);
+        if (invitado == null) {
+            throw new NoSuchElementException("Usuario no encontrado: " + identificadorInvitado);
+        }
         MiembrosGrupoId miembroId = new MiembrosGrupoId(invitado.getIdUsuario(), idGrupo);
         if (miembrosGrupoRepository.existsById(miembroId)) {
             throw new IllegalArgumentException("El usuario ya es miembro del grupo");

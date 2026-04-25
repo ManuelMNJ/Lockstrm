@@ -55,6 +55,11 @@ public class VideoController {
         ), HttpStatus.CREATED);
     }
 
+    @GetMapping("/espacio")
+    public ResponseEntity<Map<String, Long>> obtenerEspacio(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(videoService.obtenerEspacioUsado(userDetails.getUsername()));
+    }
+
     @GetMapping("/mios")
     public ResponseEntity<List<VideoDTO>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));

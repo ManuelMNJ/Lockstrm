@@ -13,7 +13,7 @@ export interface Grupo {
 export interface Miembro {
   idUsuario: number;
   username: string;
-  email: string;
+  tag: string;
   rol: string;
 }
 
@@ -76,8 +76,8 @@ export class GrupoService {
     );
   }
 
-  aniadirMiembro(idGrupo: number, email: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/${idGrupo}/miembros`, { email });
+  aniadirMiembro(idGrupo: number, identificador: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${idGrupo}/miembros`, { identificador });
   }
 
   eliminarMiembro(idGrupo: number, idUsuario: number): Observable<void> {

@@ -50,7 +50,7 @@ export class GrupoDetalleComponent implements OnInit {
   cargando = true;
   errorCarga = '';
 
-  emailNuevoMiembro = '';
+  identificadorNuevoMiembro = '';
   estadoAnadir: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorAnadir = '';
 
@@ -287,18 +287,18 @@ export class GrupoDetalleComponent implements OnInit {
   }
 
   aniadirMiembro(): void {
-    const email = this.emailNuevoMiembro.trim();
-    if (!email) return;
+    const identificador = this.identificadorNuevoMiembro.trim();
+    if (!identificador) return;
 
     this.estadoAnadir = 'loading';
     this.errorAnadir  = '';
     this.cdr.markForCheck();
 
-    this.grupoService.aniadirMiembro(this.idGrupo, email)
+    this.grupoService.aniadirMiembro(this.idGrupo, identificador)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.emailNuevoMiembro = '';
+          this.identificadorNuevoMiembro = '';
           this.estadoAnadir = 'success';
           this.cdr.markForCheck();
           this.cargarMiembrosYVideos();

@@ -2,9 +2,11 @@ package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
+import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.PermisosGrupo;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.entities.Video;
+import com.lockstrm.platform.enums.RolGrupo;
 import com.lockstrm.platform.repositories.GrupoRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
@@ -100,8 +102,15 @@ public class VideoService {
 
     private Grupo resolverGrupoPropio(Long idGrupo, String emailUsuario) {
         Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
-        if (!grupo.getCreador().getEmail().equals(emailUsuario)) {
-            throw new AccessDeniedException("No puedes asignar un vídeo a un grupo que no has creado");
+        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
+        RolGrupo rol = miembrosGrupoRepository
+                .findById(new MiembrosGrupoId(usuario.getIdUsuario(), idGrupo))
+                .map(mg -> mg.getRol())
+                .orElseThrow(() -> new AccessDeniedException(
+                        "No puedes asignar un vídeo a un grupo del que no eres miembro"));
+        if (rol.ordinal() > RolGrupo.EDITOR.ordinal()) {
+            throw new AccessDeniedException(
+                    "Se requiere rol EDITOR o superior para añadir vídeos al grupo");
         }
         return grupo;
     }
@@ -242,6 +251,26 @@ public class VideoService {
                 video.getMiniaturaUrl(),
                 video.getFileName()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> obtenerEspacioUsado(String emailUsuario) {
+        List<Video> videos = videoRepository.findByPropietario_Email(emailUsuario);
+        Path baseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+        long usedBytes = 0L;
+        for (Video v : videos) {
+            if (v.getFileName() == null) continue;
+            try {
+                Path file = baseDir.resolve(v.getFileName()).normalize();
+                if (file.startsWith(baseDir) && Files.exists(file)) {
+                    usedBytes += Files.size(file);
+                }
+            } catch (IOException e) {
+                log.warn("No se pudo leer el tamaño de '{}': {}", v.getFileName(), e.getMessage());
+            }
+        }
+        long limitBytes = 5L * 1024 * 1024 * 1024; // 5 GB
+        return Map.of("usedBytes", usedBytes, "limitBytes", limitBytes);
     }
 
     @Transactional

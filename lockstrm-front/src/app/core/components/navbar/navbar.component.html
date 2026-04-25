@@ -11,7 +11,7 @@
     @if (usuarioLogueado) {
       <a routerLink="/grupos" class="navbar-link">Grupos</a>
       <a routerLink="/videos" class="navbar-link">Mis Vídeos</a>
-      <span class="navbar-welcome">Hola, {{ usuarioLogueado.username }}</span>
+      <span class="navbar-welcome">Hola, {{ usuarioLogueado.nombre }} {{ usuarioLogueado.apellidos }}</span>
       <button (click)="cerrarSesion()" class="navbar-logout">Salir</button>
     }
 

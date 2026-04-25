@@ -7,6 +7,9 @@ import { environment } from '../../../environments/environment';
 export interface AuthResponse {
   token: string;
   username: string;
+  tag: string;
+  nombre: string;
+  apellidos: string;
   id: number;
 }
 
@@ -23,8 +26,8 @@ export class AuthService {
 
   constructor(private readonly http: HttpClient, private readonly router: Router) {}
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password }).pipe(
+  login(identificador: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { identificador, password }).pipe(
       tap(res => {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(res));
         this._currentUser.set(res);

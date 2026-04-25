@@ -9,8 +9,13 @@ import java.time.LocalDateTime;
  */
 public record VideoLogDto(
         Long          idLog,
-        String        nombre,
-        String        email,
+        Long          idUsuario,
+        String        username,
+        String        tag,
         LocalDateTime fechaHora,
         Integer       segundosVistos
-) {}
+) {
+    public String displayTag() {
+        return username + "#" + tag;
+    }
+}

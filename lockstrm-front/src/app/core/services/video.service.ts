@@ -6,11 +6,16 @@ import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
 export interface VideoVistaEstadistica {
-  nombre:         string;
-  email:          string;
+  username:       string;
+  tag:            string;
   contador:       number;
   /** MAX(segundos_vistos) en la tabla logs para este usuario/vídeo. 0 si nunca envió heartbeat. */
   segundosVistos: number;
+}
+
+export interface EspacioInfo {
+  usedBytes:  number;
+  limitBytes: number;
 }
 
 export interface VideoUploadResponse {
@@ -158,6 +163,10 @@ export class VideoService {
         this._misVideos$.next(current.map(v => v.idVideo === idVideo ? updated : v));
       }),
     );
+  }
+
+  obtenerEspacio(): Observable<EspacioInfo> {
+    return this.http.get<EspacioInfo>(`${this.apiUrl}/espacio`);
   }
 
   registrarHeartbeat(idVideo: number, currentTime: number, sessionId: string): Observable<void> {

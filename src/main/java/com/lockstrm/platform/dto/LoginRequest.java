@@ -1,15 +1,13 @@
 package com.lockstrm.platform.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class LoginRequest {
 
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El email no tiene un formato válido")
-    private String email;
+    @NotBlank(message = "El identificador es obligatorio")
+    private String identificador;
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;

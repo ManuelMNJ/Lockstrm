@@ -14,6 +14,10 @@ public interface UserRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByEmail(String email);
 
+    Optional<Usuario> findByUsernameIgnoreCaseAndTag(String username, String tag);
+
+    boolean existsByUsernameIgnoreCaseAndTag(String username, String tag);
+
     default Usuario getByEmailOrThrow(String email) {
         return findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + email));

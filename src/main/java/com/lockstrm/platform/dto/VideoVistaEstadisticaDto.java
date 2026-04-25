@@ -1,8 +1,12 @@
 package com.lockstrm.platform.dto;
 
 public record VideoVistaEstadisticaDto(
-        String  nombre,
-        String  email,
+        String  username,
+        String  tag,
         Integer contador,
         Integer segundosVistos
-) {}
+) {
+    public String displayTag() {
+        return username + "#" + tag;
+    }
+}

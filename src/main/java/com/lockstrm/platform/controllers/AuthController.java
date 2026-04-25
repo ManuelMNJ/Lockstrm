@@ -29,6 +29,11 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("disponible", userService.emailDisponible(email)));
     }
 
+    @GetMapping("/check-username")
+    public ResponseEntity<?> checkUsername(@RequestParam String username) {
+        return ResponseEntity.ok(Map.of("disponible", userService.usernameTieneTagLibre(username)));
+    }
+
     @PostMapping("/registro")
     public ResponseEntity<Map<String, String>> registrarUsuario(@Valid @RequestBody RegisterRequest request) {
         if (!userService.emailDisponible(request.getEmail())) {
@@ -40,7 +45,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        Usuario usuario = userService.buscarPorEmail(request.getEmail());
+        Usuario usuario = userService.buscarPorIdentificador(request.getIdentificador());
 
         if (usuario == null || !passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
             throw new org.springframework.security.authentication.BadCredentialsException(
@@ -50,6 +55,8 @@ public class AuthController {
         UserDetails userDetails = userService.loadUserByUsername(usuario.getEmail());
         String token = jwtService.generateToken(userDetails);
 
-        return ResponseEntity.ok(new AuthResponse(token, usuario.getNombre(), usuario.getIdUsuario()));
+        return ResponseEntity.ok(new AuthResponse(
+                token, usuario.getUsername(), usuario.getTag(),
+                usuario.getNombre(), usuario.getApellidos(), usuario.getIdUsuario()));
     }
 }

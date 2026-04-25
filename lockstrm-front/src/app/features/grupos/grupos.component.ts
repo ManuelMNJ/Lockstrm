@@ -1,4 +1,14 @@
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +27,7 @@ import { InitialPipe } from '../../shared/pipes/initial.pipe';
   imports: [CommonModule, FormsModule, A11yModule, DateLocalePipe, InitialPipe],
   templateUrl: './grupos.component.html',
   styleUrl: './grupos.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GruposComponent implements OnInit {
 
@@ -32,7 +43,6 @@ export class GruposComponent implements OnInit {
 
   miembrosPerGrupo = new Map<number, number>();
   videosPerGrupo   = new Map<number, number>();
-  cargandoStats    = false;
 
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
@@ -51,7 +61,9 @@ export class GruposComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarGrupos();
+    // Deferimos al siguiente tick para evitar NG0100 cuando la caché emite
+    // síncronamente durante la CD inicial.
+    queueMicrotask(() => this.cargarGrupos());
   }
 
   abrirDetalle(grupo: Grupo): void {
@@ -61,6 +73,8 @@ export class GruposComponent implements OnInit {
   cargarGrupos(): void {
     this.cargando   = true;
     this.errorCarga = '';
+    this.cdr.markForCheck();
+
     forkJoin({
       creados: this.grupoService.obtenerGruposCreados(),
       miembro: this.grupoService.obtenerGruposComoMiembro(),
@@ -71,19 +85,19 @@ export class GruposComponent implements OnInit {
           this.misGrupos          = creados;
           this.compartidosConmigo = miembro;
           this.cargando           = false;
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
           this.cargarEstadisticas([...creados, ...miembro]);
         },
         error: () => {
           this.errorCarga = 'No se pudo cargar la lista de grupos.';
           this.cargando   = false;
+          this.cdr.markForCheck();
         },
       });
   }
 
   private cargarEstadisticas(grupos: Grupo[]): void {
     if (!grupos.length) return;
-    this.cargandoStats = true;
 
     this.videoService.obtenerMisVideos()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -97,6 +111,7 @@ export class GruposComponent implements OnInit {
             }
           });
           this.videosPerGrupo = countMap;
+          this.cdr.markForCheck();
         },
         error: () => { /* stats opcionales */ },
       });
@@ -115,9 +130,8 @@ export class GruposComponent implements OnInit {
           const countMap = new Map<number, number>();
           results.forEach(r => countMap.set(r.idGrupo, r.count));
           this.miembrosPerGrupo = countMap;
-          this.cargandoStats    = false;
+          this.cdr.markForCheck();
         },
-        error: () => { this.cargandoStats = false; },
       });
   }
 
@@ -126,11 +140,13 @@ export class GruposComponent implements OnInit {
     this.nombreNuevoGrupo = '';
     this.estadoCreacion   = 'idle';
     this.errorCreacion    = '';
+    this.cdr.markForCheck();
     setTimeout(() => this.nombreGrupoInput?.nativeElement.focus(), 50);
   }
 
   cerrarModal(): void {
     this.modalAbierto = false;
+    this.cdr.markForCheck();
   }
 
   crearGrupo(): void {
@@ -139,6 +155,7 @@ export class GruposComponent implements OnInit {
 
     this.estadoCreacion = 'loading';
     this.errorCreacion  = '';
+    this.cdr.markForCheck();
 
     this.grupoService.crearGrupo(nombre)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -151,6 +168,7 @@ export class GruposComponent implements OnInit {
         error: (err) => {
           this.estadoCreacion = 'error';
           this.errorCreacion  = err?.error?.error || 'Error al crear el grupo.';
+          this.cdr.markForCheck();
         },
       });
   }
@@ -162,5 +180,4 @@ export class GruposComponent implements OnInit {
   getVideos(idGrupo: number): number | null {
     return this.videosPerGrupo.get(idGrupo) ?? null;
   }
-
 }

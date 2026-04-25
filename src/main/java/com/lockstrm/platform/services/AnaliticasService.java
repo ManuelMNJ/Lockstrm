@@ -64,8 +64,9 @@ public class AnaliticasService {
         return logRepository.findLogsByVideoId(idVideo).stream()
                 .map(l -> new VideoLogDto(
                         l.getIdLog(),
-                        l.getUsuario().getNombreCompleto(),
-                        l.getUsuario().getEmail(),
+                        l.getUsuario().getIdUsuario(),
+                        l.getUsuario().getUsername(),
+                        l.getUsuario().getTag(),
                         l.getFechaHora(),
                         l.getSegundosVistos()))
                 .toList();

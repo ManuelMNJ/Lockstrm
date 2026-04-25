@@ -17,9 +17,11 @@
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-6);
-  background-color: var(--bg-surface);
+  background: linear-gradient(160deg, var(--bg-surface) 65%, rgba(124, 58, 237, 0.04) 100%);
   border: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--color-primary-a20);
   border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 .section-header {
@@ -43,20 +45,9 @@
   height: 18px;
 }
 
-.section-icon--purple {
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
-}
-
-.section-icon--blue {
-  background-color: var(--color-secondary-ghost);
-  color: var(--color-secondary-light);
-}
-
-.section-icon--green {
-  background-color: var(--color-success-ghost);
-  color: var(--color-success);
-}
+.section-icon--purple { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10)); color: var(--color-primary-lighter); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
+.section-icon--blue   { background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.09)); color: var(--color-secondary-light); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
+.section-icon--green  { background: linear-gradient(135deg, rgba(16, 185, 129, 0.20), rgba(16, 185, 129, 0.08)); color: var(--color-success-light); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
 
 .section-title {
   font-size: 15px;
@@ -329,8 +320,9 @@
 }
 
 .toggle-switch--on {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
   border-color: var(--color-primary);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.30);
 }
 
 .toggle-thumb {

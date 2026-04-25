@@ -29,8 +29,8 @@ export class LoginComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
-      email:    ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      identificador: ['', [Validators.required]],
+      password:      ['', Validators.required]
     });
   }
 
@@ -41,8 +41,8 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  get email()    { return this.form.get('email')!; }
-  get password() { return this.form.get('password')!; }
+  get identificador() { return this.form.get('identificador')!; }
+  get password()      { return this.form.get('password')!; }
 
   hacerLogin(): void {
     if (this.form.invalid) {
@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
     this.cargando   = true;
     this.errorLogin = '';
 
-    this.authService.login(this.email.value, this.password.value)
+    this.authService.login(this.identificador.value, this.password.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next:  () => this.router.navigate(['/videos']),

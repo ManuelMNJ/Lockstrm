@@ -157,11 +157,11 @@
       @if (currentUser(); as user) {
         <div class="user-profile">
           <div class="user-avatar" aria-hidden="true">
-            {{ user.username.charAt(0).toUpperCase() }}
+            {{ user.nombre.charAt(0).toUpperCase() }}
           </div>
           <div class="user-info">
-            <span class="user-name">{{ user.username }}</span>
-            <span class="user-role">Miembro</span>
+            <span class="user-name">{{ user.nombre }} {{ user.apellidos }}</span>
+            <span class="user-role">@{{ user.username }}#{{ user.tag }}</span>
           </div>
           <button class="btn-logout"
                   (click)="cerrarSesion()"

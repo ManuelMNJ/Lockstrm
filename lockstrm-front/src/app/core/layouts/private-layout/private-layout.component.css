@@ -41,8 +41,10 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  /* El grid estira el item al 100% de la fila — no hace falta height:100% */
-  background-color: var(--bg-surface);
+  background: linear-gradient(180deg,
+    var(--bg-surface) 0%,
+    rgba(22, 25, 37, 0.97) 100%
+  );
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
   overflow-x: hidden;
@@ -91,13 +93,15 @@
 }
 
 .nav-item:hover {
-  background-color: var(--bg-surface-hover);
+  background: linear-gradient(90deg, var(--bg-surface-hover) 0%, rgba(124, 58, 237, 0.04) 100%);
   color: var(--text-main);
 }
 
 /* Activo: sólo color/fondo — sin cambio de font-weight */
 .nav-item.active {
-  background-color: var(--color-primary-ghost);
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0.08) 100%);
+  border-left: 2px solid var(--color-primary);
+  padding-left: calc(var(--space-3) - 2px);
   color: var(--color-primary);
 }
 
@@ -107,10 +111,12 @@
 
 /* ── Section labels ── */
 .nav-section-label {
-  display: block;
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--text-subtle);
   padding: var(--space-4) var(--space-3) var(--space-1);
@@ -119,10 +125,21 @@
   user-select: none;
 }
 
+.nav-section-label::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
 /* ── Divider (entre "Inicio" y el resto de la nav) ── */
 .nav-divider {
   height: 1px;
-  background-color: var(--border-subtle);
+  background: linear-gradient(90deg, transparent, var(--border-subtle) 30%, var(--border-subtle) 70%, transparent);
   margin: var(--space-2) var(--space-3);
   flex-shrink: 0;
 }
@@ -132,6 +149,7 @@
   padding: var(--space-3) var(--space-2);
   border-top: 1px solid var(--border-subtle);
   flex-shrink: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(124, 58, 237, 0.04) 100%);
 }
 
 /* User card */
@@ -141,7 +159,8 @@
   gap: var(--space-3);
   padding: 8px var(--space-3);
   border-radius: var(--radius-md);
-  background-color: var(--bg-surface-hover);
+  background: linear-gradient(135deg, var(--bg-surface-hover) 0%, rgba(124, 58, 237, 0.08) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.12);
 }
 
 .user-avatar {
@@ -151,12 +170,13 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
+  color: var(--color-white);
   font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.22);
 }
 
 .user-info {
@@ -179,7 +199,8 @@
 
 .user-role {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--color-primary-lighter);
+  font-weight: 500;
 }
 
 /* Logout icon button */
@@ -219,7 +240,10 @@
   flex-direction: column;
   /* El grid estira el item — no hace falta height:100% */
   overflow: hidden;
-  background-color: var(--bg-main);
+  background:
+    radial-gradient(ellipse at 80% 0%, rgba(124, 58, 237, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 5% 95%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    var(--bg-main);
 }
 
 /* ── Page header (título de sección, fijo) ── */

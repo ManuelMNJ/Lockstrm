@@ -37,9 +37,35 @@ export class RegistroComponent {
     this.form = this.fb.group({
       nombre:    ['', Validators.required],
       apellidos: ['', Validators.required],
+      username:  ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(20),
+        Validators.pattern(/^[A-Za-z0-9_-]+$/)
+      ], [this.usernameDisponibleValidator()]],
       email:     ['', [Validators.required, Validators.email], [this.emailDisponibleValidator()]],
       password:  ['', [Validators.required, passwordFortalezaValidator()]]
     });
+  }
+
+  // Validador asíncrono: comprueba si quedan tags libres para este username.
+  private usernameDisponibleValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      const value = (control.value ?? '').trim();
+      if (!value || !/^[A-Za-z0-9_-]{3,20}$/.test(value)) return of(null);
+      return of(value).pipe(
+        debounceTime(500),
+        switchMap(username =>
+          this.http.get<{ disponible: boolean }>(
+            `${this.apiUrl}/check-username?username=${encodeURIComponent(username)}`
+          )
+        ),
+        map(res => res.disponible ? null : { usernameSaturado: true }),
+        catchError(() => of(null)),
+        first(),
+        takeUntilDestroyed(this.destroyRef)
+      );
+    };
   }
 
   // Validador asíncrono: comprueba en el backend si el email ya está registrado.
@@ -66,6 +92,7 @@ export class RegistroComponent {
   // Atajos para el template
   get nombre()    { return this.form.get('nombre')!; }
   get apellidos() { return this.form.get('apellidos')!; }
+  get username()  { return this.form.get('username')!; }
   get email()     { return this.form.get('email')!; }
   get password()  { return this.form.get('password')!; }
 
