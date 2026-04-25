@@ -14,7 +14,8 @@
       "Bash(xargs -0 grep -oh 'var\\(--[a-zA-Z0-9-]*')",
       "Bash(npx ng *)",
       "Bash(npx tsc *)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
     ]
   }
 }

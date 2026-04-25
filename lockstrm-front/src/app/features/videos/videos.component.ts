@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Elem
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
-import { VideoService, Video, EspacioInfo } from '../../core/services/video.service';
+import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
@@ -16,7 +16,7 @@ import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +38,8 @@ export class VideosComponent implements OnInit {
 
   cargando = true;
   listaError = '';
+
+  isDragging = false;
 
   deletingIds = new Set<number>();
 
@@ -61,13 +63,30 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  espacio: EspacioInfo | null = null;
+  storageUsedGB  = '0.0';
+  storageLimitGB = '5';
+  storagePercent = 0;
 
-  get storageMB()      { return this.espacio ? this.espacio.usedBytes  / (1024 * 1024) : 0; }
-  get storageLimitMB() { return this.espacio ? this.espacio.limitBytes / (1024 * 1024) : 5120; }
-  get storagePercent() { return this.storageLimitMB ? Math.round(this.storageMB / this.storageLimitMB * 100) : 0; }
-  get storageUsedGB()  { return (this.storageMB  / 1024).toFixed(1); }
-  get storageLimitGB() { return (this.storageLimitMB / 1024).toFixed(0); }
+  private aplicarEspacio(usedBytes: number, limitBytes: number): void {
+    const usedMB  = usedBytes  / (1024 * 1024);
+    const limitMB = limitBytes / (1024 * 1024);
+    this.storagePercent = limitMB ? Math.round(usedMB / limitMB * 100) : 0;
+    this.storageUsedGB  = (usedMB  / 1024).toFixed(1);
+    this.storageLimitGB = (limitMB / 1024).toFixed(0);
+  }
+
+  searchQuery = '';
+
+  get filteredVideos(): Video[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    return q ? this.videos.filter(v => v.titulo.toLowerCase().includes(q)) : this.videos;
+  }
+
+  onSearchChange(): void {
+    this.paginator.setItems(this.filteredVideos);
+    this.paginator.goToPage(1);
+    this.cdr.markForCheck();
+  }
 
   readonly paginator = new Paginator<Video>(15);
 
@@ -108,7 +127,7 @@ export class VideosComponent implements OnInit {
     this.videoService.obtenerEspacio()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (info) => { this.espacio = info; this.cdr.markForCheck(); },
+        next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); },
         error: (err)  => console.error('[VideosComponent] Error al cargar espacio:', err),
       });
     this.grupoService.obtenerGruposParaDesplegable()
@@ -122,27 +141,48 @@ export class VideosComponent implements OnInit {
       });
   }
 
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.isDragging) { this.isDragging = true; this.cdr.markForCheck(); }
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    this.cdr.markForCheck();
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    const file = event.dataTransfer?.files?.[0] ?? null;
+    if (file) this.procesarArchivo(file);
+    this.cdr.markForCheck();
+  }
+
   seleccionarArchivo(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0] ?? null;
+    if (file) this.procesarArchivo(file);
+  }
 
-    if (file && !file.type.startsWith('video/')) {
-      this.estadoSubida = 'error';
-      this.mensajeError = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
+  private procesarArchivo(file: File): void {
+    if (!file.type.startsWith('video/')) {
+      this.estadoSubida    = 'error';
+      this.mensajeError    = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
       this.archivoSeleccionado = null;
-      input.value = '';
+      this.cdr.markForCheck();
       return;
     }
-
     this.archivoSeleccionado = file;
     this.miniaturaDataUrl    = null;
     this.duracionVideo       = 0;
-    if (this.estadoSubida === 'error') {
-      this.estadoSubida = 'idle';
-      this.mensajeError = '';
-    }
-
-    if (file) this.generarMiniatura(file);
+    if (this.estadoSubida === 'error') { this.estadoSubida = 'idle'; this.mensajeError = ''; }
+    this.cdr.markForCheck();
+    this.generarMiniatura(file);
   }
 
   private generarMiniatura(file: File): void {
@@ -243,7 +283,7 @@ export class VideosComponent implements OnInit {
           // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
           this.videoService.prependVideo(nuevoVideo);
           this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: (info) => { this.espacio = info; this.cdr.markForCheck(); } });
+            .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
           this.estadoSubida        = 'success';
           this.progreso            = 0;
           this.tituloVideo         = '';
@@ -302,7 +342,7 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: () => {
           this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: (info) => { this.espacio = info; this.cdr.markForCheck(); } });
+            .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
         },
         error: (err) => {
           console.error('[VideosComponent] Error al eliminar vídeo:', {
@@ -398,7 +438,7 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: (datos) => {
           this.videos   = datos;
-          this.paginator.setItems(datos);
+          this.paginator.setItems(this.filteredVideos);
           this.cargando = false;
           this.cdr.markForCheck();
         },
