@@ -68,10 +68,18 @@ export class VideosCompartidosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
+  /**
+   * En "Vídeos compartidos" el usuario ve contenido al que tiene acceso a través
+   * de cualquiera de sus grupos. Si un mismo vídeo está compartido con dos de
+   * sus grupos, el listado lo muestra una sola vez y no hay forma de saber
+   * desde qué grupo concreto lo está reproduciendo. Para no falsear la
+   * analítica contextual, mandamos `null`: la sesión queda registrada como
+   * "visualización del usuario al vídeo" sin asociarla a un grupo concreto.
+   */
+  onHeartbeat(payload: { currentTime: number; sessionId: string; grupoId: number | null }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),

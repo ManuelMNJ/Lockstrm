@@ -42,13 +42,27 @@ export class VideoPlayerComponent implements OnInit {
   readonly idVideo = input<number>();
 
   /**
-   * Emits the video's currentTime (seconds) plus the player-instance sessionId
-   * every 5 s while playing. The parent component forwards the payload to the
-   * backend heartbeat endpoint; the backend uses sessionId to guarantee that
-   * every player mount produces exactly one row in `logs`, so each viewing
-   * session is recorded independently in the analytics panel.
+   * Grupo desde el que se está reproduciendo el vídeo. Puede ser undefined/null
+   * si la reproducción ocurre fuera de un contexto de grupo (p. ej. el
+   * propietario viendo su vídeo desde "Mis vídeos"). Se incluye en cada
+   * heartbeat para que el backend segmente las analíticas por grupo: ver el
+   * mismo vídeo desde el Grupo A y desde el Grupo B genera dos series de
+   * datos independientes.
    */
-  @Output() heartbeat = new EventEmitter<{ currentTime: number; sessionId: string }>();
+  readonly grupoId = input<number | null | undefined>();
+
+  /**
+   * Emits the video's currentTime (seconds), the player-instance sessionId and
+   * the optional grupoId every 5 s while playing. The parent component forwards
+   * the payload to the backend heartbeat endpoint; the backend uses
+   * (usuario, video, grupoId) as the upsert key, so each (group, session)
+   * combination is recorded independently in the analytics panel.
+   */
+  @Output() heartbeat = new EventEmitter<{
+    currentTime: number;
+    sessionId:   string;
+    grupoId:     number | null;
+  }>();
 
   /**
    * UUID generado una sola vez por instancia del reproductor. Dos aperturas
@@ -185,6 +199,7 @@ export class VideoPlayerComponent implements OnInit {
       this.heartbeat.emit({
         currentTime: Math.round(video.currentTime),
         sessionId:   this.sessionId,
+        grupoId:     this.grupoId() ?? null,
       });
     });
   }

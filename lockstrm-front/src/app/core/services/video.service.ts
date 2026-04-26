@@ -28,12 +28,21 @@ export interface VideoUploadResponse {
   miniaturaUrl: string | null;
 }
 
+export interface GrupoRef {
+  idGrupo: number;
+  nombre:  string;
+}
+
 export interface Video {
   idVideo:      number;
   titulo:       string;
   duracion:     number | null;
   fechaSubida:  string | null;
-  grupo?:       { idGrupo?: number; nombre: string };
+  /**
+   * Lista de grupos a los que pertenece el vídeo (N:M). Vacía si el vídeo
+   * no está compartido con ningún grupo (privado).
+   */
+  grupos:       GrupoRef[];
   miniaturaUrl: string | null;
   fileName:     string | null;  // nombre UUID del fichero; null si el vídeo es antiguo/migrado
 }
@@ -44,8 +53,7 @@ interface VideoRaw {
   titulo:       string;
   duracion:     number | null;
   fechaSubida:  string | null;
-  idGrupo:      number | null;
-  grupoNombre:  string | null;
+  grupos:       GrupoRef[] | null;
   miniaturaUrl: string | null;
   fileName:     string | null;
 }
@@ -56,9 +64,7 @@ function mapVideo(raw: VideoRaw): Video {
     titulo:       raw.titulo,
     duracion:     raw.duracion ?? null,
     fechaSubida:  raw.fechaSubida ?? null,
-    grupo:        (raw.idGrupo != null)
-                    ? { idGrupo: raw.idGrupo, nombre: raw.grupoNombre ?? '' }
-                    : undefined,
+    grupos:       raw.grupos ?? [],
     miniaturaUrl: raw.miniaturaUrl ?? null,
     fileName:     raw.fileName ?? null,
   };
@@ -130,11 +136,12 @@ export class VideoService {
     return this._videosCompartidosCache$;
   }
 
-  subirVideo(archivo: File, titulo: string, idGrupo?: number | null, miniaturaUrl?: string | null, duracion?: number): Observable<HttpEvent<VideoUploadResponse>> {
+  subirVideo(archivo: File, titulo: string, idGrupos?: number[] | null, miniaturaUrl?: string | null, duracion?: number): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
     formData.append('file',   archivo);
     formData.append('titulo', titulo);
-    if (idGrupo     != null) formData.append('idGrupo',      idGrupo.toString());
+    // FormData admite la misma clave repetida; Spring lo bindea a List<Long>.
+    (idGrupos ?? []).forEach(id => formData.append('idGrupos', id.toString()));
     if (miniaturaUrl != null) formData.append('miniaturaUrl', miniaturaUrl);
     if (duracion     != null && duracion > 0) formData.append('duracion', duracion.toString());
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
@@ -154,9 +161,14 @@ export class VideoService {
     );
   }
 
-  /** PATCH /api/videos/{id} — edita título y/o reasigna el grupo. */
-  editarVideo(idVideo: number, titulo: string, idGrupo: number | null): Observable<Video> {
-    return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupo }).pipe(
+  /**
+   * PATCH /api/videos/{id} — edita título y/o reasigna grupos.
+   * `idGrupos` representa el set FINAL de grupos a los que el vídeo debe
+   * pertenecer tras la edición (semántica de "set", no de "add"); el backend
+   * calcula el diff. Una lista vacía desvincula el vídeo de todos los grupos.
+   */
+  editarVideo(idVideo: number, titulo: string, idGrupos: number[]): Observable<Video> {
+    return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupos }).pipe(
       map(raw => mapVideo(raw)),
       tap(updated => {
         const current = this._misVideos$.value ?? [];
@@ -169,10 +181,16 @@ export class VideoService {
     return this.http.get<EspacioInfo>(`${this.apiUrl}/espacio`);
   }
 
-  registrarHeartbeat(idVideo: number, currentTime: number, sessionId: string): Observable<void> {
+  registrarHeartbeat(
+    idVideo:     number,
+    currentTime: number,
+    sessionId:   string,
+    grupoId?:    number | null,
+  ): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${idVideo}/heartbeat`, {
       currentTime: Math.floor(currentTime),
       sessionId,
+      grupoId: grupoId ?? null,
     });
   }
 
@@ -180,7 +198,16 @@ export class VideoService {
     return this.http.post<void>(`${this.apiUrl}/${idVideo}/ver`, {});
   }
 
-  obtenerEstadisticas(idVideo: number): Observable<VideoVistaEstadistica[]> {
-    return this.http.get<VideoVistaEstadistica[]>(`${this.apiUrl}/${idVideo}/estadisticas`);
+  /**
+   * Estadísticas por usuario del vídeo. Si se pasa `grupoId`, el backend
+   * filtra los logs a las sesiones reproducidas dentro de ese grupo
+   * (analítica contextual). Sin `grupoId` se devuelven los datos agregados
+   * de todas las reproducciones del vídeo.
+   */
+  obtenerEstadisticas(idVideo: number, grupoId?: number | null): Observable<VideoVistaEstadistica[]> {
+    const url = grupoId != null
+      ? `${this.apiUrl}/${idVideo}/estadisticas?grupoId=${grupoId}`
+      : `${this.apiUrl}/${idVideo}/estadisticas`;
+    return this.http.get<VideoVistaEstadistica[]>(url);
   }
 }

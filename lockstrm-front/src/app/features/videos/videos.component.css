@@ -777,6 +777,12 @@
   flex-wrap: wrap;
 }
 
+.card-groups {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .card-group {
   display: inline-block;
   font-size: 10px;
@@ -792,6 +798,48 @@
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Checklist multi-grupo (modales subir/editar) */
+.grupo-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.grupo-checklist__item { margin: 0; }
+.grupo-checklist__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.grupo-checklist__label:hover { background: rgba(124, 58, 237, 0.10); }
+.grupo-checklist__label:has(input:checked) {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10));
+  border-color: rgba(124, 58, 237, 0.45);
+  color: var(--color-primary-lighter);
+}
+.grupo-checklist__label input { accent-color: var(--color-primary, #7c3aed); }
+
+.form-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--text-subtle);
 }
 
 .card-date {

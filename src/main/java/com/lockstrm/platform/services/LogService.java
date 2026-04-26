@@ -42,20 +42,25 @@ public class LogService {
      */
     @Transactional
     public void registrarHeartbeat(Long idVideo, String emailUsuario,
-                                   Double currentTime, String sessionId) {
+                                   Double currentTime, String sessionId,
+                                   Long grupoId) {
 
         Video   video   = videoRepository.getByIdOrThrow(idVideo);
         Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         verificarAcceso(video, emailUsuario);
 
+        // Clave lógica del UPSERT: (usuario, video, grupoId). Si el usuario ve
+        // el mismo vídeo desde dos grupos distintos, cada uno acumula sus
+        // segundos en su propia fila, lo que permite analíticas por grupo.
         Log log = logRepository
-                .findByUsuarioAndVideoAndSessionId(usuario, video, sessionId)
+                .findByUsuarioVideoYGrupo(usuario, video, grupoId)
                 .orElseGet(() -> {
                     Log nuevoLog = new Log();
                     nuevoLog.setUsuario(usuario);
                     nuevoLog.setVideo(video);
                     nuevoLog.setSessionId(sessionId);
+                    nuevoLog.setGrupoId(grupoId);
                     return nuevoLog;
                 });
 

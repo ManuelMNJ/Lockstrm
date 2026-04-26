@@ -47,6 +47,17 @@ public class Log {
     @Column(name = "session_id", length = 36)
     private String sessionId;
 
+    /**
+     * Grupo desde el que se está reproduciendo el vídeo. Puede ser null cuando
+     * la reproducción ocurre fuera de un contexto de grupo (p. ej. el propietario
+     * viendo su propio vídeo). Forma parte de la clave lógica del UPSERT junto
+     * con (usuario, video), de modo que un mismo vídeo visto desde dos grupos
+     * distintos genera dos filas independientes y permite segmentar las
+     * analíticas por grupo.
+     */
+    @Column(name = "id_grupo")
+    private Long grupoId;
+
     @PrePersist
     protected void onCreate() {
         if (this.fechaHora == null) {

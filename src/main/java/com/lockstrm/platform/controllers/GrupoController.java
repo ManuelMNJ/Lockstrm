@@ -1,9 +1,11 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.GrupoVideoStatsDto;
 import com.lockstrm.platform.dto.MiembroDto;
 import com.lockstrm.platform.dto.VideoDTO;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.enums.RolGrupo;
+import com.lockstrm.platform.services.AnaliticasService;
 import com.lockstrm.platform.services.GrupoService;
 import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +22,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GrupoController {
 
-    private final GrupoService grupoService;
-    private final VideoService videoService;
+    private final GrupoService      grupoService;
+    private final VideoService      videoService;
+    private final AnaliticasService analiticasService;
 
     /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
@@ -72,6 +75,18 @@ public class GrupoController {
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerVideosPorGrupo(idGrupo, userDetails.getUsername()));
+    }
+
+    /**
+     * Analíticas B2B segregadas: una fila por vídeo del grupo con
+     * espectadores únicos y tiempo total de reproducción acotados a este
+     * contexto. Solo accesible para miembros con rol EDITOR o superior.
+     */
+    @GetMapping("/{idGrupo}/analiticas")
+    public ResponseEntity<List<GrupoVideoStatsDto>> obtenerAnaliticasDelGrupo(
+            @PathVariable Long idGrupo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(analiticasService.analiticasDelGrupo(idGrupo, userDetails.getUsername()));
     }
 
     @GetMapping("/{idGrupo}/miembros")

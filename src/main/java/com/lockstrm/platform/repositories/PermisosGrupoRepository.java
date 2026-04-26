@@ -25,11 +25,19 @@ public interface PermisosGrupoRepository extends JpaRepository<PermisosGrupo, Pe
     @Query("SELECT COUNT(pg) > 0 FROM PermisosGrupo pg WHERE pg.id.idVideoId = :idVideo AND pg.grupo.creador.email = :email")
     boolean existsByVideoIdAndGrupoCreadorEmail(@Param("idVideo") Long idVideo, @Param("email") String email);
 
-    @Modifying
+    /**
+     * `clearAutomatically` evita que queden referencias gestionadas a las
+     * filas borradas en el persistence context — imprescindible cuando el
+     * mismo método de servicio re-inserta combinaciones (idVideo, idGrupo)
+     * que acaban de desaparecer (caso típico del `editarVideo`).
+     * `flushAutomatically` garantiza que cualquier cambio pendiente se
+     * vuelque a BBDD ANTES de ejecutar el DELETE.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PermisosGrupo pg WHERE pg.id.idVideoId = :idVideo")
     void deleteByVideoId(@Param("idVideo") Long idVideo);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM PermisosGrupo pg WHERE pg.id.idGrupoId = :idGrupo")
     void deleteByGrupoId(@Param("idGrupo") Long idGrupo);
 }

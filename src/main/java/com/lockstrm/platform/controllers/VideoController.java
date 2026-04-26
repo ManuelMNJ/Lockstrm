@@ -38,12 +38,15 @@ public class VideoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("file") MultipartFile file,
             @RequestParam("titulo") String titulo,
-            @RequestParam(value = "idGrupo",      required = false) Long    idGrupo,
-            @RequestParam(value = "miniaturaUrl",  required = false) String  miniaturaUrl,
-            @RequestParam(value = "duracion",      required = false) Integer duracion
+            // Multi-valor: el cliente envía `idGrupos=1&idGrupos=2` (FormData
+            // soporta valores repetidos para la misma clave). Spring lo bindea
+            // a List<Long>. `idGrupo` (singular) se mantendría sin efecto.
+            @RequestParam(value = "idGrupos",      required = false) List<Long> idGrupos,
+            @RequestParam(value = "miniaturaUrl",  required = false) String     miniaturaUrl,
+            @RequestParam(value = "duracion",      required = false) Integer    duracion
     ) throws Exception {
         Video guardado = videoService.subirVideo(
-                file, userDetails.getUsername(), titulo, idGrupo, miniaturaUrl, duracion);
+                file, userDetails.getUsername(), titulo, idGrupos, miniaturaUrl, duracion);
         return new ResponseEntity<>(Map.of(
                 "status",       "exito",
                 "mensaje",      "Video subido correctamente",
@@ -86,7 +89,7 @@ public class VideoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         logService.registrarHeartbeat(idVideo, userDetails.getUsername(),
-                request.currentTime(), request.sessionId());
+                request.currentTime(), request.sessionId(), request.grupoId());
         return ResponseEntity.ok().build();
     }
 
@@ -96,7 +99,7 @@ public class VideoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody EditarVideoRequest req) {
         VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(),
-                req.titulo().trim(), req.idGrupo());
+                req.titulo().trim(), req.idGrupos());
         return ResponseEntity.ok(dto);
     }
 
@@ -111,8 +114,10 @@ public class VideoController {
     @GetMapping("/{id}/estadisticas")
     public ResponseEntity<List<VideoVistaEstadisticaDto>> obtenerEstadisticas(
             @PathVariable Long id,
+            @RequestParam(value = "grupoId", required = false) Long grupoId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(videoVistaService.obtenerEstadisticas(id, userDetails.getUsername()));
+        return ResponseEntity.ok(
+                videoVistaService.obtenerEstadisticas(id, userDetails.getUsername(), grupoId));
     }
 
     @DeleteMapping("/{idVideo}")

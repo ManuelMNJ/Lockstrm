@@ -197,3 +197,65 @@
 .skeleton-line--value { width: 80px;  height: 24px; }
 .skeleton-line--label { width: 120px; height: 12px; margin-top: 4px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Filtro de contexto de grupo ─────────────────────────────────────── */
+.section-header--with-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.grupo-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.grupo-filter__label { white-space: nowrap; }
+.grupo-filter__select {
+  font: inherit;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  min-width: 200px;
+}
+.grupo-filter__select:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+
+/* ── Chip de "Visto desde" en cada fila de la tabla ──────────────────── */
+.ctx-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ctx-chip--group {
+  color: var(--color-primary-lighter, #c4b5fd);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(124, 58, 237, 0.08));
+  border-color: rgba(124, 58, 237, 0.30);
+}
+.ctx-chip--none {
+  color: var(--text-subtle, #9ca3af);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+.ctx-chip--orphan {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.25);
+}

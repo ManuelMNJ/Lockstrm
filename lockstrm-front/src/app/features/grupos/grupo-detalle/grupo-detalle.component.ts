@@ -15,6 +15,7 @@ import { forkJoin, finalize, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../core/services/video.service';
+import { AnaliticasService, GrupoVideoStats } from '../../../core/services/analiticas.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
@@ -93,7 +94,23 @@ export class GrupoDetalleComponent implements OnInit {
   cargandoStats = false;
   errorStats = '';
 
-  private idGrupo!: number;
+  /**
+   * Pestaña activa del detalle del grupo. "resumen" muestra el layout
+   * existente (miembros + vídeos); "analiticas" abre el panel B2B con los
+   * agregados por vídeo en el contexto de este grupo. La pestaña de
+   * analíticas solo está accesible para roles EDITOR+.
+   */
+  pestanaActiva: 'resumen' | 'analiticas' = 'resumen';
+
+  analiticasGrupo: GrupoVideoStats[] = [];
+  cargandoAnaliticas = false;
+  errorAnaliticas = '';
+  /** Evita refetch en cada cambio de pestaña; primera apertura carga, sucesivas no. */
+  private analiticasCargadas = false;
+
+  // Público porque el template lo enlaza a [grupoId] del <app-video-player>
+  // para que el heartbeat lleve el contexto de grupo a la analítica.
+  idGrupo!: number;
   private destroyRef = inject(DestroyRef);
 
   constructor(
@@ -101,6 +118,7 @@ export class GrupoDetalleComponent implements OnInit {
     private router: Router,
     private grupoService: GrupoService,
     protected videoService: VideoService,
+    private analiticasService: AnaliticasService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
   ) {}
@@ -224,8 +242,11 @@ export class GrupoDetalleComponent implements OnInit {
       .subscribe({
         next: ({ videosGrupo, misVideos }) => {
           this.videosGrupo = videosGrupo;
+          // Excluimos del desplegable "añadir vídeo existente" los que ya están
+          // en este grupo. Como un vídeo puede pertenecer a varios, comprobamos
+          // si el grupo actual está en su lista, no la igualdad estricta.
           this.misVideosDisponibles = misVideos.filter(
-            v => !v.grupo || v.grupo.idGrupo !== this.idGrupo
+            v => !v.grupos.some(g => g.idGrupo === this.idGrupo)
           );
           this.cdr.markForCheck();
         },
@@ -245,7 +266,11 @@ export class GrupoDetalleComponent implements OnInit {
     this.errorAnadirVideo  = '';
     this.cdr.markForCheck();
 
-    this.videoService.editarVideo(video.idVideo, video.titulo, this.idGrupo)
+    // Añadir = unión del set actual + este grupo. NO sustituimos los grupos
+    // del vídeo; conservamos cualquier otra pertenencia previa.
+    const idGruposSet = new Set(video.grupos.map(g => g.idGrupo));
+    idGruposSet.add(this.idGrupo);
+    this.videoService.editarVideo(video.idVideo, video.titulo, [...idGruposSet])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -266,7 +291,11 @@ export class GrupoDetalleComponent implements OnInit {
   quitarVideoDelGrupo(video: Video): void {
     this.quitandoVideos = new Set(this.quitandoVideos).add(video.idVideo);
 
-    this.videoService.editarVideo(video.idVideo, video.titulo, null)
+    // Quitar = mismos grupos menos el actual. Si el vídeo estaba en otros
+    // grupos, los conservamos: solo desvinculamos del grupo en el que estamos.
+    const nuevosGrupos = video.grupos.filter(g => g.idGrupo !== this.idGrupo);
+
+    this.videoService.editarVideo(video.idVideo, video.titulo, nuevosGrupos.map(g => g.idGrupo))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -274,7 +303,12 @@ export class GrupoDetalleComponent implements OnInit {
           next.delete(video.idVideo);
           this.quitandoVideos = next;
           this.videosGrupo = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
-          this.misVideosDisponibles = [...this.misVideosDisponibles, { ...video, grupo: undefined }];
+          // Solo lo devolvemos al desplegable si no tiene ya otra pertenencia
+          // que lo excluya de la lista (en realidad sí lo devolvemos siempre:
+          // si quedó sin grupos, vuelve a estar disponible para añadir aquí o
+          // a otro; si quedó con otros grupos, el filtro de `cargarVideos`
+          // ya lo dejaría dentro porque este grupo ya no está en su lista).
+          this.misVideosDisponibles = [...this.misVideosDisponibles, { ...video, grupos: nuevosGrupos }];
           this.cdr.markForCheck();
         },
         error: () => {
@@ -473,12 +507,64 @@ export class GrupoDetalleComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
+  onHeartbeat(payload: { currentTime: number; sessionId: string; grupoId: number | null }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, payload.grupoId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ error: () => {} });
+  }
+
+  /**
+   * Cambia entre las pestañas del detalle. La carga de analíticas es
+   * perezosa: solo se dispara la primera vez que el usuario entra en la
+   * pestaña, no en cada toggle. Si quiere refrescar, puede usar
+   * {@link refrescarAnaliticas}.
+   */
+  cambiarPestana(p: 'resumen' | 'analiticas'): void {
+    this.pestanaActiva = p;
+    if (p === 'analiticas' && !this.analiticasCargadas) {
+      this.cargarAnaliticas();
+    }
+    this.cdr.markForCheck();
+  }
+
+  refrescarAnaliticas(): void {
+    this.analiticasCargadas = false;
+    this.cargarAnaliticas();
+  }
+
+  private cargarAnaliticas(): void {
+    if (!this.idGrupo) return;
+    this.cargandoAnaliticas = true;
+    this.errorAnaliticas    = '';
+    this.cdr.markForCheck();
+
+    this.analiticasService.getAnaliticasDelGrupo(this.idGrupo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (stats) => {
+          this.analiticasGrupo    = stats;
+          this.analiticasCargadas = true;
+          this.cargandoAnaliticas = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.errorAnaliticas = err?.status === 403
+            ? 'No tienes permisos para ver las analíticas de este grupo.'
+            : 'No se pudieron cargar las analíticas. Inténtalo de nuevo.';
+          this.cargandoAnaliticas = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  /** % de retención agregado del vídeo en este grupo. */
+  retencionPctVideo(stat: GrupoVideoStats): number {
+    if (!stat.duracion || stat.duracion <= 0 || !stat.espectadoresUnicos) return 0;
+    // Promedio de segundos por espectador / duración del vídeo.
+    const segundosMediosPorUsuario = stat.tiempoTotalSegundos / stat.espectadoresUnicos;
+    return Math.min(Math.round((segundosMediosPorUsuario / stat.duracion) * 100), 100);
   }
 
   volver(): void {

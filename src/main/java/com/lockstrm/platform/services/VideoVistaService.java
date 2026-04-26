@@ -51,7 +51,9 @@ public class VideoVistaService {
     }
 
     @Transactional(readOnly = true)
-    public List<VideoVistaEstadisticaDto> obtenerEstadisticas(Long idVideo, String emailSolicitante) {
+    public List<VideoVistaEstadisticaDto> obtenerEstadisticas(Long idVideo,
+                                                              String emailSolicitante,
+                                                              Long grupoId) {
         if (!videoRepository.existsById(idVideo)) {
             throw new RuntimeException("Vídeo no encontrado");
         }
@@ -61,7 +63,9 @@ public class VideoVistaService {
         }
 
         // Mapa email → MAX(segundosVistos) desde la tabla logs (alimentada por heartbeat).
-        Map<String, Integer> segundosPorEmail = logRepository.findSegundosVistosByVideoId(idVideo).stream()
+        // El repo recibe `grupoId` opcional: si no es null, acota al contexto.
+        var segundosVistos = logRepository.findSegundosVistos(idVideo, grupoId);
+        Map<String, Integer> segundosPorEmail = segundosVistos.stream()
                 .collect(Collectors.toMap(
                         LogRepository.SegundosPorUsuario::getEmail,
                         LogRepository.SegundosPorUsuario::getSegundos,

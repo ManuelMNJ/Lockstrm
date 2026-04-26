@@ -27,7 +27,12 @@ export class VideosComponent implements OnInit {
   misGrupos: Grupo[] = [];
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
-  idGrupoSeleccionado: number | null = null;
+  /**
+   * Set de grupos seleccionados en el modal de subida. Un vídeo puede subirse
+   * directamente vinculado a varios grupos (N:M). Se materializa como Set
+   * para que el toggle de un checkbox sea O(1) y no haya duplicados.
+   */
+  idGruposSeleccionados = new Set<number>();
   miniaturaDataUrl: string | null = null;
   private duracionVideo = 0;
   private objectUrl: string | null = null;
@@ -56,7 +61,8 @@ export class VideosComponent implements OnInit {
 
   videoEnEdicion: Video | null = null;
   editTitulo    = '';
-  editIdGrupo: number | null = null;
+  /** Set de grupos marcados en el modal de edición. Mismo motivo que el de subida. */
+  editIdGrupos  = new Set<number>();
   estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
   mensajeEdicion = '';
 
@@ -246,7 +252,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl, this.duracionVideo)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, [...this.idGruposSeleccionados], this.miniaturaDataUrl, this.duracionVideo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -266,16 +272,21 @@ export class VideosComponent implements OnInit {
           if (event.type !== HttpEventType.Response) return;
 
           const res = event.body!;
-          const grupo = this.idGrupoSeleccionado
-            ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
-            : null;
+          // Reconstruimos la lista de grupos a partir de los seleccionados en el
+          // formulario y el catálogo `misGrupos`. El backend ya validó cada
+          // pertenencia; aquí solo necesitamos el nombre para el render inmediato
+          // sin esperar a refetchear.
+          const grupos = [...this.idGruposSeleccionados]
+            .map(id => this.misGrupos.find(g => g.idGrupo === id))
+            .filter((g): g is Grupo => g != null)
+            .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
 
           const nuevoVideo: Video = {
             idVideo:      res.id_video,
             titulo:       res.titulo,
             duracion:     res.duracion ?? null,
             fechaSubida:  new Date().toISOString(),
-            grupo:        grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
+            grupos,
             miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
             fileName:     res.fileName,
           };
@@ -288,7 +299,7 @@ export class VideosComponent implements OnInit {
           this.progreso            = 0;
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
-          this.idGrupoSeleccionado = null;
+          this.idGruposSeleccionados = new Set<number>();
           this.miniaturaDataUrl    = null;
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
@@ -393,9 +404,28 @@ export class VideosComponent implements OnInit {
   iniciarEdicion(video: Video): void {
     this.videoEnEdicion = video;
     this.editTitulo     = video.titulo;
-    this.editIdGrupo    = video.grupo?.idGrupo ?? null;
+    this.editIdGrupos   = new Set(video.grupos.map(g => g.idGrupo));
     this.estadoEdicion  = 'idle';
     this.mensajeEdicion = '';
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Toggle helper para los checkboxes de grupos. Devuelve un nuevo Set para
+   * que el ChangeDetector OnPush detecte el cambio (Set mutado in-place no
+   * dispararía repintado).
+   */
+  toggleGrupoSubida(idGrupo: number): void {
+    const next = new Set(this.idGruposSeleccionados);
+    next.has(idGrupo) ? next.delete(idGrupo) : next.add(idGrupo);
+    this.idGruposSeleccionados = next;
+    this.cdr.markForCheck();
+  }
+
+  toggleGrupoEdicion(idGrupo: number): void {
+    const next = new Set(this.editIdGrupos);
+    next.has(idGrupo) ? next.delete(idGrupo) : next.add(idGrupo);
+    this.editIdGrupos = next;
     this.cdr.markForCheck();
   }
 
@@ -411,7 +441,7 @@ export class VideosComponent implements OnInit {
 
     this.estadoEdicion = 'saving';
 
-    this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), this.editIdGrupo)
+    this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), [...this.editIdGrupos])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -461,10 +491,17 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
+  /**
+   * En "Mis vídeos" no existe un contexto de grupo único: un vídeo puede
+   * pertenecer a varios y el propietario lo está abriendo desde su biblioteca,
+   * no desde la página de un grupo concreto. Por eso forzamos `grupoId: null`
+   * en el heartbeat — esa fila de `logs` representa la visualización del
+   * propietario fuera de cualquier grupo, que se contabiliza aparte.
+   */
+  onHeartbeat(payload: { currentTime: number; sessionId: string; grupoId: number | null }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),

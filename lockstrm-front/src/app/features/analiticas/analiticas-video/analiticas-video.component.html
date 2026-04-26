@@ -80,8 +80,25 @@
 
   <!-- ── Tabla de registros ── -->
   <section class="top-section">
-    <header class="section-header">
+    <header class="section-header section-header--with-filter">
       <h3 class="section-title">Todas las visualizaciones</h3>
+
+      <!-- Filtro por contexto de grupo. Se aplica en cliente sobre los logs
+           ya cargados; cambiar de opción no provoca ninguna petición. -->
+      @if (!cargando && logs.length > 0) {
+        <label class="grupo-filter">
+          <span class="grupo-filter__label">Visto desde:</span>
+          <select class="grupo-filter__select" [(ngModel)]="filtroGrupo">
+            <option [ngValue]="'all'">Todos los contextos</option>
+            @if (hayLogsSinGrupo) {
+              <option [ngValue]="'none'">Sin grupo (visualización directa)</option>
+            }
+            @for (g of gruposDisponibles; track g.idGrupo) {
+              <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
+            }
+          </select>
+        </label>
+      }
     </header>
 
     @if (cargando) {
@@ -90,18 +107,23 @@
       <div class="empty-state">
         <p>Aún no hay visualizaciones registradas para este vídeo.</p>
       </div>
+    } @else if (!logsFiltrados.length) {
+      <div class="empty-state">
+        <p>No hay visualizaciones para este filtro de grupo.</p>
+      </div>
     } @else {
       <table class="stats-table">
         <thead>
           <tr>
             <th>Espectador</th>
+            <th>Visto desde</th>
             <th>Fecha</th>
             <th>Tiempo visto</th>
             <th class="retention-col">Retención</th>
           </tr>
         </thead>
         <tbody>
-          @for (l of logs; track l.idLog) {
+          @for (l of logsFiltrados; track l.idLog) {
             <tr>
               <td>
                 <div class="stats-member">
@@ -110,6 +132,15 @@
                     <span class="member-name">{{ l.username }}#{{ l.tag }}</span>
                   </div>
                 </div>
+              </td>
+              <td>
+                @if (l.grupoId == null) {
+                  <span class="ctx-chip ctx-chip--none">Sin grupo</span>
+                } @else if (l.grupoNombre) {
+                  <span class="ctx-chip ctx-chip--group">{{ l.grupoNombre }}</span>
+                } @else {
+                  <span class="ctx-chip ctx-chip--orphan" title="Este grupo ya no existe">Grupo eliminado</span>
+                }
               </td>
               <td>
                 <span class="log-date">{{ l.fechaHora | date:'dd MMM yyyy, HH:mm' }}</span>

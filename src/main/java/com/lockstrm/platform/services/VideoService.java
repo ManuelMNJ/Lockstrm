@@ -1,6 +1,7 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.VideoDTO;
+import com.lockstrm.platform.dto.VideoDTO.GrupoRef;
 import com.lockstrm.platform.entities.Grupo;
 import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.PermisosGrupo;
@@ -35,9 +36,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -62,7 +66,7 @@ public class VideoService {
 
     @Transactional
     public Video subirVideo(MultipartFile file, String emailUsuario, String titulo,
-                            Long idGrupo, String miniaturaUrl, Integer duracion) throws IOException {
+                            List<Long> idGrupos, String miniaturaUrl, Integer duracion) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new com.lockstrm.platform.exceptions.InvalidFileException(
                     "El archivo excede el tamaño máximo permitido (200 MB)");
@@ -71,6 +75,15 @@ public class VideoService {
         String ext = mimeValidator.validateAndGetExtension(file);
 
         Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
+
+        // Antes de tocar disco, validamos el rol en CADA grupo destino. Si
+        // alguno falla, abortamos sin haber escrito el fichero ni la fila.
+        // `LinkedHashSet` deduplica preservando el orden de entrada.
+        Set<Long> destinos = idGrupos == null ? Set.of() : new LinkedHashSet<>(idGrupos);
+        List<Grupo> grupos = new ArrayList<>(destinos.size());
+        for (Long idGrupo : destinos) {
+            grupos.add(resolverGrupoPropio(idGrupo, emailUsuario));
+        }
 
         String fileName = UUID.randomUUID() + "." + ext;
 
@@ -92,9 +105,9 @@ public class VideoService {
 
         Video guardado = videoRepository.save(nuevoVideo);
 
-        if (idGrupo != null) {
-            Grupo grupo = resolverGrupoPropio(idGrupo, emailUsuario);
-            permisosGrupoRepository.save(new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
+        for (Grupo grupo : grupos) {
+            permisosGrupoRepository.save(
+                    new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
         }
 
         return guardado;
@@ -172,53 +185,76 @@ public class VideoService {
             throw new AccessDeniedException("No tienes acceso a este grupo");
         }
         List<Video> videos = videoRepository.findByGrupoId(idGrupo);
-        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<VideoDTO> obtenerMisVideos(String emailUsuario) {
         List<Video> videos = videoRepository.findByPropietario_Email(emailUsuario);
-        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<VideoDTO> obtenerVideosCompartidos(String emailUsuario) {
         List<Video> videos = videoRepository.findVideosCompartidosConUsuario(emailUsuario);
-        Map<Long, GrupoRef> grupoMap = buildGrupoMap(videos);
+        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
-    private record GrupoRef(Long idGrupo, String nombre) {}
-
-    private VideoDTO toDTO(Video video, Map<Long, GrupoRef> grupoMap) {
-        GrupoRef ref = grupoMap.get(video.getIdVideo());
+    private VideoDTO toDTO(Video video, Map<Long, List<GrupoRef>> grupoMap) {
+        List<GrupoRef> refs = grupoMap.getOrDefault(video.getIdVideo(), List.of());
         return new VideoDTO(
                 video.getIdVideo(),
                 video.getTitulo(),
                 video.getDuracion(),
                 video.getFechaSubida(),
-                ref != null ? ref.idGrupo() : null,
-                ref != null ? ref.nombre()  : null,
+                refs,
                 video.getMiniaturaUrl(),
                 video.getFileName()   // nombre de fichero UUID, no URL directa
         );
     }
 
-    private Map<Long, GrupoRef> buildGrupoMap(List<Video> videos) {
+    /**
+     * Mapa idVideo → lista de grupos a los que pertenece. Una sola consulta
+     * con JOIN FETCH evita el N+1, y agrupar manualmente en lugar de usar
+     * `toMap` permite que un mismo vídeo aparezca en varios grupos (N:M real).
+     */
+    private Map<Long, List<GrupoRef>> buildGrupoMap(List<Video> videos) {
         if (videos.isEmpty()) return Map.of();
         List<Long> ids = videos.stream().map(Video::getIdVideo).toList();
         return permisosGrupoRepository.findByVideoIds(ids).stream()
-                .collect(Collectors.toMap(
+                .collect(Collectors.groupingBy(
                         pg -> pg.getId().getIdVideoId(),
-                        pg -> new GrupoRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
-                        (a, b) -> a
+                        Collectors.mapping(
+                                pg -> new GrupoRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
+                                Collectors.toList()
+                        )
                 ));
     }
 
+    /**
+     * Reemplaza la lista de grupos del vídeo por la indicada (semántica de
+     * "set"). Se valida ANTES de tocar la BBDD que el propietario tenga rol
+     * EDITOR+ en cada grupo de la lista; si alguna validación falla, la
+     * transacción aborta y no queda estado parcial.
+     *
+     * Implementación: borrar todas las filas de permisos del vídeo y
+     * reinsertarlas. Es más simple que un diff con `deleteById` + `save`
+     * mezclados — ese patrón con `@EmbeddedId` puede provocar fallos de
+     * orden de flush en Hibernate (el motivo del 500 visto en producción).
+     * Hacemos `flush()` entre el delete y los inserts para asegurar que
+     * el DELETE se ejecuta antes que los INSERT y no haya conflicto de PK
+     * en la sesión cuando se conserva un grupo ya existente.
+     *
+     * Reglas de seguridad:
+     *  - Solo el propietario del vídeo puede editar.
+     *  - Para que un grupo aparezca en la lista, el propietario debe ser
+     *    miembro de ese grupo con rol EDITOR o superior.
+     */
     @Transactional
-    public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, Long idGrupo) {
+    public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, List<Long> idGrupos) {
         Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(emailUsuario)) {
@@ -228,29 +264,33 @@ public class VideoService {
         video.setTitulo(titulo);
         videoRepository.save(video);
 
-        Grupo grupo = null;
-        if (idGrupo != null) {
-            grupo = resolverGrupoPropio(idGrupo, emailUsuario);
+        Set<Long> deseados = idGrupos == null ? Set.of() : new LinkedHashSet<>(idGrupos);
+
+        // Validamos rol EDITOR+ en TODOS los grupos antes de tocar BBDD para
+        // que un grupo inválido aborte la operación sin estado parcial.
+        List<Grupo> gruposValidados = new ArrayList<>(deseados.size());
+        for (Long id : deseados) {
+            gruposValidados.add(resolverGrupoPropio(id, emailUsuario));
         }
 
+        // `deleteByVideoId` está anotado con flushAutomatically + clearAutomatically:
+        // tras esta línea, el persistence context queda limpio para los inserts.
         permisosGrupoRepository.deleteByVideoId(idVideo);
-
-        String grupoNombre = null;
-        if (grupo != null) {
-            permisosGrupoRepository.save(new PermisosGrupo(idVideo, grupo.getIdGrupo()));
-            grupoNombre = grupo.getNombre();
+        for (Grupo g : gruposValidados) {
+            permisosGrupoRepository.save(new PermisosGrupo(idVideo, g.getIdGrupo()));
         }
 
-        return new VideoDTO(
-                video.getIdVideo(),
-                video.getTitulo(),
-                video.getDuracion(),
-                video.getFechaSubida(),
-                idGrupo,
-                grupoNombre,
-                video.getMiniaturaUrl(),
-                video.getFileName()
-        );
+        // No releemos con `buildGrupoMap` después de los inserts: Hibernate
+        // cachea las PermisosGrupo recién persistidas con su relación `grupo`
+        // a null (la columna está marcada `insertable=false`), y el JOIN FETCH
+        // posterior devuelve la instancia gestionada en lugar de hidratar la
+        // fresca → NPE en `pg.getGrupo().getNombre()`. Construimos el listado
+        // a mano con los Grupo ya validados — son justo los que acabamos de
+        // persistir.
+        List<GrupoRef> refs = gruposValidados.stream()
+                .map(g -> new GrupoRef(g.getIdGrupo(), g.getNombre()))
+                .toList();
+        return toDTO(video, Map.of(idVideo, refs));
     }
 
     @Transactional(readOnly = true)

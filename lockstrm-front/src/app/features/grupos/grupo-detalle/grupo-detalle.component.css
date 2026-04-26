@@ -1147,3 +1147,92 @@
   font-weight: 700;
   border-radius: 999px;
 }
+
+/* ── Navegador de pestañas del detalle de grupo ─────────────────────── */
+.detalle-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 var(--space-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.detalle-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.detalle-tab svg { width: 14px; height: 14px; }
+.detalle-tab:hover { color: var(--text-main); }
+.detalle-tab--active {
+  color: var(--color-primary-lighter, #c4b5fd);
+  border-bottom-color: var(--color-primary, #7c3aed);
+}
+
+/* ── Pestaña "Analíticas" ─────────────────────────────────────────────── */
+.analiticas-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: var(--space-5);
+}
+.section-header--with-action {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.section-sub {
+  font-size: 12px;
+  color: var(--text-subtle, #9ca3af);
+  margin: 4px 0 0;
+}
+.analiticas-table-wrap { overflow-x: auto; }
+.analiticas-video-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.analiticas-thumb {
+  width: 64px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+.analiticas-thumb--placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-subtle);
+}
+.analiticas-thumb--placeholder svg { width: 20px; height: 20px; }
+.analiticas-video-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.analiticas-video-title {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.analiticas-video-dur {
+  font-size: 11px;
+  color: var(--text-subtle);
+}

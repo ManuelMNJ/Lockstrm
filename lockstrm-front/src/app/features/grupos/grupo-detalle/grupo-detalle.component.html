@@ -81,6 +81,40 @@
   }
 
   @if (!cargando && grupo) {
+
+    <!-- ── Navegador de pestañas ───────────────────────────────────────
+         "Resumen" siempre visible. "Analíticas" solo para EDITOR+ porque
+         el endpoint del backend exige ese rol y mostrar la pestaña a un
+         usuario que recibirá 403 al pulsarla sería confuso. -->
+    <nav class="detalle-tabs" role="tablist" aria-label="Secciones del grupo">
+      <button class="detalle-tab"
+              role="tab"
+              [class.detalle-tab--active]="pestanaActiva === 'resumen'"
+              [attr.aria-selected]="pestanaActiva === 'resumen'"
+              (click)="cambiarPestana('resumen')">
+        Resumen
+      </button>
+      @if (puedeGestionarVideos) {
+        <button class="detalle-tab"
+                role="tab"
+                [class.detalle-tab--active]="pestanaActiva === 'analiticas'"
+                [attr.aria-selected]="pestanaActiva === 'analiticas'"
+                (click)="cambiarPestana('analiticas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          Analíticas
+        </button>
+      }
+    </nav>
+
+  }
+
+  @if (!cargando && grupo && pestanaActiva === 'resumen') {
     <div class="detalle-body">
 
       <div class="detalle-columns">
@@ -324,6 +358,105 @@
     </div><!-- /.detalle-body -->
   }
 
+  <!-- ── Pestaña "Analíticas" ────────────────────────────────────────────
+       Solo se renderiza cuando está activa y el usuario tiene rol EDITOR+.
+       Datos acotados al contexto de este grupo (segregación B2B): las
+       reproducciones desde otros grupos donde el vídeo también esté
+       compartido NO entran en estos agregados. -->
+  @if (!cargando && grupo && pestanaActiva === 'analiticas' && puedeGestionarVideos) {
+    <section class="analiticas-panel" aria-labelledby="analiticas-title">
+
+      <header class="section-header section-header--with-action">
+        <div>
+          <h3 class="section-title" id="analiticas-title">Analíticas del grupo</h3>
+          <p class="section-sub">
+            Visualizaciones únicas y tiempo de reproducción de cada vídeo
+            <strong>solo</strong> en el contexto de este grupo.
+          </p>
+        </div>
+        <button class="btn-secondary"
+                (click)="refrescarAnaliticas()"
+                [disabled]="cargandoAnaliticas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          {{ cargandoAnaliticas ? 'Cargando…' : 'Refrescar' }}
+        </button>
+      </header>
+
+      @if (errorAnaliticas) {
+        <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnaliticas }}</p>
+      }
+
+      @if (cargandoAnaliticas && !analiticasGrupo.length) {
+        <div class="empty-state"><p>Cargando analíticas…</p></div>
+      } @else if (!analiticasGrupo.length) {
+        <div class="empty-state">
+          <p>No hay vídeos en este grupo todavía. Añade contenido para empezar a recibir métricas.</p>
+        </div>
+      } @else {
+        <div class="analiticas-table-wrap">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>Vídeo</th>
+                <th>Espectadores únicos</th>
+                <th>Tiempo total visto</th>
+                <th>Retención media</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of analiticasGrupo; track s.idVideo) {
+                <tr>
+                  <td>
+                    <div class="analiticas-video-cell">
+                      @if (s.miniaturaUrl) {
+                        <img class="analiticas-thumb" [src]="s.miniaturaUrl" [alt]="s.titulo" loading="lazy">
+                      } @else {
+                        <div class="analiticas-thumb analiticas-thumb--placeholder" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                          </svg>
+                        </div>
+                      }
+                      <div class="analiticas-video-meta">
+                        <span class="analiticas-video-title" [title]="s.titulo">{{ s.titulo }}</span>
+                        @if (s.duracion) {
+                          <span class="analiticas-video-dur">{{ s.duracion | videoDuration:true }}</span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="stats-badge">{{ s.espectadoresUnicos }}</span>
+                  </td>
+                  <td>
+                    <span class="stats-badge">{{ s.tiempoTotalSegundos | videoDuration:true }}</span>
+                  </td>
+                  <td>
+                    <div class="retention-cell">
+                      <div class="retention-track retention-track--inline">
+                        <div class="retention-fill" [style.width.%]="retencionPctVideo(s)"></div>
+                      </div>
+                      <span class="retention-pct">{{ retencionPctVideo(s) }}%</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    </section>
+  }
+
 </div>
 
 @if (videoReproduciendose) {
@@ -351,6 +484,7 @@
           <app-video-player
             [fileName]="videoReproduciendose.fileName"
             [idVideo]="videoReproduciendose.idVideo"
+            [grupoId]="idGrupo"
             (heartbeat)="onHeartbeat($event)">
           </app-video-player>
         } @else {

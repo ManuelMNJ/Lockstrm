@@ -13,7 +13,18 @@ public record VideoLogDto(
         String        username,
         String        tag,
         LocalDateTime fechaHora,
-        Integer       segundosVistos
+        Integer       segundosVistos,
+        /**
+         * Grupo desde el que se reprodujo el vídeo en esta sesión. Puede ser
+         * null cuando la reproducción ocurrió fuera de un contexto de grupo
+         * (p. ej. el propietario abriendo el vídeo desde "Mis vídeos").
+         */
+        Long          grupoId,
+        /**
+         * Nombre del grupo, resuelto en la consulta JPQL para evitar un round
+         * trip adicional. null si grupoId es null o si el grupo fue eliminado.
+         */
+        String        grupoNombre
 ) {
     public String displayTag() {
         return username + "#" + tag;

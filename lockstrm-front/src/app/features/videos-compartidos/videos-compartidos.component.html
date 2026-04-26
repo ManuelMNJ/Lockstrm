@@ -75,7 +75,7 @@
 
             <!-- Contexto: desde qué grupo -->
             <div class="card-context">
-              @if (v.grupo?.nombre) {
+              @if (v.grupos.length > 0) {
                 <span class="context-row">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -85,8 +85,12 @@
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
-                  <span class="context-label">Grupo</span>
-                  <span class="context-value context-value--group">{{ v.grupo!.nombre }}</span>
+                  <span class="context-label">{{ v.grupos.length === 1 ? 'Grupo' : 'Grupos' }}</span>
+                  <span class="context-value context-value--group">
+                    @for (g of v.grupos; track g.idGrupo; let last = $last) {
+                      {{ g.nombre }}{{ last ? '' : ', ' }}
+                    }
+                  </span>
                 </span>
               }
             </div>
@@ -181,6 +185,7 @@
             <app-video-player
               [fileName]="videoReproduciendose.fileName"
               [idVideo]="videoReproduciendose.idVideo"
+              [grupoId]="null"
               (heartbeat)="onHeartbeat($event)">
             </app-video-player>
           } @else {

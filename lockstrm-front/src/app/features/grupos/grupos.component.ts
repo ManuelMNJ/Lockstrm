@@ -103,12 +103,12 @@ export class GruposComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (videos) => {
+          // Un vídeo puede pertenecer a varios grupos (N:M); cada uno suma +1.
           const countMap = new Map<number, number>();
           videos.forEach(v => {
-            const idGrupo = v.grupo?.idGrupo;
-            if (idGrupo) {
+            v.grupos.forEach(({ idGrupo }) => {
               countMap.set(idGrupo, (countMap.get(idGrupo) ?? 0) + 1);
-            }
+            });
           });
           this.videosPerGrupo = countMap;
           this.cdr.markForCheck();
