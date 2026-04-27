@@ -31,14 +31,21 @@ public class LogService {
     private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
 
     /**
-     * Acumula segundos de reproducción sobre la fila de `logs` que identifica
-     * esta sesión del reproductor. La clave de sesión la genera el cliente al
-     * montar el <video-player> (UUID en `sessionId`), de modo que cada apertura
-     * del reproductor produce exactamente una fila independiente: la analítica
-     * por sesión es atómica, sin heurísticas de ventana temporal.
+     * Acumula segundos de reproducción sobre la fila de `logs` correspondiente
+     * a ESTA sesión concreta del reproductor.
      *
-     * Si el ping llega con un sessionId aún no visto (primer heartbeat de la
-     * sesión), se crea la fila y se suman los 5 s del propio pulso.
+     * Clave de UPSERT: (usuario, vídeo, grupoId, sessionId).
+     *  - sessionId lo genera el cliente al montar el <video-player>; cada
+     *    apertura del reproductor produce un UUID nuevo y, por tanto, una
+     *    fila independiente. Volver a abrir el mismo vídeo el mismo día
+     *    crea otra fila — esto preserva la granularidad por sesión que
+     *    necesita la analítica.
+     *  - grupoId segrega por contexto: ver el vídeo desde el Grupo A y
+     *    desde el Grupo B genera dos filas distintas aunque el sessionId
+     *    fuera (improbablemente) el mismo.
+     *
+     * Si el ping llega con una combinación aún no vista (primer heartbeat
+     * de la sesión), se crea la fila y se suman los 5 s del propio pulso.
      */
     @Transactional
     public void registrarHeartbeat(Long idVideo, String emailUsuario,
@@ -50,11 +57,8 @@ public class LogService {
 
         verificarAcceso(video, emailUsuario);
 
-        // Clave lógica del UPSERT: (usuario, video, grupoId). Si el usuario ve
-        // el mismo vídeo desde dos grupos distintos, cada uno acumula sus
-        // segundos en su propia fila, lo que permite analíticas por grupo.
         Log log = logRepository
-                .findByUsuarioVideoYGrupo(usuario, video, grupoId)
+                .findSesion(usuario, video, grupoId, sessionId)
                 .orElseGet(() -> {
                     Log nuevoLog = new Log();
                     nuevoLog.setUsuario(usuario);

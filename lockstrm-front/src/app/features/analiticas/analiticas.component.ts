@@ -11,11 +11,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AnaliticasService, AnaliticasGlobales, VideoTop } from '../../core/services/analiticas.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 
 @Component({
   selector: 'app-analiticas',
   standalone: true,
-  imports: [CommonModule, RouterLink, VideoDurationPipe],
+  imports: [CommonModule, RouterLink, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './analiticas.component.html',
   styleUrl: './analiticas.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

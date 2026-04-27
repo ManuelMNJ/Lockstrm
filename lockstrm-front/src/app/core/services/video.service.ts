@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, map, shareReplay, tap } from 'rxjs/operators';
+import { filter, map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
@@ -78,7 +78,6 @@ export class VideoService {
   // null = aún no cargado; [] = cargado sin vídeos; Video[] = datos reales
   private readonly _misVideos$      = new BehaviorSubject<Video[] | null>(null);
   private _misVideosLoaded          = false;
-  private _videosCompartidosCache$: Observable<Video[]> | null = null;
 
   constructor(
     private http:          HttpClient,
@@ -125,25 +124,15 @@ export class VideoService {
     );
   }
 
-  /** GET /api/videos/compartidos — vídeos accesibles vía permisos de grupo (contexto Espectador). */
-  obtenerVideosCompartidos(): Observable<Video[]> {
-    if (!this._videosCompartidosCache$) {
-      this._videosCompartidosCache$ = this.http.get<VideoRaw[]>(`${this.apiUrl}/compartidos`).pipe(
-        map(arr => arr.map(mapVideo)),
-        shareReplay(1),
-      );
-    }
-    return this._videosCompartidosCache$;
-  }
-
-  subirVideo(archivo: File, titulo: string, idGrupos?: number[] | null, miniaturaUrl?: string | null, duracion?: number): Observable<HttpEvent<VideoUploadResponse>> {
+  subirVideo(archivo: File, titulo: string, idGrupos?: number[] | null, miniatura?: Blob | null, duracion?: number): Observable<HttpEvent<VideoUploadResponse>> {
     const formData = new FormData();
     formData.append('file',   archivo);
     formData.append('titulo', titulo);
     // FormData admite la misma clave repetida; Spring lo bindea a List<Long>.
     (idGrupos ?? []).forEach(id => formData.append('idGrupos', id.toString()));
-    if (miniaturaUrl != null) formData.append('miniaturaUrl', miniaturaUrl);
-    if (duracion     != null && duracion > 0) formData.append('duracion', duracion.toString());
+    // Enviamos la miniatura como fichero JPEG; Spring recibe MultipartFile.
+    if (miniatura != null) formData.append('miniatura', miniatura, 'thumbnail.jpg');
+    if (duracion  != null && duracion > 0) formData.append('duracion', duracion.toString());
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
       reportProgress: true,
     });

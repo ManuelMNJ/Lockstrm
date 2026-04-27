@@ -10,16 +10,17 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { combineLatest } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { VideoService, Video, GrupoRef } from '../../../core/services/video.service';
 import { AnaliticasService, VideoLog } from '../../../core/services/analiticas.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
 
 @Component({
   selector: 'app-analiticas-video',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './analiticas-video.component.html',
   styleUrl: './analiticas-video.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,10 +29,9 @@ export class AnaliticasVideoComponent implements OnInit {
 
   video:     Video | null = null;
   /**
-   * Logs sin filtrar (todos los del vídeo). El filtro por grupo se aplica en
-   * memoria con `logsFiltrados` para que el desplegable cambie la vista
-   * instantáneamente sin nuevas peticiones HTTP. Si el set crece mucho,
-   * pasamos a refetchear con ?grupoId.
+   * Logs cargados. Si vienes en contexto de grupo, ya llegan filtrados por
+   * el backend (con los permisos verificados al servidor); si vienes en
+   * contexto global, llegan todos.
    */
   logs:      VideoLog[]   = [];
   cargando   = true;
@@ -40,10 +40,32 @@ export class AnaliticasVideoComponent implements OnInit {
   /**
    * Filtro activo de grupo:
    *  - 'all'   → todas las visualizaciones
-   *  - 'none'  → solo las reproducciones sin contexto de grupo (grupoId = null)
+   *  - 'none'  → solo las reproducciones sin contexto de grupo
    *  - número  → un grupo concreto
+   *
+   * En modo "from=grupo" el filtro arranca y se queda fijo en el grupo de
+   * origen porque el backend solo nos devuelve esas filas. En modo global
+   * (propietario), el desplegable se puede cambiar a piacere.
    */
   filtroGrupo: 'all' | 'none' | number = 'all';
+
+  /**
+   * Origen de la navegación. "grupo" significa que llegamos desde la pestaña
+   * Analíticas del detalle de un grupo y debemos:
+   *  - Cargar el vídeo desde `obtenerVideosPorGrupo` (el solicitante puede no
+   *    ser propietario; sí miembro del grupo).
+   *  - Pedir los logs ya filtrados por ese grupo al backend.
+   *  - Volver al detalle del grupo, no al panel global.
+   */
+  fromGrupo:  boolean = false;
+  grupoIdCtx: number | null = null;
+
+  /**
+   * Preset de fecha activo. Cambia → refetch al backend (no filtramos en
+   * cliente porque queremos que las KPIs sean exactas para el rango y el
+   * dataset puede ser grande).
+   */
+  rangoActivo: '7d' | '30d' | '90d' | 'all' = 'all';
 
   private idVideo: number | null = null;
 
@@ -63,29 +85,71 @@ export class AnaliticasVideoComponent implements OnInit {
     }
     this.idVideo = idVideo;
 
-    // Si la vista se abre desde un grupo concreto, ese contexto pre-selecciona
-    // el filtro pero NO restringe la consulta: pedimos todos los logs para
-    // que el usuario pueda cambiar de filtro en el desplegable sin refetch.
-    const grupoIdParam = this.route.snapshot.queryParamMap.get('grupoId');
-    if (grupoIdParam != null) {
-      this.filtroGrupo = Number(grupoIdParam);
+    const qp = this.route.snapshot.queryParamMap;
+    this.fromGrupo  = qp.get('from') === 'grupo';
+    const grupoStr  = qp.get('grupoId');
+    this.grupoIdCtx = grupoStr != null ? Number(grupoStr) : null;
+
+    if (this.fromGrupo && this.grupoIdCtx != null) {
+      this.filtroGrupo = this.grupoIdCtx;
     }
 
-    combineLatest([
-      this.videoService.obtenerMisVideos(),
-      this.analiticasService.getLogsDelVideo(idVideo),
-    ]).pipe(takeUntilDestroyed(this.destroyRef))
+    // Heredamos el rango si la URL trae `?rango=`. Si no, "all" por defecto.
+    const rangoParam = qp.get('rango');
+    if (rangoParam === '7d' || rangoParam === '30d' || rangoParam === '90d') {
+      this.rangoActivo = rangoParam;
+    }
+
+    this.cargarTodo(idVideo);
+  }
+
+  /** Cambia el preset de fecha y vuelve a pedir logs al backend. */
+  cambiarRango(r: '7d' | '30d' | '90d' | 'all'): void {
+    if (this.rangoActivo === r) return;
+    this.rangoActivo = r;
+    if (this.idVideo != null) this.cargarTodo(this.idVideo);
+  }
+
+  private rangoDesde(): string | null {
+    const dias: Record<string, number | null> = { '7d': 7, '30d': 30, '90d': 90, 'all': null };
+    const n = dias[this.rangoActivo];
+    if (n == null) return null;
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+
+  private cargarTodo(idVideo: number): void {
+    this.cargando = true;
+    this.cdr.markForCheck();
+
+    const desde = this.rangoDesde();
+    // En modo "grupo" pedimos los logs YA filtrados por el backend (que
+    // además autoriza por rol del grupo). En modo global pedimos todos los
+    // logs y dejamos que el desplegable filtre en cliente.
+    const logs$ = this.fromGrupo && this.grupoIdCtx != null
+      ? this.analiticasService.getLogsDelVideo(idVideo, this.grupoIdCtx, { desde })
+      : this.analiticasService.getLogsDelVideo(idVideo, null, { desde });
+
+    // Para los metadatos del vídeo (título, miniatura, duración):
+    //  - Si vienes de un grupo, lo buscamos en los vídeos compartidos con
+    //    ese grupo (el usuario puede no ser propietario).
+    //  - Si vienes de "Mis vídeos", lo buscamos en obtenerMisVideos.
+    const videos$: Observable<Video[]> = this.fromGrupo && this.grupoIdCtx != null
+      ? this.videoService.obtenerVideosPorGrupo(this.grupoIdCtx)
+      : this.videoService.obtenerMisVideos();
+
+    combineLatest([videos$, logs$])
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ([videos, logs]) => {
-          const propio = videos.find(v => v.idVideo === idVideo) ?? null;
-          if (!propio) {
-            // Seguridad en profundidad: el back ya devuelve 403, pero si por
-            // cualquier motivo los logs llegaron sin el vídeo en la lista
-            // propia, no mostramos analíticas de un vídeo que no es nuestro.
+          const v = videos.find(x => x.idVideo === idVideo) ?? null;
+          if (!v) {
             this.redirigirNoAutorizado();
             return;
           }
-          this.video    = propio;
+          this.video    = v;
           this.logs     = logs;
           this.cargando = false;
           this.cdr.markForCheck();
@@ -103,9 +167,28 @@ export class AnaliticasVideoComponent implements OnInit {
   }
 
   private redirigirNoAutorizado(): void {
-    this.router.navigate(['/mi-espacio/videos'], {
-      queryParams: { aviso: 'sin-acceso-analiticas' },
-    });
+    // Volvemos al origen razonable: al grupo si veníamos de él, al panel
+    // global si no.
+    if (this.fromGrupo && this.grupoIdCtx != null) {
+      this.router.navigate(['/mi-espacio/grupos', this.grupoIdCtx], {
+        queryParams: { aviso: 'sin-acceso-analiticas' },
+      });
+    } else {
+      this.router.navigate(['/mi-espacio/videos'], {
+        queryParams: { aviso: 'sin-acceso-analiticas' },
+      });
+    }
+  }
+
+  /** Ruta del back-link: al grupo si vienes de él, al panel global si no. */
+  get backLink(): unknown[] {
+    return this.fromGrupo && this.grupoIdCtx != null
+      ? ['/mi-espacio/grupos', this.grupoIdCtx]
+      : ['/mi-espacio/analiticas'];
+  }
+
+  get backLabel(): string {
+    return this.fromGrupo ? 'Volver al grupo' : 'Volver';
   }
 
   /** % de retención individual: segundos vistos en esta sesión / duración. */
@@ -115,11 +198,6 @@ export class AnaliticasVideoComponent implements OnInit {
     return Math.min(Math.round((segundos / dur) * 100), 100);
   }
 
-  /**
-   * Logs aplicando el filtro de grupo activo. Se evalúa sobre cada cambio
-   * de `filtroGrupo` o de `logs`; al ser un getter no requiere recomputación
-   * manual.
-   */
   get logsFiltrados(): VideoLog[] {
     if (this.filtroGrupo === 'all')  return this.logs;
     if (this.filtroGrupo === 'none') return this.logs.filter(l => l.grupoId == null);
@@ -127,12 +205,13 @@ export class AnaliticasVideoComponent implements OnInit {
   }
 
   /**
-   * Lista de grupos disponibles en el desplegable. Combina los grupos a los
-   * que pertenece el vídeo HOY (con sus nombres canónicos) con cualquier
-   * grupoId que aparezca en los logs y NO esté en esa lista — caso de un
-   * grupo del que el vídeo fue desvinculado pero del que aún quedan
-   * registros históricos. Esos se renderizan como "Grupo eliminado" o con el
-   * nombre que el log preservó.
+   * Grupos disponibles en el desplegable. Combina los grupos a los que
+   * pertenece el vídeo hoy con los que aparecen en logs huérfanos (vídeo ya
+   * desvinculado del grupo o grupo eliminado).
+   *
+   * En modo "from=grupo" el desplegable se inhabilita en el HTML porque el
+   * backend solo devuelve los logs de ese grupo y no tendría sentido
+   * cambiar el filtro.
    */
   get gruposDisponibles(): GrupoRef[] {
     const fromVideo = this.video?.grupos ?? [];
@@ -142,15 +221,22 @@ export class AnaliticasVideoComponent implements OnInit {
         fromLogs.set(l.grupoId, l.grupoNombre ?? 'Grupo eliminado');
       }
     }
-    // Quitamos los que ya están en `video.grupos` para no duplicar.
     fromVideo.forEach(g => fromLogs.delete(g.idGrupo));
     const huerfanos = [...fromLogs.entries()].map(([idGrupo, nombre]) => ({ idGrupo, nombre }));
     return [...fromVideo, ...huerfanos];
   }
 
-  /** True si en los logs hay al menos una sesión sin contexto de grupo. */
   get hayLogsSinGrupo(): boolean {
     return this.logs.some(l => l.grupoId == null);
+  }
+
+  /** Nombre del grupo de contexto, para mostrar en la cabecera. */
+  get nombreGrupoCtx(): string | null {
+    if (this.grupoIdCtx == null) return null;
+    const fromVideo = this.video?.grupos.find(g => g.idGrupo === this.grupoIdCtx);
+    if (fromVideo) return fromVideo.nombre;
+    const fromLog = this.logs.find(l => l.grupoId === this.grupoIdCtx);
+    return fromLog?.grupoNombre ?? null;
   }
 
   // ── KPIs (sobre los logs filtrados) ────────────────────────────────────
@@ -165,5 +251,12 @@ export class AnaliticasVideoComponent implements OnInit {
 
   get tiempoTotalVisto(): number {
     return this.logsFiltrados.reduce((s, l) => s + (l.segundosVistos ?? 0), 0);
+  }
+
+  /** Duración media por sesión — la métrica honesta, sin sumar sesiones distintas. */
+  get duracionMediaSegundos(): number {
+    const filas = this.logsFiltrados;
+    if (!filas.length) return 0;
+    return Math.round(filas.reduce((s, l) => s + (l.segundosVistos ?? 0), 0) / filas.length);
   }
 }

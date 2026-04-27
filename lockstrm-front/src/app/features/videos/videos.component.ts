@@ -10,13 +10,14 @@ import { VideoService, Video } from '../../core/services/video.service';
 import { GrupoService, Grupo } from '../../core/services/grupo.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 import { Paginator } from '../../shared/utils/paginator';
 import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +34,13 @@ export class VideosComponent implements OnInit {
    * para que el toggle de un checkbox sea O(1) y no haya duplicados.
    */
   idGruposSeleccionados = new Set<number>();
-  miniaturaDataUrl: string | null = null;
+  /** Blob JPEG para subir al backend como multipart. */
+  miniaturaBlob:    Blob   | null = null;
+  /**
+   * URL temporal (createObjectURL) usada solo para mostrar la preview en el
+   * formulario. Se revoca al cerrar / subir para liberar memoria.
+   */
+  miniaturaPreviewUrl: string | null = null;
   private duracionVideo = 0;
   private objectUrl: string | null = null;
 
@@ -184,7 +191,8 @@ export class VideosComponent implements OnInit {
       return;
     }
     this.archivoSeleccionado = file;
-    this.miniaturaDataUrl    = null;
+    this.miniaturaBlob       = null;
+    if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
     this.duracionVideo       = 0;
     if (this.estadoSubida === 'error') { this.estadoSubida = 'idle'; this.mensajeError = ''; }
     this.cdr.markForCheck();
@@ -213,11 +221,18 @@ export class VideosComponent implements OnInit {
       canvas.height   = 180;
       const ctx       = canvas.getContext('2d')!;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      this.miniaturaDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      // toBlob es asíncrono: producimos un Blob real en lugar del data URL
+      // para poder enviarlo como MultipartFile al backend.
+      canvas.toBlob(blob => {
+        this.miniaturaBlob = blob;
+        // URL temporal solo para la preview en formulario; se revoca al subir.
+        if (this.miniaturaPreviewUrl) URL.revokeObjectURL(this.miniaturaPreviewUrl);
+        this.miniaturaPreviewUrl = blob ? URL.createObjectURL(blob) : null;
+        this.cdr.markForCheck();
+      }, 'image/jpeg', 0.75);
       video.src = '';
       URL.revokeObjectURL(this.objectUrl!);
       this.objectUrl = null;
-      this.cdr.markForCheck();
     };
 
     video.onerror = () => {
@@ -252,7 +267,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, [...this.idGruposSeleccionados], this.miniaturaDataUrl, this.duracionVideo)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, [...this.idGruposSeleccionados], this.miniaturaBlob, this.duracionVideo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -287,7 +302,8 @@ export class VideosComponent implements OnInit {
             duracion:     res.duracion ?? null,
             fechaSubida:  new Date().toISOString(),
             grupos,
-            miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
+            // El backend devuelve la ruta pública resuelta o null si no hubo miniatura.
+            miniaturaUrl: res.miniaturaUrl || null,
             fileName:     res.fileName,
           };
 
@@ -300,7 +316,8 @@ export class VideosComponent implements OnInit {
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
           this.idGruposSeleccionados = new Set<number>();
-          this.miniaturaDataUrl    = null;
+          this.miniaturaBlob       = null;
+          if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 

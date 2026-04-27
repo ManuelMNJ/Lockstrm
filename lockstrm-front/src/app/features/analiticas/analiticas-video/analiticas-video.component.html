@@ -3,23 +3,30 @@
   <!-- ── Cabecera ── -->
   <header class="page-header">
     <div class="header-left">
-      <a routerLink="/mi-espacio/analiticas" class="back-link" aria-label="Volver al panel general">
+      <a [routerLink]="backLink" class="back-link" [attr.aria-label]="backLabel">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-        Volver
+        {{ backLabel }}
       </a>
       <h2 class="page-title">
         @if (cargando) { <span class="skeleton-line skeleton-line--title"></span> }
         @else { {{ video?.titulo ?? 'Vídeo' }} }
       </h2>
-      <p class="page-sub">Registro de cada sesión de visualización</p>
+      <p class="page-sub">
+        @if (fromGrupo && nombreGrupoCtx) {
+          Sesiones reproducidas desde el grupo
+          <strong class="ctx-chip ctx-chip--group">{{ nombreGrupoCtx }}</strong>
+        } @else {
+          Registro de cada sesión de visualización (todos los contextos)
+        }
+      </p>
     </div>
 
     @if (video?.miniaturaUrl) {
       <div class="header-thumb" aria-hidden="true">
-        <img [src]="video!.miniaturaUrl" [alt]="video!.titulo" loading="lazy"/>
+        <img [src]="video!.miniaturaUrl | thumbnailSrc" [alt]="video!.titulo" loading="lazy"/>
       </div>
     }
   </header>
@@ -67,14 +74,17 @@
       </div>
     </div>
 
-    @if (video?.duracion) {
-      <div class="kpi-card kpi-card--neutral">
-        <div class="kpi-body">
-          <span class="kpi-value">{{ video!.duracion | videoDuration:true }}</span>
-          <span class="kpi-label">Duración del vídeo</span>
-        </div>
+    <div class="kpi-card kpi-card--neutral">
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value">{{ duracionMediaSegundos | videoDuration:true }}</span>
+          <span class="kpi-label">Duración media por sesión</span>
+        }
       </div>
-    }
+    </div>
 
   </section>
 
@@ -83,9 +93,30 @@
     <header class="section-header section-header--with-filter">
       <h3 class="section-title">Todas las visualizaciones</h3>
 
-      <!-- Filtro por contexto de grupo. Se aplica en cliente sobre los logs
-           ya cargados; cambiar de opción no provoca ninguna petición. -->
-      @if (!cargando && logs.length > 0) {
+      <div class="rango-presets" role="tablist" aria-label="Rango de fechas">
+        <button class="rango-preset" role="tab"
+                [class.rango-preset--active]="rangoActivo === '7d'"
+                [attr.aria-selected]="rangoActivo === '7d'"
+                (click)="cambiarRango('7d')">7 días</button>
+        <button class="rango-preset" role="tab"
+                [class.rango-preset--active]="rangoActivo === '30d'"
+                [attr.aria-selected]="rangoActivo === '30d'"
+                (click)="cambiarRango('30d')">30 días</button>
+        <button class="rango-preset" role="tab"
+                [class.rango-preset--active]="rangoActivo === '90d'"
+                [attr.aria-selected]="rangoActivo === '90d'"
+                (click)="cambiarRango('90d')">90 días</button>
+        <button class="rango-preset" role="tab"
+                [class.rango-preset--active]="rangoActivo === 'all'"
+                [attr.aria-selected]="rangoActivo === 'all'"
+                (click)="cambiarRango('all')">Todo</button>
+      </div>
+
+      <!-- Filtro por contexto de grupo. Solo visible/editable si llegamos
+           sin contexto fijo (modo "global"). Cuando vienes desde un grupo
+           el backend ya filtra a ese grupo y cambiar el desplegable no
+           tendría datos que mostrar. -->
+      @if (!cargando && logs.length > 0 && !fromGrupo) {
         <label class="grupo-filter">
           <span class="grupo-filter__label">Visto desde:</span>
           <select class="grupo-filter__select" [(ngModel)]="filtroGrupo">
@@ -116,7 +147,9 @@
         <thead>
           <tr>
             <th>Espectador</th>
-            <th>Visto desde</th>
+            @if (!fromGrupo) {
+              <th>Visto desde</th>
+            }
             <th>Fecha</th>
             <th>Tiempo visto</th>
             <th class="retention-col">Retención</th>
@@ -133,15 +166,17 @@
                   </div>
                 </div>
               </td>
-              <td>
-                @if (l.grupoId == null) {
-                  <span class="ctx-chip ctx-chip--none">Sin grupo</span>
-                } @else if (l.grupoNombre) {
-                  <span class="ctx-chip ctx-chip--group">{{ l.grupoNombre }}</span>
-                } @else {
-                  <span class="ctx-chip ctx-chip--orphan" title="Este grupo ya no existe">Grupo eliminado</span>
-                }
-              </td>
+              @if (!fromGrupo) {
+                <td>
+                  @if (l.grupoId == null) {
+                    <span class="ctx-chip ctx-chip--none">Sin grupo</span>
+                  } @else if (l.grupoNombre) {
+                    <span class="ctx-chip ctx-chip--group">{{ l.grupoNombre }}</span>
+                  } @else {
+                    <span class="ctx-chip ctx-chip--orphan" title="Este grupo ya no existe">Grupo eliminado</span>
+                  }
+                </td>
+              }
               <td>
                 <span class="log-date">{{ l.fechaHora | date:'dd MMM yyyy, HH:mm' }}</span>
               </td>

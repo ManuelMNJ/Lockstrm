@@ -1236,3 +1236,178 @@
   font-size: 11px;
   color: var(--text-subtle);
 }
+
+/* ── KPI cards de la pestaña Analíticas ───────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: var(--space-5);
+}
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid transparent;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+.kpi-card:hover { transform: translateY(-1px); }
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-subtle, #9ca3af);
+}
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  font-feature-settings: "tnum";  /* dígitos tabulares: alineación visual */
+  color: var(--text-main);
+}
+.kpi-hint {
+  font-size: 11px;
+  color: var(--text-subtle, #9ca3af);
+}
+.kpi-card--purple { border-left-color: #7c3aed; }
+.kpi-card--blue   { border-left-color: #3b82f6; }
+.kpi-card--green  { border-left-color: #10b981; }
+.kpi-card--amber  { border-left-color: #f59e0b; }
+
+/* ── Tabla con números alineados a la derecha ─────────────────────────── */
+.stats-table .num-col {
+  text-align: right;
+  font-feature-settings: "tnum";
+}
+.stats-table .num-col:first-of-type { padding-left: 12px; }
+.stats-num {
+  font-weight: 600;
+  color: var(--text-main);
+  font-feature-settings: "tnum";
+}
+.stats-empty {
+  color: var(--text-subtle, #6b7280);
+  font-size: 13px;
+}
+.row--inactive td { opacity: 0.55; }
+.row--inactive:hover td { opacity: 0.85; }
+
+.stats-badge--soft {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* ── Filas clicables (drill-down al detalle) ──────────────────────────── */
+.row--clickable {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.row--clickable:hover td {
+  background: rgba(124, 58, 237, 0.06);
+}
+.row--clickable:hover .row-chevron {
+  color: var(--color-primary-lighter, #c4b5fd);
+  transform: translateX(2px);
+}
+.row--clickable:focus-visible {
+  outline: 2px solid var(--color-primary, #7c3aed);
+  outline-offset: -2px;
+}
+.chevron-col {
+  width: 32px;
+  text-align: right;
+  padding-right: 12px;
+}
+.row-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-subtle, #6b7280);
+  transition: transform 120ms ease, color 120ms ease;
+}
+
+/* ── Celda "Subido por" ──────────────────────────────────────────────── */
+.autor-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.autor-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.autor-handle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.autor-tag {
+  color: var(--text-subtle, #9ca3af);
+  font-weight: 400;
+  margin-left: 1px;
+}
+
+/* ── Cabecera de Analíticas: presets + acciones ──────────────────────── */
+.analiticas-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rango-presets {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.rango-preset {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.rango-preset:hover { color: var(--text-main); }
+.rango-preset--active {
+  background: rgba(124, 58, 237, 0.18);
+  color: var(--color-primary-lighter, #c4b5fd);
+}
+
+/* ── Sparkline en la tabla ───────────────────────────────────────────── */
+.spark-col {
+  width: 110px;
+  text-align: center;
+}
+.sparkline {
+  width: 90px;
+  height: 24px;
+  color: var(--color-primary-lighter, #c4b5fd);
+  vertical-align: middle;
+  display: inline-block;
+}
+.row--clickable:hover .sparkline { color: #fff; }

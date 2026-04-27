@@ -190,10 +190,10 @@
 
       <!-- ── DERECHA: vista previa miniatura ── -->
       <div class="upload-preview">
-        @if (miniaturaDataUrl) {
+        @if (miniaturaPreviewUrl) {
           <div class="preview-card">
             <div class="preview-thumb">
-              <img [src]="miniaturaDataUrl" alt="Miniatura generada" class="preview-img">
+              <img [src]="miniaturaPreviewUrl" alt="Miniatura generada" class="preview-img">
               <span class="preview-badge">Vista previa</span>
             </div>
             <div class="preview-footer">
@@ -305,7 +305,7 @@
                    [attr.aria-label]="'Reproducir: ' + v.titulo">
 
                 @if (v.miniaturaUrl) {
-                  <img [src]="v.miniaturaUrl"
+                  <img [src]="v.miniaturaUrl | thumbnailSrc"
                        [alt]="'Miniatura: ' + v.titulo"
                        class="card-thumb__img">
                 } @else {

@@ -62,11 +62,56 @@ public class VideoService {
     @Value("${lockstrm.upload.dir}")
     private String uploadDir;
 
+    @Value("${lockstrm.upload.thumbnails.dir}")
+    private String thumbnailsDir;
+
     private static final long MAX_FILE_SIZE = 200L * 1024 * 1024; // 200 MB
+
+    /**
+     * Guarda la miniatura JPEG en disco y devuelve el nombre de fichero UUID.
+     * Si `miniatura` es null o está vacía devuelve null (el vídeo quedará sin
+     * miniatura). Solo acepta imágenes (image/*).
+     */
+    private String saveThumbnail(MultipartFile miniatura) throws IOException {
+        if (miniatura == null || miniatura.isEmpty()) return null;
+
+        String contentType = miniatura.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new com.lockstrm.platform.exceptions.InvalidFileException(
+                    "La miniatura debe ser una imagen (JPEG, PNG…)");
+        }
+
+        // Forzamos extensión .jpg independientemente del subtipo: el canvas siempre
+        // produce image/jpeg y el reproductor no necesita el tipo correcto para mostrar.
+        String thumbName = UUID.randomUUID() + ".jpg";
+        Path dir    = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
+        Files.createDirectories(dir);
+        Path target = dir.resolve(thumbName).normalize();
+        if (!target.startsWith(dir)) {
+            throw new com.lockstrm.platform.exceptions.InvalidFileException("Ruta de miniatura no válida");
+        }
+        Files.copy(miniatura.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        return thumbName;
+    }
+
+    /**
+     * Resuelve el valor almacenado en `miniatura_url` para el campo del DTO.
+     *
+     * - null → null (sin miniatura).
+     * - Empieza con "data:" → base64 heredado; se devuelve tal cual para que
+     *   el frontend pueda seguir mostrando las imágenes antiguas sin migración.
+     * - Cualquier otra cosa → nombre de fichero almacenado en disco; se
+     *   devuelve la ruta relativa del endpoint público de miniaturas.
+     */
+    public static String resolveThumbnailUrl(String raw) {
+        if (raw == null)            return null;
+        if (raw.startsWith("data:")) return raw;
+        return "/api/videos/thumbnails/" + raw;
+    }
 
     @Transactional
     public Video subirVideo(MultipartFile file, String emailUsuario, String titulo,
-                            List<Long> idGrupos, String miniaturaUrl, Integer duracion) throws IOException {
+                            List<Long> idGrupos, MultipartFile miniatura, Integer duracion) throws IOException {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new com.lockstrm.platform.exceptions.InvalidFileException(
                     "El archivo excede el tamaño máximo permitido (200 MB)");
@@ -85,6 +130,10 @@ public class VideoService {
             grupos.add(resolverGrupoPropio(idGrupo, emailUsuario));
         }
 
+        // Guardamos la miniatura antes que el vídeo: si falla, no hemos tocado
+        // nada en la base de datos ni el archivo de vídeo todavía.
+        String thumbName = saveThumbnail(miniatura);
+
         String fileName = UUID.randomUUID() + "." + ext;
 
         Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
@@ -99,7 +148,7 @@ public class VideoService {
         nuevoVideo.setTitulo(titulo);
         nuevoVideo.setDuracion(duracion != null ? duracion : 0);
         nuevoVideo.setFileName(fileName);
-        nuevoVideo.setMiniaturaUrl(miniaturaUrl);
+        nuevoVideo.setMiniaturaUrl(thumbName);   // null o nombre de fichero UUID
         nuevoVideo.setFechaSubida(LocalDateTime.now());
         nuevoVideo.setPropietario(autor);
 
@@ -196,13 +245,6 @@ public class VideoService {
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<VideoDTO> obtenerVideosCompartidos(String emailUsuario) {
-        List<Video> videos = videoRepository.findVideosCompartidosConUsuario(emailUsuario);
-        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
-        return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
-    }
-
     private VideoDTO toDTO(Video video, Map<Long, List<GrupoRef>> grupoMap) {
         List<GrupoRef> refs = grupoMap.getOrDefault(video.getIdVideo(), List.of());
         return new VideoDTO(
@@ -211,7 +253,7 @@ public class VideoService {
                 video.getDuracion(),
                 video.getFechaSubida(),
                 refs,
-                video.getMiniaturaUrl(),
+                resolveThumbnailUrl(video.getMiniaturaUrl()),
                 video.getFileName()   // nombre de fichero UUID, no URL directa
         );
     }
@@ -321,7 +363,8 @@ public class VideoService {
             throw new AccessDeniedException("No tienes permiso para eliminar este vídeo");
         }
 
-        String fileName = video.getFileName();
+        String fileName    = video.getFileName();
+        String thumbRaw    = video.getMiniaturaUrl();   // puede ser null, base64 o nombre de fichero
 
         permisosGrupoRepository.deleteByVideoId(idVideo);
         videoVistaRepository.deleteByVideoId(idVideo);
@@ -334,6 +377,16 @@ public class VideoService {
                 Files.deleteIfExists(Paths.get(uploadDir).resolve(fileName));
             } catch (IOException e) {
                 log.warn("No se pudo eliminar el archivo '{}': {}", fileName, e.getMessage());
+            }
+        }
+
+        // Eliminar miniatura del disco (solo si es un nombre de fichero, no base64 heredado)
+        if (thumbRaw != null && !thumbRaw.startsWith("data:")) {
+            try {
+                Path thumbDir = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
+                Files.deleteIfExists(thumbDir.resolve(thumbRaw).normalize());
+            } catch (IOException e) {
+                log.warn("No se pudo eliminar la miniatura '{}': {}", thumbRaw, e.getMessage());
             }
         }
     }

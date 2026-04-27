@@ -9,8 +9,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, finalize, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { GrupoService, Grupo, Miembro } from '../../../core/services/grupo.service';
@@ -19,13 +20,14 @@ import { AnaliticasService, GrupoVideoStats } from '../../../core/services/anali
 import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
 import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [FormsModule, InitialPipe, VideoDurationPipe, VideoPlayerComponent],
+  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe, InitialPipe, VideoDurationPipe, ThumbnailSrcPipe, VideoPlayerComponent],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -107,6 +109,17 @@ export class GrupoDetalleComponent implements OnInit {
   errorAnaliticas = '';
   /** Evita refetch en cada cambio de pestaña; primera apertura carga, sucesivas no. */
   private analiticasCargadas = false;
+
+  /**
+   * Preset de fecha activo en la pestaña Analíticas. Cada cambio dispara un
+   * refetch al backend porque el filtro se aplica server-side (no en cliente)
+   * para que los KPIs y agregados sean exactos.
+   */
+  rangoActivo: '7d' | '30d' | '90d' | 'all' = 'all';
+
+  /** Anchura de la franja del sparkline SVG en píxeles del viewBox. */
+  readonly SPARK_W = 90;
+  readonly SPARK_H = 24;
 
   // Público porque el template lo enlaza a [grupoId] del <app-video-player>
   // para que el heartbeat lleve el contexto de grupo a la analítica.
@@ -534,13 +547,36 @@ export class GrupoDetalleComponent implements OnInit {
     this.cargarAnaliticas();
   }
 
+  /** Cambia el preset de fecha y vuelve a pedir al backend. */
+  cambiarRango(r: '7d' | '30d' | '90d' | 'all'): void {
+    if (this.rangoActivo === r) return;
+    this.rangoActivo = r;
+    this.analiticasCargadas = false;
+    this.cargarAnaliticas();
+  }
+
+  /**
+   * Convierte el preset en un `desde` ISO-8601. `hasta` siempre es ahora —
+   * lo dejamos null para que el backend no acote por arriba (datos vivos).
+   */
+  private rangoDesde(): string | null {
+    const dias: Record<string, number | null> = { '7d': 7, '30d': 30, '90d': 90, 'all': null };
+    const n = dias[this.rangoActivo];
+    if (n == null) return null;
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+
   private cargarAnaliticas(): void {
     if (!this.idGrupo) return;
     this.cargandoAnaliticas = true;
     this.errorAnaliticas    = '';
     this.cdr.markForCheck();
 
-    this.analiticasService.getAnaliticasDelGrupo(this.idGrupo)
+    const desde = this.rangoDesde();
+    this.analiticasService.getAnaliticasDelGrupo(this.idGrupo, { desde })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats) => {
@@ -559,12 +595,143 @@ export class GrupoDetalleComponent implements OnInit {
       });
   }
 
-  /** % de retención agregado del vídeo en este grupo. */
+  /**
+   * Path SVG del sparkline normalizado al viewBox SPARK_W × SPARK_H. El
+   * pico del array se mapea al borde superior del viewBox (con un margen
+   * de 2px para que no se corte el stroke). Devuelve string vacío cuando
+   * no hay sesiones — la plantilla pinta entonces "—" en vez de la curva.
+   */
+  sparklinePath(serie: number[]): string {
+    const max = Math.max(...serie, 0);
+    if (!serie.length || max === 0) return '';
+    const w = this.SPARK_W;
+    const h = this.SPARK_H - 2;       // 1px de padding arriba y abajo
+    const stepX = w / Math.max(serie.length - 1, 1);
+    const points = serie.map((v, i) => {
+      const x = i * stepX;
+      const y = h - (v / max) * h + 1;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return 'M' + points.join(' L');
+  }
+
+  /**
+   * Tooltip del sparkline: total de visitas en los 30 días + máximo en un
+   * solo día, para que un punto alto se entienda sin abrir el detalle.
+   */
+  sparklineTitle(serie: number[]): string {
+    const total = serie.reduce((a, b) => a + b, 0);
+    const max   = Math.max(...serie, 0);
+    return total === 0
+      ? 'Sin visitas en los últimos 30 días'
+      : `${total} visitas en los últimos 30 días · pico ${max} en un día`;
+  }
+
+  /**
+   * Genera y descarga un CSV con la tabla actual. Usa el preset de fecha
+   * activo en el nombre del fichero para que el usuario sepa de qué franja
+   * son los datos. Implementación 100 % cliente: ningún round-trip extra.
+   */
+  exportarCSV(): void {
+    if (!this.analiticasGrupo.length) return;
+    const incluyeAutor = this.esAdmin;
+    const headers = [
+      'Vídeo',
+      ...(incluyeAutor ? ['Subido por'] : []),
+      'Visitas', 'Espectadores únicos', 'Visitas/usuario',
+      'Duración media (s)', '% completado medio',
+      'Tiempo total (s)', 'Última visita',
+    ];
+    const rows = this.analiticasGrupo.map(s => [
+      s.titulo,
+      ...(incluyeAutor ? [`${s.autorUsername}#${s.autorTag}`] : []),
+      s.visitasTotales,
+      s.espectadoresUnicos,
+      this.visitasPorUsuario(s),
+      Math.round(s.duracionMediaSegundos),
+      Math.round(s.porcentajeCompletadoMedio),
+      s.tiempoTotalSegundos,
+      s.ultimaVisita ?? '',
+    ]);
+
+    // Escapado RFC 4180: rodear con comillas y duplicar las comillas internas
+    // si la celda contiene comas, comillas o saltos de línea.
+    const escape = (val: unknown): string => {
+      const s = String(val);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers, ...rows]
+      .map(row => row.map(escape).join(','))
+      .join('\n');
+
+    // BOM UTF-8 para que Excel detecte el encoding y muestre tildes/ñ bien.
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analiticas-${this.grupo?.nombre ?? 'grupo'}-${this.rangoActivo}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * % de completado medio del vídeo en este grupo. Lo calcula el backend
+   * (AVG por sesión, capado a 100); aquí solo lo redondeamos a entero para
+   * pintar la barra. Si no hay sesiones devuelve 0.
+   */
   retencionPctVideo(stat: GrupoVideoStats): number {
-    if (!stat.duracion || stat.duracion <= 0 || !stat.espectadoresUnicos) return 0;
-    // Promedio de segundos por espectador / duración del vídeo.
-    const segundosMediosPorUsuario = stat.tiempoTotalSegundos / stat.espectadoresUnicos;
-    return Math.min(Math.round((segundosMediosPorUsuario / stat.duracion) * 100), 100);
+    return Math.round(stat.porcentajeCompletadoMedio ?? 0);
+  }
+
+  /**
+   * Visitas por usuario único. Útil como indicador de "lealtad": valores
+   * cercanos a 1 indican que cada usuario abre el vídeo una vez; >1 indica
+   * que la gente vuelve. Devuelve "—" cuando no hay datos para no mostrar
+   * un NaN ni un cero engañoso.
+   */
+  visitasPorUsuario(stat: GrupoVideoStats): string {
+    if (!stat.espectadoresUnicos) return '—';
+    const ratio = stat.visitasTotales / stat.espectadoresUnicos;
+    return ratio.toFixed(1);
+  }
+
+  // ── KPIs agregados del grupo ─────────────────────────────────────────
+  // Cuatro métricas que resumen TODO el panel y van en las tarjetas de
+  // arriba. Se recalculan automáticamente por ChangeDetection cuando cambia
+  // analiticasGrupo. Usamos getters (no propiedades cacheadas) porque el
+  // dataset es pequeño (< 50 vídeos típicamente) y el cómputo es trivial.
+
+  get kpiVisitasTotales(): number {
+    return this.analiticasGrupo.reduce((s, v) => s + v.visitasTotales, 0);
+  }
+
+  /**
+   * Espectadores únicos a NIVEL DE GRUPO no se puede calcular sumando los
+   * `espectadoresUnicos` de cada vídeo (un usuario que ha visto 3 vídeos
+   * sumaría 3, no 1). Para hacerlo bien necesitaríamos otra query — para
+   * la fase A devolvemos null/— y queda como mejora de fase posterior.
+   * En su lugar mostramos "vídeos con vistas" como métrica honesta.
+   */
+  get kpiVideosConVistas(): number {
+    return this.analiticasGrupo.filter(v => v.visitasTotales > 0).length;
+  }
+
+  get kpiTiempoTotalSegundos(): number {
+    return this.analiticasGrupo.reduce((s, v) => s + v.tiempoTotalSegundos, 0);
+  }
+
+  /**
+   * Retención media del grupo: media ponderada por número de visitas para
+   * que un vídeo con 50 visitas pese más que uno con 2. Esto evita que un
+   * vídeo anecdótico distorsione la media global.
+   */
+  get kpiRetencionMedia(): number {
+    const totalVisitas = this.kpiVisitasTotales;
+    if (!totalVisitas) return 0;
+    const ponderado = this.analiticasGrupo
+      .reduce((s, v) => s + v.porcentajeCompletadoMedio * v.visitasTotales, 0);
+    return Math.round(ponderado / totalVisitas);
   }
 
   volver(): void {

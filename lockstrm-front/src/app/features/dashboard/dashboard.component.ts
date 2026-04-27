@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { DashboardService, DashboardStats } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, VideoDurationPipe],
+  imports: [CommonModule, RouterLink, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

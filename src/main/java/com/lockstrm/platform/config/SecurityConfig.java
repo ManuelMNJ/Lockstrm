@@ -36,6 +36,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                // Las miniaturas son imágenes de preview sin contenido sensible;
+                // se sirven sin autenticación para que <img> las cargue sin headers.
+                .requestMatchers("/api/videos/thumbnails/**").permitAll()
                 .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).authenticated()
                 .requestMatchers("/", "/index.html", "/css/**", "/js/**",

@@ -259,3 +259,30 @@
   background: rgba(239, 68, 68, 0.10);
   border-color: rgba(239, 68, 68, 0.25);
 }
+
+/* ── Presets de rango (heredan estilo del grupo-detalle pero standalone) ── */
+.rango-presets {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.rango-preset {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.rango-preset:hover { color: var(--text-main); }
+.rango-preset--active {
+  background: rgba(124, 58, 237, 0.18);
+  color: var(--color-primary-lighter, #c4b5fd);
+}

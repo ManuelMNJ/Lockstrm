@@ -9,11 +9,13 @@ import com.lockstrm.platform.services.AnaliticasService;
 import com.lockstrm.platform.services.GrupoService;
 import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -78,15 +80,24 @@ public class GrupoController {
     }
 
     /**
-     * Analíticas B2B segregadas: una fila por vídeo del grupo con
-     * espectadores únicos y tiempo total de reproducción acotados a este
-     * contexto. Solo accesible para miembros con rol EDITOR o superior.
+     * Analíticas B2B segregadas: una fila por vídeo del grupo con agregados
+     * acotados a este contexto y, opcionalmente, a un rango de fechas.
+     *
+     * @param desde ISO-8601 (inclusivo) — filtra `fechaHora >= desde`.
+     *              Aplicado en JOIN ON, por lo que vídeos sin visitas en el
+     *              rango siguen apareciendo con 0/0.
+     * @param hasta ISO-8601 (inclusivo) — filtra `fechaHora <= hasta`.
      */
     @GetMapping("/{idGrupo}/analiticas")
     public ResponseEntity<List<GrupoVideoStatsDto>> obtenerAnaliticasDelGrupo(
             @PathVariable Long idGrupo,
+            @RequestParam(value = "desde", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
+            @RequestParam(value = "hasta", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(analiticasService.analiticasDelGrupo(idGrupo, userDetails.getUsername()));
+        return ResponseEntity.ok(
+                analiticasService.analiticasDelGrupo(idGrupo, userDetails.getUsername(), desde, hasta));
     }
 
     @GetMapping("/{idGrupo}/miembros")

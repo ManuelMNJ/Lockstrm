@@ -5,7 +5,23 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "logs")
+@Table(
+    name = "logs",
+    indexes = {
+        // Cubre los filtros de las consultas analíticas: GROUP BY (id_grupo, id_video)
+        // y el ORDER/FILTER sobre fecha_hora.
+        @Index(name = "idx_logs_grupo_video", columnList = "id_grupo, id_video"),
+        @Index(name = "idx_logs_grupo_fecha", columnList = "id_grupo, fecha_hora")
+    },
+    uniqueConstraints = @UniqueConstraint(
+        name        = "uq_logs_sesion",
+        columnNames = {"id_usuario", "id_video", "id_grupo", "session_id"}
+        // NOTA MySQL: las columnas NULL (id_grupo) se tratan como valores distintos
+        // en un índice UNIQUE → dos filas con id_grupo=NULL y el mismo session_id
+        // no violan la restricción. La protección definitiva para ese caso es la
+        // lógica de UPSERT a nivel de aplicación (LogService.registrarHeartbeat).
+    )
+)
 @Data
 public class Log {
 

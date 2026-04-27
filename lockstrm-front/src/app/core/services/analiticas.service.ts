@@ -20,15 +20,47 @@ export interface AnaliticasGlobales {
 
 /**
  * Una fila por vídeo del grupo en la pestaña "Analíticas" del detalle.
- * Los agregados están acotados al contexto del grupo (segregación B2B).
+ * Todos los agregados están acotados al contexto del grupo (segregación B2B)
+ * y se calculan sobre sesiones independientes — cada apertura del
+ * reproductor es una fila en `logs`, no se colapsan por usuario.
  */
 export interface GrupoVideoStats {
-  idVideo:             number;
-  titulo:              string;
-  miniaturaUrl:        string | null;
-  duracion:            number | null;
-  espectadoresUnicos:  number;
-  tiempoTotalSegundos: number;
+  idVideo:                   number;
+  titulo:                    string;
+  miniaturaUrl:              string | null;
+  duracion:                  number | null;
+  /** Subidor del vídeo. La columna "Subido por" solo se pinta para ADMIN+. */
+  autorIdUsuario:            number;
+  autorUsername:             string;
+  autorTag:                  string;
+  /** Aperturas del reproductor (sesiones), no usuarios distintos. */
+  visitasTotales:            number;
+  /** Usuarios distintos que han generado al menos una sesión. */
+  espectadoresUnicos:        number;
+  /** Suma cruda de segundos vistos. Métrica secundaria de "consumo agregado". */
+  tiempoTotalSegundos:       number;
+  /** AVG por sesión — atención típica en una visita. */
+  duracionMediaSegundos:     number;
+  /** AVG por sesión del % completado, capado a 100. */
+  porcentajeCompletadoMedio: number;
+  /** ISO-8601, o null si nunca se ha visto. */
+  ultimaVisita:              string | null;
+  /**
+   * Visitas/día de los últimos 30 días, alineadas al calendario.
+   * `sparkline[0]` = hace 29 días, `sparkline[29]` = hoy.
+   * Independiente del filtro de fechas (siempre 30 d) para dar contexto fijo.
+   */
+  sparkline:                 number[];
+}
+
+/**
+ * Rango opcional pasado a las llamadas de analíticas. Strings ISO-8601 que
+ * el backend deserializa con @DateTimeFormat. null = "sin límite por ese
+ * extremo" (todos los valores).
+ */
+export interface RangoFechas {
+  desde?: string | null;
+  hasta?: string | null;
 }
 
 export interface VideoLog {
@@ -65,11 +97,22 @@ export class AnaliticasService {
    * backend filtra a las sesiones generadas dentro de ese grupo (analítica
    * contextual); sin él, devuelve todos los logs del vídeo.
    */
-  getLogsDelVideo(idVideo: number, grupoId?: number | null): Observable<VideoLog[]> {
-    const url = grupoId != null
-      ? `${this.apiUrl}/videos/${idVideo}/logs?grupoId=${grupoId}`
-      : `${this.apiUrl}/videos/${idVideo}/logs`;
-    return this.http.get<VideoLog[]>(url);
+  getLogsDelVideo(idVideo: number, grupoId?: number | null,
+                  rango?: RangoFechas): Observable<VideoLog[]> {
+    const params = this.buildParams({ grupoId, ...rango });
+    return this.http.get<VideoLog[]>(`${this.apiUrl}/videos/${idVideo}/logs`, { params });
+  }
+
+  /**
+   * Construye los query params descartando valores null/undefined. HttpParams
+   * solo acepta string|number|boolean, así que normalizamos antes.
+   */
+  private buildParams(obj: Record<string, string | number | null | undefined>): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (v != null && v !== '') out[k] = String(v);
+    }
+    return out;
   }
 
   /**
@@ -79,9 +122,11 @@ export class AnaliticasService {
    * también está compartido NO entran). El backend exige rol EDITOR+ en el
    * grupo; si el usuario no lo tiene, responde 403.
    */
-  getAnaliticasDelGrupo(idGrupo: number): Observable<GrupoVideoStats[]> {
+  getAnaliticasDelGrupo(idGrupo: number, rango?: RangoFechas): Observable<GrupoVideoStats[]> {
+    const params = this.buildParams({ ...rango });
     return this.http.get<GrupoVideoStats[]>(
-      `${environment.apiUrl}/api/grupos/${idGrupo}/analiticas`
+      `${environment.apiUrl}/api/grupos/${idGrupo}/analiticas`,
+      { params }
     );
   }
 }

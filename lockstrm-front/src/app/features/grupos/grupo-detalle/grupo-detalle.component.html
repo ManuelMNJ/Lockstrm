@@ -298,7 +298,7 @@
                 <div class="video-card" role="listitem" (click)="verVideo(v)">
                   <div class="video-card-thumb">
                     @if (v.miniaturaUrl) {
-                      <img [src]="v.miniaturaUrl" [alt]="'Miniatura de ' + v.titulo" class="video-card-img">
+                      <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img">
                     } @else {
                       <div class="video-card-placeholder" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -374,18 +374,53 @@
             <strong>solo</strong> en el contexto de este grupo.
           </p>
         </div>
-        <button class="btn-secondary"
-                (click)="refrescarAnaliticas()"
-                [disabled]="cargandoAnaliticas">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          {{ cargandoAnaliticas ? 'Cargando…' : 'Refrescar' }}
-        </button>
+        <div class="analiticas-actions">
+          <!-- Presets de rango: aplican filtro server-side a los agregados.
+               El sparkline son SIEMPRE los últimos 30 días, indistinto. -->
+          <div class="rango-presets" role="tablist" aria-label="Rango de fechas">
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '7d'"
+                    [attr.aria-selected]="rangoActivo === '7d'"
+                    (click)="cambiarRango('7d')">7 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '30d'"
+                    [attr.aria-selected]="rangoActivo === '30d'"
+                    (click)="cambiarRango('30d')">30 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '90d'"
+                    [attr.aria-selected]="rangoActivo === '90d'"
+                    (click)="cambiarRango('90d')">90 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === 'all'"
+                    [attr.aria-selected]="rangoActivo === 'all'"
+                    (click)="cambiarRango('all')">Todo</button>
+          </div>
+
+          <button class="btn-secondary"
+                  (click)="exportarCSV()"
+                  [disabled]="cargandoAnaliticas || !analiticasGrupo.length"
+                  title="Descargar la tabla actual como CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            CSV
+          </button>
+
+          <button class="btn-secondary"
+                  (click)="refrescarAnaliticas()"
+                  [disabled]="cargandoAnaliticas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            {{ cargandoAnaliticas ? 'Cargando…' : 'Refrescar' }}
+          </button>
+        </div>
       </header>
 
       @if (errorAnaliticas) {
@@ -399,23 +434,63 @@
           <p>No hay vídeos en este grupo todavía. Añade contenido para empezar a recibir métricas.</p>
         </div>
       } @else {
+
+        <!-- ── KPIs agregados ─────────────────────────────────────────── -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--purple">
+            <span class="kpi-label">Visitas totales</span>
+            <span class="kpi-value">{{ kpiVisitasTotales }}</span>
+            <span class="kpi-hint">Aperturas del reproductor</span>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <span class="kpi-label">Vídeos con vistas</span>
+            <span class="kpi-value">{{ kpiVideosConVistas }} / {{ analiticasGrupo.length }}</span>
+            <span class="kpi-hint">Catálogo activo</span>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <span class="kpi-label">Tiempo total consumido</span>
+            <span class="kpi-value">{{ kpiTiempoTotalSegundos | videoDuration:true }}</span>
+            <span class="kpi-hint">Suma de todas las sesiones</span>
+          </div>
+          <div class="kpi-card kpi-card--amber">
+            <span class="kpi-label">Retención media</span>
+            <span class="kpi-value">{{ kpiRetencionMedia }}%</span>
+            <span class="kpi-hint">Promedio ponderado por visitas</span>
+          </div>
+        </div>
+
+        <!-- ── Tabla por vídeo ────────────────────────────────────────── -->
         <div class="analiticas-table-wrap">
           <table class="stats-table">
             <thead>
               <tr>
                 <th>Vídeo</th>
-                <th>Espectadores únicos</th>
-                <th>Tiempo total visto</th>
-                <th>Retención media</th>
+                @if (esAdmin) {
+                  <th title="Usuario que subió el vídeo">Subido por</th>
+                }
+                <th class="num-col" title="Aperturas totales del reproductor en este grupo">Visitas</th>
+                <th class="num-col" title="Usuarios distintos">Únicos</th>
+                <th class="num-col" title="Visitas dividido por usuarios únicos">Visitas / usuario</th>
+                <th class="num-col" title="Tiempo medio que la gente ve el vídeo en una sesión">Duración media</th>
+                <th title="Promedio del % visto por sesión, capado a 100">Completado medio</th>
+                <th class="spark-col" title="Visitas/día de los últimos 30 días">Tendencia</th>
+                <th title="Última vez que alguien abrió el vídeo">Última visita</th>
+                <th class="chevron-col" aria-hidden="true"></th>
               </tr>
             </thead>
             <tbody>
               @for (s of analiticasGrupo; track s.idVideo) {
-                <tr>
+                <tr class="row--clickable"
+                    [class.row--inactive]="s.visitasTotales === 0"
+                    [routerLink]="['/mi-espacio/analiticas', s.idVideo]"
+                    [queryParams]="{ grupoId: idGrupo, from: 'grupo', rango: rangoActivo }"
+                    role="link"
+                    tabindex="0"
+                    [attr.aria-label]="'Ver sesiones individuales de ' + s.titulo">
                   <td>
                     <div class="analiticas-video-cell">
                       @if (s.miniaturaUrl) {
-                        <img class="analiticas-thumb" [src]="s.miniaturaUrl" [alt]="s.titulo" loading="lazy">
+                        <img class="analiticas-thumb" [src]="s.miniaturaUrl | thumbnailSrc" [alt]="s.titulo" loading="lazy">
                       } @else {
                         <div class="analiticas-thumb analiticas-thumb--placeholder" aria-hidden="true">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -428,24 +503,94 @@
                       <div class="analiticas-video-meta">
                         <span class="analiticas-video-title" [title]="s.titulo">{{ s.titulo }}</span>
                         @if (s.duracion) {
-                          <span class="analiticas-video-dur">{{ s.duracion | videoDuration:true }}</span>
+                          <span class="analiticas-video-dur">{{ s.duracion | videoDuration:true }} totales</span>
                         }
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <span class="stats-badge">{{ s.espectadoresUnicos }}</span>
-                  </td>
-                  <td>
-                    <span class="stats-badge">{{ s.tiempoTotalSegundos | videoDuration:true }}</span>
-                  </td>
-                  <td>
-                    <div class="retention-cell">
-                      <div class="retention-track retention-track--inline">
-                        <div class="retention-fill" [style.width.%]="retencionPctVideo(s)"></div>
+
+                  @if (esAdmin) {
+                    <td>
+                      <div class="autor-cell">
+                        <div class="autor-avatar" aria-hidden="true">
+                          {{ s.autorUsername.charAt(0).toUpperCase() }}
+                        </div>
+                        <span class="autor-handle" [title]="s.autorUsername + '#' + s.autorTag">
+                          {{ s.autorUsername }}<span class="autor-tag">#{{ s.autorTag }}</span>
+                        </span>
                       </div>
-                      <span class="retention-pct">{{ retencionPctVideo(s) }}%</span>
-                    </div>
+                    </td>
+                  }
+
+                  <td class="num-col">
+                    @if (s.visitasTotales > 0) {
+                      <span class="stats-badge">{{ s.visitasTotales }}</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="num-col">
+                    @if (s.espectadoresUnicos > 0) {
+                      <span class="stats-badge stats-badge--soft">{{ s.espectadoresUnicos }}</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="num-col">
+                    <span class="stats-num">{{ visitasPorUsuario(s) }}</span>
+                  </td>
+
+                  <td class="num-col">
+                    @if (s.visitasTotales > 0) {
+                      <span class="stats-num">{{ (s.duracionMediaSegundos | number:'1.0-0') }}s</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td>
+                    @if (s.visitasTotales > 0) {
+                      <div class="retention-cell">
+                        <div class="retention-track retention-track--inline">
+                          <div class="retention-fill" [style.width.%]="retencionPctVideo(s)"></div>
+                        </div>
+                        <span class="retention-pct">{{ retencionPctVideo(s) }}%</span>
+                      </div>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="spark-col">
+                    @if (sparklinePath(s.sparkline); as path) {
+                      <svg class="sparkline" [attr.viewBox]="'0 0 ' + SPARK_W + ' ' + SPARK_H"
+                           [attr.aria-label]="sparklineTitle(s.sparkline)"
+                           [attr.title]="sparklineTitle(s.sparkline)"
+                           preserveAspectRatio="none">
+                        <path [attr.d]="path" fill="none" stroke="currentColor"
+                              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else {
+                      <span class="stats-empty" [title]="sparklineTitle(s.sparkline)">—</span>
+                    }
+                  </td>
+
+                  <td>
+                    @if (s.ultimaVisita) {
+                      <span class="log-date" [title]="s.ultimaVisita | date:'dd MMM yyyy, HH:mm'">
+                        {{ s.ultimaVisita | date:'dd MMM yyyy' }}
+                      </span>
+                    } @else {
+                      <span class="stats-empty">Sin visitas</span>
+                    }
+                  </td>
+                  <td class="chevron-col" aria-hidden="true">
+                    <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
                   </td>
                 </tr>
               }

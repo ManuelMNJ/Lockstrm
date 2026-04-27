@@ -9,7 +9,6 @@ import { LoginComponent }             from './features/auth/login/login.componen
 import { RegistroComponent }          from './features/auth/registro/registro.component';
 import { DashboardComponent }         from './features/dashboard/dashboard.component';
 import { VideosComponent }            from './features/videos/videos.component';
-import { VideosCompartidosComponent } from './features/videos-compartidos/videos-compartidos.component';
 import { GruposComponent }            from './features/grupos/grupos.component';
 import { GrupoDetalleComponent }      from './features/grupos/grupo-detalle/grupo-detalle.component';
 import { AjustesComponent }           from './features/ajustes/ajustes.component';
@@ -67,9 +66,6 @@ export const routes: Routes = [
               { path: 'analiticas/:idVideo', component: AnaliticasVideoComponent },
             ],
           },
-
-          // Contexto Espectador: Compartido conmigo
-          { path: 'compartido', component: VideosCompartidosComponent },
 
           { path: 'perfil',  component: PerfilComponent },
           { path: 'ajustes', component: AjustesComponent },

@@ -156,7 +156,7 @@
             <!-- Miniatura -->
             <div class="top-thumb">
               @if (video.miniaturaUrl) {
-                <img [src]="video.miniaturaUrl" [alt]="video.titulo" loading="lazy"/>
+                <img [src]="video.miniaturaUrl | thumbnailSrc" [alt]="video.titulo" loading="lazy"/>
               } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="1.5" aria-hidden="true">

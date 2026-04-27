@@ -7,6 +7,7 @@ import com.lockstrm.platform.entities.MiembrosGrupoId;
 import com.lockstrm.platform.entities.Usuario;
 import com.lockstrm.platform.enums.RolGrupo;
 import com.lockstrm.platform.repositories.GrupoRepository;
+import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
 import com.lockstrm.platform.repositories.PermisosGrupoRepository;
 import com.lockstrm.platform.repositories.UserRepository;
@@ -29,6 +30,7 @@ public class GrupoService {
     private final UserRepository          userRepository;
     private final MiembrosGrupoRepository miembrosGrupoRepository;
     private final PermisosGrupoRepository permisosGrupoRepository;
+    private final LogRepository           logRepository;
     private final UserService             userService;
 
     @Transactional(readOnly = true)
@@ -184,11 +186,18 @@ public class GrupoService {
         return grupoRepository.save(grupo);
     }
 
-    /** Los vídeos asignados al grupo quedan como privados al eliminarlo. */
+    /**
+     * Elimina el grupo. Los vídeos asignados al grupo quedan como privados
+     * (se borran sus permisos). Los logs históricos conservan los datos de
+     * reproducción pero pierden la referencia al grupo (id_grupo → NULL) para
+     * no dejar FKs huérfanas ni borrar el historial del usuario.
+     */
     @Transactional
     public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
         verifyRolMinimo(idGrupo, emailSolicitante, RolGrupo.SUPER_ADMIN, "eliminar el grupo");
 
+        // Primero limpiamos referencias en logs (SET NULL) para conservar historial.
+        logRepository.nullifyGrupoId(idGrupo);
         miembrosGrupoRepository.deleteByGrupoId(idGrupo);
         permisosGrupoRepository.deleteByGrupoId(idGrupo);
         Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
