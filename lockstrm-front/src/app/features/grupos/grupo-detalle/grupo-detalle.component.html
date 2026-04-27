@@ -173,21 +173,14 @@
                   </div>
 
                   @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
-                    <div class="rol-select-wrap">
-                      <select class="rol-select-custom"
-                              [ngModel]="m.rol"
-                              (ngModelChange)="cambiarRolMiembro(m, $event)"
-                              [disabled]="cambiandoRoles.has(m.idUsuario)"
-                              [attr.aria-label]="'Rol de ' + m.username">
-                        @for (r of rolesDisponiblesParaAsignar; track r) {
-                          <option [value]="r">{{ r }}</option>
-                        }
-                      </select>
-                      <svg class="rol-select-caret" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="4 6 8 10 12 6"/>
-                      </svg>
-                    </div>
+                    <app-custom-select
+                      variant="pill"
+                      [options]="rolOptionsParaAsignar"
+                      [ngModel]="m.rol"
+                      (ngModelChange)="cambiarRolMiembro(m, $event)"
+                      [disabled]="cambiandoRoles.has(m.idUsuario)"
+                      [ariaLabel]="'Rol de ' + m.username">
+                    </app-custom-select>
                   } @else {
                     <span class="rol-badge"
                           [class.rol-badge--super]="m.rol === 'SUPER_ADMIN'"
@@ -249,31 +242,26 @@
                     <line x1="6" y1="12" x2="18" y2="12"/>
                     <line x1="9" y1="18" x2="15" y2="18"/>
                   </svg>
-                  <select class="sort-select"
-                          [ngModel]="criterioOrden"
-                          (ngModelChange)="onCambioOrden($event)"
-                          aria-label="Ordenar vídeos">
-                    <option value="fechaDesc">Más recientes</option>
-                    <option value="fechaAsc">Más antiguos</option>
-                    <option value="duracionDesc">Mayor duración</option>
-                    <option value="duracionAsc">Menor duración</option>
-                    <option value="nombreAsc">Nombre (A-Z)</option>
-                  </select>
+                  <app-custom-select
+                    size="sm"
+                    [options]="sortOptions"
+                    [ngModel]="criterioOrden"
+                    (ngModelChange)="onCambioOrden($event)"
+                    ariaLabel="Ordenar vídeos">
+                  </app-custom-select>
                 </div>
               }
             </div>
 
             @if (puedeGestionarVideos) {
               <div class="add-row">
-                <select
-                  class="form-input video-select"
+                <app-custom-select
+                  [fullWidth]="true"
+                  [options]="videoOptions"
                   [(ngModel)]="idVideoAAnadir"
+                  placeholder="Selecciona un vídeo…"
                   [disabled]="estadoAnadirVideo === 'loading'">
-                  <option [ngValue]="null" disabled>Selecciona un vídeo…</option>
-                  @for (v of misVideosDisponibles; track v.idVideo) {
-                    <option [ngValue]="v.idVideo">{{ v.titulo }}</option>
-                  }
-                </select>
+                </app-custom-select>
                 <button class="btn-primary"
                         (click)="aniadirVideoExistente()"
                         [disabled]="idVideoAAnadir == null || estadoAnadirVideo === 'loading'">
@@ -396,19 +384,6 @@
                     [attr.aria-selected]="rangoActivo === 'all'"
                     (click)="cambiarRango('all')">Todo</button>
           </div>
-
-          <button class="btn-secondary"
-                  (click)="exportarCSV()"
-                  [disabled]="cargandoAnaliticas || !analiticasGrupo.length"
-                  title="Descargar la tabla actual como CSV">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            CSV
-          </button>
 
           <button class="btn-secondary"
                   (click)="refrescarAnaliticas()"

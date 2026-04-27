@@ -23,11 +23,12 @@ import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
 import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
+import { CustomSelectComponent, SelectOption } from '../../../shared/components/custom-select/custom-select.component';
 
 @Component({
   selector: 'app-grupo-detalle',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe, InitialPipe, VideoDurationPipe, ThumbnailSrcPipe, VideoPlayerComponent],
+  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe, InitialPipe, VideoDurationPipe, ThumbnailSrcPipe, VideoPlayerComponent, CustomSelectComponent],
   templateUrl: './grupo-detalle.component.html',
   styleUrl: './grupo-detalle.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -78,6 +79,24 @@ export class GrupoDetalleComponent implements OnInit {
   errorVideos = '';
 
   criterioOrden: string = 'fechaDesc';
+
+  // ── Opciones para app-custom-select ────────────────────────────────────
+
+  readonly sortOptions: SelectOption[] = [
+    { value: 'fechaDesc',    label: 'Más recientes'  },
+    { value: 'fechaAsc',     label: 'Más antiguos'   },
+    { value: 'duracionDesc', label: 'Mayor duración'  },
+    { value: 'duracionAsc',  label: 'Menor duración'  },
+    { value: 'nombreAsc',    label: 'Nombre (A-Z)'   },
+  ];
+
+  get videoOptions(): SelectOption[] {
+    return this.misVideosDisponibles.map(v => ({ value: v.idVideo, label: v.titulo }));
+  }
+
+  get rolOptionsParaAsignar(): SelectOption[] {
+    return this.rolesDisponiblesParaAsignar.map(r => ({ value: r, label: r }));
+  }
 
   get videosGrupoOrdenados(): Video[] {
     return [...this.videosGrupo].sort((a, b) => {
@@ -631,54 +650,6 @@ export class GrupoDetalleComponent implements OnInit {
     return total === 0
       ? 'Sin visitas en los últimos 30 días'
       : `${total} visitas en los últimos 30 días · pico ${max} en un día`;
-  }
-
-  /**
-   * Genera y descarga un CSV con la tabla actual. Usa el preset de fecha
-   * activo en el nombre del fichero para que el usuario sepa de qué franja
-   * son los datos. Implementación 100 % cliente: ningún round-trip extra.
-   */
-  exportarCSV(): void {
-    if (!this.analiticasGrupo.length) return;
-    const incluyeAutor = this.esAdmin;
-    const headers = [
-      'Vídeo',
-      ...(incluyeAutor ? ['Subido por'] : []),
-      'Visitas', 'Espectadores únicos', 'Visitas/usuario',
-      'Duración media (s)', '% completado medio',
-      'Tiempo total (s)', 'Última visita',
-    ];
-    const rows = this.analiticasGrupo.map(s => [
-      s.titulo,
-      ...(incluyeAutor ? [`${s.autorUsername}#${s.autorTag}`] : []),
-      s.visitasTotales,
-      s.espectadoresUnicos,
-      this.visitasPorUsuario(s),
-      Math.round(s.duracionMediaSegundos),
-      Math.round(s.porcentajeCompletadoMedio),
-      s.tiempoTotalSegundos,
-      s.ultimaVisita ?? '',
-    ]);
-
-    // Escapado RFC 4180: rodear con comillas y duplicar las comillas internas
-    // si la celda contiene comas, comillas o saltos de línea.
-    const escape = (val: unknown): string => {
-      const s = String(val);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const csv = [headers, ...rows]
-      .map(row => row.map(escape).join(','))
-      .join('\n');
-
-    // BOM UTF-8 para que Excel detecte el encoding y muestre tildes/ñ bien.
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analiticas-${this.grupo?.nombre ?? 'grupo'}-${this.rangoActivo}-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   /**
