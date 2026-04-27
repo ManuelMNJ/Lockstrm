@@ -1,6 +1,6 @@
 package com.lockstrm.platform.repositories;
 
-import com.lockstrm.platform.dto.VideoResumenDTO;
+import com.lockstrm.platform.dto.VideoSummaryDto;
 import com.lockstrm.platform.entities.Video;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,7 +31,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findTop3ByPropietario_EmailOrderByFechaSubidaDesc(String email);
 
     @Query("SELECT DISTINCT v FROM Video v " +
-           "JOIN PermisosGrupo pg ON pg.video = v " +
+           "JOIN GroupPermission pg ON pg.video = v " +
            "WHERE pg.grupo.idGrupo = :idGrupo")
     List<Video> findByGrupoId(@Param("idGrupo") Long idGrupo);
 }

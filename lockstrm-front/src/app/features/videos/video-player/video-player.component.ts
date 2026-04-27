@@ -42,11 +42,11 @@ export class VideoPlayerComponent implements OnInit {
   readonly idVideo = input<number>();
 
   /**
-   * Grupo desde el que se está reproduciendo el vídeo. Puede ser undefined/null
+   * Group desde el que se está reproduciendo el vídeo. Puede ser undefined/null
    * si la reproducción ocurre fuera de un contexto de grupo (p. ej. el
    * propietario viendo su vídeo desde "Mis vídeos"). Se incluye en cada
    * heartbeat para que el backend segmente las analíticas por grupo: ver el
-   * mismo vídeo desde el Grupo A y desde el Grupo B genera dos series de
+   * mismo vídeo desde el Group A y desde el Group B genera dos series de
    * datos independientes.
    */
   readonly grupoId = input<number | null | undefined>();

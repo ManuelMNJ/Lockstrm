@@ -20,7 +20,8 @@
       "Bash(ls uploads/videos/.gitkeep)",
       "Bash(git rm *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(xargs sed *)"
     ]
   }
 }

@@ -16,14 +16,14 @@ import java.util.List;
  * La reproducción se realiza exclusivamente a través del proxy
  * /api/videos/stream/{fileName}, que verifica el JWT y registra la auditoría.
  */
-public record VideoDTO(
+public record VideoDto(
         Long idVideo,
         String titulo,
         Integer duracion,
         LocalDateTime fechaSubida,
-        List<GrupoRef> grupos,
+        List<GroupRef> grupos,
         String miniaturaUrl,
         String fileName
 ) {
-    public record GrupoRef(Long idGrupo, String nombre) {}
+    public record GroupRef(Long idGrupo, String nombre) {}
 }

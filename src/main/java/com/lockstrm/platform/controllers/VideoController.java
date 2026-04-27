@@ -1,13 +1,13 @@
 package com.lockstrm.platform.controllers;
 
-import com.lockstrm.platform.dto.EditarVideoRequest;
+import com.lockstrm.platform.dto.EditVideoRequest;
 import com.lockstrm.platform.dto.HeartbeatRequest;
-import com.lockstrm.platform.dto.VideoDTO;
-import com.lockstrm.platform.dto.VideoVistaEstadisticaDto;
+import com.lockstrm.platform.dto.VideoDto;
+import com.lockstrm.platform.dto.VideoViewStatsDto;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
-import com.lockstrm.platform.services.VideoVistaService;
+import com.lockstrm.platform.services.VideoViewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class VideoController {
 
     private final VideoService      videoService;
     private final LogService        logService;
-    private final VideoVistaService videoVistaService;
+    private final VideoViewService videoVistaService;
 
     @Value("${lockstrm.upload.thumbnails.dir}")
     private String thumbnailsDir;
@@ -79,7 +79,7 @@ public class VideoController {
     }
 
     @GetMapping("/mios")
-    public ResponseEntity<List<VideoDTO>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<VideoDto>> listarMisVideos(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(videoService.obtenerMisVideos(userDetails.getUsername()));
     }
 
@@ -104,11 +104,11 @@ public class VideoController {
     }
 
     @PatchMapping("/{idVideo}")
-    public ResponseEntity<VideoDTO> editarVideo(
+    public ResponseEntity<VideoDto> editarVideo(
             @PathVariable Long idVideo,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody EditarVideoRequest req) {
-        VideoDTO dto = videoService.editarVideo(idVideo, userDetails.getUsername(),
+            @Valid @RequestBody EditVideoRequest req) {
+        VideoDto dto = videoService.editarVideo(idVideo, userDetails.getUsername(),
                 req.titulo().trim(), req.idGrupos());
         return ResponseEntity.ok(dto);
     }
@@ -122,7 +122,7 @@ public class VideoController {
     }
 
     @GetMapping("/{id}/estadisticas")
-    public ResponseEntity<List<VideoVistaEstadisticaDto>> obtenerEstadisticas(
+    public ResponseEntity<List<VideoViewStatsDto>> obtenerEstadisticas(
             @PathVariable Long id,
             @RequestParam(value = "grupoId", required = false) Long grupoId,
             @AuthenticationPrincipal UserDetails userDetails) {

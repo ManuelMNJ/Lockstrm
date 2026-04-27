@@ -1,19 +1,19 @@
 package com.lockstrm.platform.services;
 
-import com.lockstrm.platform.dto.VideoDTO;
-import com.lockstrm.platform.dto.VideoDTO.GrupoRef;
-import com.lockstrm.platform.entities.Grupo;
-import com.lockstrm.platform.entities.MiembrosGrupoId;
-import com.lockstrm.platform.entities.PermisosGrupo;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.dto.VideoDto;
+import com.lockstrm.platform.dto.VideoDto.GroupRef;
+import com.lockstrm.platform.entities.Group;
+import com.lockstrm.platform.entities.GroupMemberId;
+import com.lockstrm.platform.entities.GroupPermission;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.entities.Video;
-import com.lockstrm.platform.enums.RolGrupo;
-import com.lockstrm.platform.repositories.GrupoRepository;
-import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
-import com.lockstrm.platform.repositories.PermisosGrupoRepository;
+import com.lockstrm.platform.enums.GroupRole;
+import com.lockstrm.platform.repositories.GroupRepository;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
+import com.lockstrm.platform.repositories.GroupPermissionRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
-import com.lockstrm.platform.repositories.VideoVistaRepository;
+import com.lockstrm.platform.repositories.VideoViewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,10 +52,10 @@ public class VideoService {
 
     private final VideoRepository         videoRepository;
     private final UserRepository          userRepository;
-    private final GrupoRepository         grupoRepository;
-    private final MiembrosGrupoRepository miembrosGrupoRepository;
-    private final PermisosGrupoRepository permisosGrupoRepository;
-    private final VideoVistaRepository    videoVistaRepository;
+    private final GroupRepository         grupoRepository;
+    private final GroupMemberRepository miembrosGroupRepository;
+    private final GroupPermissionRepository permisosGroupRepository;
+    private final VideoViewRepository    videoVistaRepository;
     private final LogService              logService;
     private final VideoMimeValidator      mimeValidator;
 
@@ -119,13 +119,13 @@ public class VideoService {
 
         String ext = mimeValidator.validateAndGetExtension(file);
 
-        Usuario autor = userRepository.getByEmailOrThrow(emailUsuario);
+        User autor = userRepository.getByEmailOrThrow(emailUsuario);
 
         // Antes de tocar disco, validamos el rol en CADA grupo destino. Si
         // alguno falla, abortamos sin haber escrito el fichero ni la fila.
         // `LinkedHashSet` deduplica preservando el orden de entrada.
         Set<Long> destinos = idGrupos == null ? Set.of() : new LinkedHashSet<>(idGrupos);
-        List<Grupo> grupos = new ArrayList<>(destinos.size());
+        List<Group> grupos = new ArrayList<>(destinos.size());
         for (Long idGrupo : destinos) {
             grupos.add(resolverGrupoPropio(idGrupo, emailUsuario));
         }
@@ -154,23 +154,23 @@ public class VideoService {
 
         Video guardado = videoRepository.save(nuevoVideo);
 
-        for (Grupo grupo : grupos) {
-            permisosGrupoRepository.save(
-                    new PermisosGrupo(guardado.getIdVideo(), grupo.getIdGrupo()));
+        for (Group grupo : grupos) {
+            permisosGroupRepository.save(
+                    new GroupPermission(guardado.getIdVideo(), grupo.getIdGrupo()));
         }
 
         return guardado;
     }
 
-    private Grupo resolverGrupoPropio(Long idGrupo, String emailUsuario) {
-        Grupo grupo = grupoRepository.getByIdOrThrow(idGrupo);
-        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
-        RolGrupo rol = miembrosGrupoRepository
-                .findById(new MiembrosGrupoId(usuario.getIdUsuario(), idGrupo))
+    private Group resolverGrupoPropio(Long idGrupo, String emailUsuario) {
+        Group grupo = grupoRepository.getByIdOrThrow(idGrupo);
+        User usuario = userRepository.getByEmailOrThrow(emailUsuario);
+        GroupRole rol = miembrosGroupRepository
+                .findById(new GroupMemberId(usuario.getIdUsuario(), idGrupo))
                 .map(mg -> mg.getRol())
                 .orElseThrow(() -> new AccessDeniedException(
                         "No puedes asignar un vídeo a un grupo del que no eres miembro"));
-        if (rol.ordinal() > RolGrupo.EDITOR.ordinal()) {
+        if (rol.ordinal() > GroupRole.EDITOR.ordinal()) {
             throw new AccessDeniedException(
                     "Se requiere rol EDITOR o superior para añadir vídeos al grupo");
         }
@@ -229,25 +229,25 @@ public class VideoService {
     }
 
     @Transactional(readOnly = true)
-    public List<VideoDTO> obtenerVideosPorGrupo(Long idGrupo, String emailUsuario) {
-        if (miembrosGrupoRepository.countMiembroByEmailAndGrupo(emailUsuario, idGrupo) == 0) {
+    public List<VideoDto> obtenerVideosPorGrupo(Long idGrupo, String emailUsuario) {
+        if (miembrosGroupRepository.countMiembroByEmailAndGrupo(emailUsuario, idGrupo) == 0) {
             throw new AccessDeniedException("No tienes acceso a este grupo");
         }
         List<Video> videos = videoRepository.findByGrupoId(idGrupo);
-        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
+        Map<Long, List<GroupRef>> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<VideoDTO> obtenerMisVideos(String emailUsuario) {
+    public List<VideoDto> obtenerMisVideos(String emailUsuario) {
         List<Video> videos = videoRepository.findByPropietario_Email(emailUsuario);
-        Map<Long, List<GrupoRef>> grupoMap = buildGrupoMap(videos);
+        Map<Long, List<GroupRef>> grupoMap = buildGrupoMap(videos);
         return videos.stream().map(v -> toDTO(v, grupoMap)).toList();
     }
 
-    private VideoDTO toDTO(Video video, Map<Long, List<GrupoRef>> grupoMap) {
-        List<GrupoRef> refs = grupoMap.getOrDefault(video.getIdVideo(), List.of());
-        return new VideoDTO(
+    private VideoDto toDTO(Video video, Map<Long, List<GroupRef>> grupoMap) {
+        List<GroupRef> refs = grupoMap.getOrDefault(video.getIdVideo(), List.of());
+        return new VideoDto(
                 video.getIdVideo(),
                 video.getTitulo(),
                 video.getDuracion(),
@@ -263,14 +263,14 @@ public class VideoService {
      * con JOIN FETCH evita el N+1, y agrupar manualmente en lugar de usar
      * `toMap` permite que un mismo vídeo aparezca en varios grupos (N:M real).
      */
-    private Map<Long, List<GrupoRef>> buildGrupoMap(List<Video> videos) {
+    private Map<Long, List<GroupRef>> buildGrupoMap(List<Video> videos) {
         if (videos.isEmpty()) return Map.of();
         List<Long> ids = videos.stream().map(Video::getIdVideo).toList();
-        return permisosGrupoRepository.findByVideoIds(ids).stream()
+        return permisosGroupRepository.findByVideoIds(ids).stream()
                 .collect(Collectors.groupingBy(
                         pg -> pg.getId().getIdVideoId(),
                         Collectors.mapping(
-                                pg -> new GrupoRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
+                                pg -> new GroupRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
                                 Collectors.toList()
                         )
                 ));
@@ -296,7 +296,7 @@ public class VideoService {
      *    miembro de ese grupo con rol EDITOR o superior.
      */
     @Transactional
-    public VideoDTO editarVideo(Long idVideo, String emailUsuario, String titulo, List<Long> idGrupos) {
+    public VideoDto editarVideo(Long idVideo, String emailUsuario, String titulo, List<Long> idGrupos) {
         Video video = videoRepository.getByIdOrThrow(idVideo);
 
         if (!video.getPropietario().getEmail().equals(emailUsuario)) {
@@ -310,27 +310,27 @@ public class VideoService {
 
         // Validamos rol EDITOR+ en TODOS los grupos antes de tocar BBDD para
         // que un grupo inválido aborte la operación sin estado parcial.
-        List<Grupo> gruposValidados = new ArrayList<>(deseados.size());
+        List<Group> gruposValidados = new ArrayList<>(deseados.size());
         for (Long id : deseados) {
             gruposValidados.add(resolverGrupoPropio(id, emailUsuario));
         }
 
         // `deleteByVideoId` está anotado con flushAutomatically + clearAutomatically:
         // tras esta línea, el persistence context queda limpio para los inserts.
-        permisosGrupoRepository.deleteByVideoId(idVideo);
-        for (Grupo g : gruposValidados) {
-            permisosGrupoRepository.save(new PermisosGrupo(idVideo, g.getIdGrupo()));
+        permisosGroupRepository.deleteByVideoId(idVideo);
+        for (Group g : gruposValidados) {
+            permisosGroupRepository.save(new GroupPermission(idVideo, g.getIdGrupo()));
         }
 
         // No releemos con `buildGrupoMap` después de los inserts: Hibernate
-        // cachea las PermisosGrupo recién persistidas con su relación `grupo`
+        // cachea las GroupPermission recién persistidas con su relación `grupo`
         // a null (la columna está marcada `insertable=false`), y el JOIN FETCH
         // posterior devuelve la instancia gestionada en lugar de hidratar la
         // fresca → NPE en `pg.getGrupo().getNombre()`. Construimos el listado
-        // a mano con los Grupo ya validados — son justo los que acabamos de
+        // a mano con los Group ya validados — son justo los que acabamos de
         // persistir.
-        List<GrupoRef> refs = gruposValidados.stream()
-                .map(g -> new GrupoRef(g.getIdGrupo(), g.getNombre()))
+        List<GroupRef> refs = gruposValidados.stream()
+                .map(g -> new GroupRef(g.getIdGrupo(), g.getNombre()))
                 .toList();
         return toDTO(video, Map.of(idVideo, refs));
     }
@@ -366,7 +366,7 @@ public class VideoService {
         String fileName    = video.getFileName();
         String thumbRaw    = video.getMiniaturaUrl();   // puede ser null, base64 o nombre de fichero
 
-        permisosGrupoRepository.deleteByVideoId(idVideo);
+        permisosGroupRepository.deleteByVideoId(idVideo);
         videoVistaRepository.deleteByVideoId(idVideo);
         logService.eliminarLogsPorVideo(idVideo);
         videoRepository.delete(video);

@@ -3,7 +3,7 @@ package com.lockstrm.platform.controllers;
 import com.lockstrm.platform.dto.AuthResponse;
 import com.lockstrm.platform.dto.LoginRequest;
 import com.lockstrm.platform.dto.RegisterRequest;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.security.JwtService;
 import com.lockstrm.platform.services.UserService;
 import jakarta.validation.Valid;
@@ -40,12 +40,12 @@ public class AuthController {
             throw new com.lockstrm.platform.exceptions.BusinessException("El email ya está registrado");
         }
         userService.registrarUsuario(request);
-        return ResponseEntity.ok(Map.of("mensaje", "Usuario registrado con exito"));
+        return ResponseEntity.ok(Map.of("mensaje", "User registrado con exito"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        Usuario usuario = userService.buscarPorIdentificador(request.getIdentificador());
+        User usuario = userService.buscarPorIdentificador(request.getIdentificador());
 
         if (usuario == null || !passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
             throw new org.springframework.security.authentication.BadCredentialsException(

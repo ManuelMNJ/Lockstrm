@@ -1,6 +1,6 @@
 package com.lockstrm.platform.controllers;
 
-import com.lockstrm.platform.dto.DashboardStatsDTO;
+import com.lockstrm.platform.dto.DashboardStatsDto;
 import com.lockstrm.platform.services.StatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ public class DashboardController {
     private final StatsService statsService;
 
     @GetMapping("/stats")
-    public ResponseEntity<DashboardStatsDTO> getStats(
+    public ResponseEntity<DashboardStatsDto> getStats(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(statsService.getDashboardStats(userDetails.getUsername()));
     }

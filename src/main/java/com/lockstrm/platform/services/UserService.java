@@ -1,10 +1,9 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.RegisterRequest;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,18 +25,18 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+        User usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado: " + email));
 
-        return User.builder()
+        return org.springframework.security.core.userdetails.User.builder()
                 .username(usuario.getEmail())
                 .password(usuario.getPassword())
                 .authorities("ROLE_USER")
                 .build();
     }
 
-    public Usuario registrarUsuario(RegisterRequest request) {
-        Usuario nuevo = new Usuario();
+    public User registrarUsuario(RegisterRequest request) {
+        User nuevo = new User();
         nuevo.setNombre(request.getNombre());
         nuevo.setApellidos(request.getApellidos());
         nuevo.setUsername(request.getUsername());
@@ -59,11 +58,11 @@ public class UserService implements UserDetailsService {
                 "No se pudo asignar un tag único para este nombre de usuario");
     }
 
-    public Usuario buscarPorEmail(String email) {
+    public User buscarPorEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public Usuario buscarPorIdentificador(String identificador) {
+    public User buscarPorIdentificador(String identificador) {
         if (identificador == null || identificador.isBlank()) return null;
         String limpio = identificador.trim().toLowerCase();
 
@@ -104,8 +103,8 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
-        Usuario usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        User usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
         if (!passwordEncoder.matches(actual, usuario.getPassword())) {
             return false;
         }

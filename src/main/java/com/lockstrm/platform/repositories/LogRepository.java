@@ -1,8 +1,8 @@
 package com.lockstrm.platform.repositories;
 
-import com.lockstrm.platform.dto.GrupoVideoStatsDto;
+import com.lockstrm.platform.dto.GroupVideoStatsDto;
 import com.lockstrm.platform.entities.Log;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.entities.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @Repository
 public interface LogRepository extends JpaRepository<Log, Long> {
 
-    List<Log> findByUsuario(Usuario usuario);
+    List<Log> findByUsuario(User usuario);
 
     /**
      * Fila de `logs` que identifica una sesión concreta del reproductor:
@@ -46,7 +46,7 @@ public interface LogRepository extends JpaRepository<Log, Long> {
             @Param("sessionId") String sessionId);
 
     /** Sobrecarga por entidades para uso cómodo desde el servicio. */
-    default Optional<Log> findSesion(Usuario usuario, Video video, Long grupoId, String sessionId) {
+    default Optional<Log> findSesion(User usuario, Video video, Long grupoId, String sessionId) {
         return findByUsuarioIdAndVideoIdAndGrupoIdAndSessionId(
                 usuario.getIdUsuario(), video.getIdVideo(), grupoId, sessionId);
     }
@@ -146,7 +146,7 @@ public interface LogRepository extends JpaRepository<Log, Long> {
      * temporal no contiene ningún log.
      */
     @Query("""
-            SELECT new com.lockstrm.platform.dto.GrupoVideoStatsDto(
+            SELECT new com.lockstrm.platform.dto.GroupVideoStatsDto(
                 v.idVideo,
                 v.titulo,
                 v.miniaturaUrl,
@@ -168,7 +168,7 @@ public interface LogRepository extends JpaRepository<Log, Long> {
                 MAX(l.fechaHora)
             )
             FROM Video v
-            JOIN PermisosGrupo pg ON pg.id.idVideoId = v.idVideo
+            JOIN GroupPermission pg ON pg.id.idVideoId = v.idVideo
             LEFT JOIN Log l ON l.video = v
                 AND l.grupoId = :idGrupo
                 AND (:desde IS NULL OR l.fechaHora >= :desde)
@@ -179,7 +179,7 @@ public interface LogRepository extends JpaRepository<Log, Long> {
                      v.propietario.idUsuario, v.propietario.username, v.propietario.tag
             ORDER BY v.fechaSubida DESC
             """)
-    List<GrupoVideoStatsDto> statsPorVideoEnGrupo(@Param("idGrupo")    Long          idGrupo,
+    List<GroupVideoStatsDto> statsPorVideoEnGrupo(@Param("idGrupo")    Long          idGrupo,
                                                   @Param("autorEmail") String        autorEmail,
                                                   @Param("desde")      LocalDateTime desde,
                                                   @Param("hasta")      LocalDateTime hasta);
@@ -201,7 +201,7 @@ public interface LogRepository extends JpaRepository<Log, Long> {
                    COUNT(l.idLog)               AS visitas
             FROM Log l
             JOIN l.video v
-            JOIN PermisosGrupo pg ON pg.id.idVideoId = v.idVideo
+            JOIN GroupPermission pg ON pg.id.idVideoId = v.idVideo
             WHERE pg.id.idGrupoId = :idGrupo
               AND l.grupoId       = :idGrupo
               AND l.fechaHora    >= :desde

@@ -7,7 +7,7 @@ import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
-import { GrupoService, Grupo } from '../../core/services/grupo.service';
+import { GroupService, Group } from '../../core/services/group.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
@@ -25,7 +25,7 @@ import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 export class VideosComponent implements OnInit {
 
   videos: Video[] = [];
-  misGrupos: Grupo[] = [];
+  misGrupos: Group[] = [];
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
   /**
@@ -121,7 +121,7 @@ export class VideosComponent implements OnInit {
 
   constructor(
     protected videoService: VideoService,
-    private  grupoService:  GrupoService,
+    private  grupoService:  GroupService,
     private  route:         ActivatedRoute,
   ) {}
 
@@ -299,7 +299,7 @@ export class VideosComponent implements OnInit {
           // sin esperar a refetchear.
           const grupos = [...this.idGruposSeleccionados]
             .map(id => this.misGrupos.find(g => g.idGrupo === id))
-            .filter((g): g is Grupo => g != null)
+            .filter((g): g is Group => g != null)
             .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
 
           const nuevoVideo: Video = {
