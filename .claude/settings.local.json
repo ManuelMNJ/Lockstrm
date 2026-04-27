@@ -15,7 +15,10 @@
       "Bash(npx ng *)",
       "Bash(npx tsc *)",
       "Bash(tasklist)",
-      "mcp__Claude_in_Chrome__tabs_context_mcp"
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(du -sh uploads/)",
+      "Bash(ls uploads/videos/.gitkeep)",
+      "Bash(git rm *)"
     ]
   }
 }

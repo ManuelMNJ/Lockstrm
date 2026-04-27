@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
                 "Credenciales incorrectas", req);
     }
 
-    @ExceptionHandler({ResourceNotFoundException.class, NoSuchElementException.class})
+    @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException ex,
                                                         HttpServletRequest req) {
         return build(HttpStatus.NOT_FOUND, "NOT_FOUND",
