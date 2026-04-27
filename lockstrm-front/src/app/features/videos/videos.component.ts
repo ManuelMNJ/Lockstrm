@@ -53,7 +53,13 @@ export class VideosComponent implements OnInit {
 
   isDragging = false;
 
-  deletingIds = new Set<number>();
+  deletingIds   = new Set<number>();
+  failedThumbs  = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
 
   errorEliminacion = '';
   errorEliminacionVisible = false;
@@ -141,7 +147,7 @@ export class VideosComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); },
-        error: (err)  => console.error('[VideosComponent] Error al cargar espacio:', err),
+        error: (err)  => console.warn('[VideosComponent] Error al cargar espacio:', err?.status),
       });
     this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -150,7 +156,7 @@ export class VideosComponent implements OnInit {
           this.misGrupos = grupos;
           this.cdr.markForCheck();
         },
-        error: (err) => console.error('[VideosComponent] Error al cargar grupos:', err)
+        error: (err) => console.warn('[VideosComponent] Error al cargar grupos:', err?.status)
       });
   }
 
@@ -330,11 +336,7 @@ export class VideosComponent implements OnInit {
           this.estadoSubida = 'error';
           this.progreso     = 0;
           this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Comprueba la consola.');
-          console.error('[VideosComponent] Error en subida:', {
-            status:     err?.status,
-            statusText: err?.statusText,
-            body:       err?.error,
-          });
+          console.warn('[VideosComponent] Error en subida:', err?.status, err?.statusText);
           this.refresh();
         }
       });
@@ -373,11 +375,7 @@ export class VideosComponent implements OnInit {
             .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
         },
         error: (err) => {
-          console.error('[VideosComponent] Error al eliminar vídeo:', {
-            status:     err?.status,
-            statusText: err?.statusText,
-            body:       err?.error,
-          });
+          console.warn('[VideosComponent] Error al eliminar vídeo:', err?.status, err?.statusText);
           this.mostrarErrorEliminacion(
             extractHttpErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
           );
@@ -492,7 +490,7 @@ export class VideosComponent implements OnInit {
         error: (err) => {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
           this.cargando   = false;
-          console.error('[VideosComponent] Error al cargar videos:', err);
+          console.warn('[VideosComponent] Error al cargar videos:', err?.status);
           this.refresh();
         }
       });
@@ -521,7 +519,7 @@ export class VideosComponent implements OnInit {
     this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),
+        error: (err) => console.warn('[Heartbeat]', err?.status),
       });
   }
 }

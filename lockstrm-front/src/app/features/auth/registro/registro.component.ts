@@ -120,7 +120,7 @@ export class RegistroComponent {
         error: (err) => {
           this.cargando    = false;
           this.errorGlobal = err?.error?.error ?? 'Error al registrar. Inténtalo de nuevo.';
-          console.error('[RegistroComponent] Error:', err);
+          console.warn('[RegistroComponent] Error al registrar:', err?.status);
         }
       });
   }

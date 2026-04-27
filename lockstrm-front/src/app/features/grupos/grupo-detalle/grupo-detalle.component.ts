@@ -48,6 +48,12 @@ export class GrupoDetalleComponent implements OnInit {
   estadoAnadirVideo: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   errorAnadirVideo = '';
   quitandoVideos = new Set<number>();
+  failedThumbs   = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
   videoReproduciendose: Video | null = null;
 
   cargando = true;

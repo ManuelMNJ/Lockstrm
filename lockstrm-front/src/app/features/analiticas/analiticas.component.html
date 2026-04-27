@@ -155,8 +155,9 @@
 
             <!-- Miniatura -->
             <div class="top-thumb">
-              @if (video.miniaturaUrl) {
-                <img [src]="video.miniaturaUrl | thumbnailSrc" [alt]="video.titulo" loading="lazy"/>
+              @if (video.miniaturaUrl && !failedThumbs.has(video.idVideo)) {
+                <img [src]="video.miniaturaUrl | thumbnailSrc" [alt]="video.titulo" loading="lazy"
+                     (error)="onThumbError(video.idVideo)"/>
               } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="1.5" aria-hidden="true">

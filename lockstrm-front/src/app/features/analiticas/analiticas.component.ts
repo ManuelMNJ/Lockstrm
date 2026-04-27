@@ -23,9 +23,15 @@ import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 })
 export class AnaliticasComponent implements OnInit {
 
-  datos:    AnaliticasGlobales | null = null;
-  cargando  = true;
-  error     = '';
+  datos:        AnaliticasGlobales | null = null;
+  cargando      = true;
+  error         = '';
+  failedThumbs  = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
 
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);

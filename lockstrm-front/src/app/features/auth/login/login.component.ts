@@ -60,7 +60,7 @@ export class LoginComponent implements OnInit {
         error: (err) => {
           this.cargando   = false;
           this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';
-          console.error('[LoginComponent] Error de autenticacion:', err);
+          console.warn('[LoginComponent] Error de autenticacion:', err?.status);
         }
       });
   }

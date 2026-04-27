@@ -304,10 +304,11 @@
                    tabindex="0"
                    [attr.aria-label]="'Reproducir: ' + v.titulo">
 
-                @if (v.miniaturaUrl) {
+                @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
                   <img [src]="v.miniaturaUrl | thumbnailSrc"
                        [alt]="'Miniatura: ' + v.titulo"
-                       class="card-thumb__img">
+                       class="card-thumb__img"
+                       (error)="onThumbError(v.idVideo)">
                 } @else {
                   <div class="card-thumb__placeholder" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"

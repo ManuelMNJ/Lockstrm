@@ -24,9 +24,10 @@
       </p>
     </div>
 
-    @if (video?.miniaturaUrl) {
+    @if (video?.miniaturaUrl && !thumbFailed) {
       <div class="header-thumb" aria-hidden="true">
-        <img [src]="video!.miniaturaUrl | thumbnailSrc" [alt]="video!.titulo" loading="lazy"/>
+        <img [src]="video!.miniaturaUrl | thumbnailSrc" [alt]="video!.titulo" loading="lazy"
+             (error)="onThumbError()"/>
       </div>
     }
   </header>

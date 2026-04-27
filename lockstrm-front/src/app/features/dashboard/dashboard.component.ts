@@ -17,9 +17,15 @@ import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 })
 export class DashboardComponent implements OnInit {
 
-  stats:    DashboardStats | null = null;
-  cargando  = true;
-  error     = '';
+  stats:        DashboardStats | null = null;
+  cargando      = true;
+  error         = '';
+  failedThumbs  = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
 
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);

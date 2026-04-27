@@ -297,8 +297,9 @@
               @for (v of videosGrupoOrdenados; track v.idVideo) {
                 <div class="video-card" role="listitem" (click)="verVideo(v)">
                   <div class="video-card-thumb">
-                    @if (v.miniaturaUrl) {
-                      <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img">
+                    @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
+                      <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img"
+                           (error)="onThumbError(v.idVideo)">
                     } @else {
                       <div class="video-card-placeholder" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -490,7 +491,8 @@
                   <td>
                     <div class="analiticas-video-cell">
                       @if (s.miniaturaUrl) {
-                        <img class="analiticas-thumb" [src]="s.miniaturaUrl | thumbnailSrc" [alt]="s.titulo" loading="lazy">
+                        <img class="analiticas-thumb" [src]="s.miniaturaUrl | thumbnailSrc" [alt]="s.titulo" loading="lazy"
+                             (error)="onThumbError(s.idVideo)">
                       } @else {
                         <div class="analiticas-thumb analiticas-thumb--placeholder" aria-hidden="true">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"

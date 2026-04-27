@@ -13,7 +13,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -41,9 +41,11 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       UPLOAD_DIR: /var/lockstrm/videos
-      CORS_ORIGIN: ${CORS_ORIGIN:http://localhost:4200}
+      THUMBNAILS_DIR: /var/lockstrm/thumbnails
+      CORS_ORIGIN: ${CORS_ORIGIN}
     volumes:
       - video_storage:/var/lockstrm/videos
+      - thumbnail_storage:/var/lockstrm/thumbnails
     ports:
       - "8080:8080"
 
@@ -68,4 +70,6 @@ volumes:
   mysql_data:
     driver: local
   video_storage:
+    driver: local
+  thumbnail_storage:
     driver: local

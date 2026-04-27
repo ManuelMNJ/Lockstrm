@@ -27,15 +27,16 @@ import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
 })
 export class AnaliticasVideoComponent implements OnInit {
 
-  video:     Video | null = null;
-  /**
-   * Logs cargados. Si vienes en contexto de grupo, ya llegan filtrados por
-   * el backend (con los permisos verificados al servidor); si vienes en
-   * contexto global, llegan todos.
-   */
-  logs:      VideoLog[]   = [];
-  cargando   = true;
-  error      = '';
+  video:        Video | null = null;
+  logs:         VideoLog[]   = [];
+  cargando      = true;
+  error         = '';
+  thumbFailed   = false;
+
+  onThumbError(): void {
+    this.thumbFailed = true;
+    this.cdr.markForCheck();
+  }
 
   /**
    * Filtro activo de grupo:

@@ -194,8 +194,9 @@
                 <span class="rank-badge" aria-hidden="true">{{ i + 1 }}</span>
 
                 <div class="video-row-thumb" aria-hidden="true">
-                  @if (v.miniaturaUrl) {
-                    <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="v.titulo" loading="lazy">
+                  @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
+                    <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="v.titulo" loading="lazy"
+                         (error)="onThumbError(v.idVideo)">
                   } @else {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -243,8 +244,9 @@
               <li class="video-row">
 
                 <div class="video-row-thumb" aria-hidden="true">
-                  @if (v.miniaturaUrl) {
-                    <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="v.titulo" loading="lazy">
+                  @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
+                    <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="v.titulo" loading="lazy"
+                         (error)="onThumbError(v.idVideo)">
                   } @else {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
