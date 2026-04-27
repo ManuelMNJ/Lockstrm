@@ -2,10 +2,10 @@ package com.lockstrm.platform.dto;
 
 import java.util.List;
 
-public record DashboardStatsDTO(
+public record DashboardStatsDto(
         long                 totalVideos,
         long                 totalVistas,
         long                 totalGrupos,
-        List<VideoResumenDTO> topVistos,
-        List<VideoResumenDTO> topRecientes
+        List<VideoSummaryDto> topVistos,
+        List<VideoSummaryDto> topRecientes
 ) {}

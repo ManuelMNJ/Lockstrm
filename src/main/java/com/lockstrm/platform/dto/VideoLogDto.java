@@ -15,7 +15,7 @@ public record VideoLogDto(
         LocalDateTime fechaHora,
         Integer       segundosVistos,
         /**
-         * Grupo desde el que se reprodujo el vídeo en esta sesión. Puede ser
+         * Group desde el que se reprodujo el vídeo en esta sesión. Puede ser
          * null cuando la reproducción ocurrió fuera de un contexto de grupo
          * (p. ej. el propietario abriendo el vídeo desde "Mis vídeos").
          */

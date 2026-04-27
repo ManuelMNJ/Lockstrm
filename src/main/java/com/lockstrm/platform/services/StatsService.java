@@ -1,10 +1,10 @@
 package com.lockstrm.platform.services;
 
-import com.lockstrm.platform.dto.DashboardStatsDTO;
-import com.lockstrm.platform.dto.VideoResumenDTO;
-import com.lockstrm.platform.repositories.GrupoRepository;
+import com.lockstrm.platform.dto.DashboardStatsDto;
+import com.lockstrm.platform.dto.VideoSummaryDto;
+import com.lockstrm.platform.repositories.GroupRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
-import com.lockstrm.platform.repositories.VideoVistaRepository;
+import com.lockstrm.platform.repositories.VideoViewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -17,22 +17,22 @@ import java.util.List;
 public class StatsService {
 
     private final VideoRepository      videoRepository;
-    private final VideoVistaRepository videoVistaRepository;
-    private final GrupoRepository      grupoRepository;
+    private final VideoViewRepository videoVistaRepository;
+    private final GroupRepository      grupoRepository;
 
     @Transactional(readOnly = true)
-    public DashboardStatsDTO getDashboardStats(String email) {
+    public DashboardStatsDto getDashboardStats(String email) {
         long totalVideos = videoRepository.countByPropietario_Email(email);
         long totalVistas = videoVistaRepository.sumVistasByOwnerEmail(email);
         long totalGrupos = grupoRepository.countByCreador_Email(email);
 
-        List<VideoResumenDTO> topVistos = videoVistaRepository
+        List<VideoSummaryDto> topVistos = videoVistaRepository
                 .findTopVistedByOwner(email, PageRequest.of(0, 3));
 
-        List<VideoResumenDTO> topRecientes = videoRepository
+        List<VideoSummaryDto> topRecientes = videoRepository
                 .findTop3ByPropietario_EmailOrderByFechaSubidaDesc(email)
                 .stream()
-                .map(v -> new VideoResumenDTO(
+                .map(v -> new VideoSummaryDto(
                         v.getIdVideo(),
                         v.getTitulo(),
                         v.getDuracion(),
@@ -41,6 +41,6 @@ public class StatsService {
                         v.getFechaSubida()))
                 .toList();
 
-        return new DashboardStatsDTO(totalVideos, totalVistas, totalGrupos, topVistos, topRecientes);
+        return new DashboardStatsDto(totalVideos, totalVistas, totalGrupos, topVistos, topRecientes);
     }
 }

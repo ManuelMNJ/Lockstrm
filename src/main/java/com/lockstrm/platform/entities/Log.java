@@ -31,7 +31,7 @@ public class Log {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+    private User usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_video", nullable = false)
@@ -64,7 +64,7 @@ public class Log {
     private String sessionId;
 
     /**
-     * Grupo desde el que se está reproduciendo el vídeo. Puede ser null cuando
+     * Group desde el que se está reproduciendo el vídeo. Puede ser null cuando
      * la reproducción ocurre fuera de un contexto de grupo (p. ej. el propietario
      * viendo su propio vídeo). Forma parte de la clave lógica del UPSERT junto
      * con (usuario, video), de modo que un mismo vídeo visto desde dos grupos

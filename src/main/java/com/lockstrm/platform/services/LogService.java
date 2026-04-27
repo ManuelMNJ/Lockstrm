@@ -1,10 +1,10 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.entities.Log;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.LogRepository;
-import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class LogService {
     private final LogRepository            logRepository;
     private final UserRepository           userRepository;
     private final VideoRepository          videoRepository;
-    private final MiembrosGrupoRepository  miembrosGrupoRepository;
+    private final GroupMemberRepository  miembrosGroupRepository;
 
     /**
      * Segundos reales de reproducción que representa cada ping del cliente.
@@ -40,8 +40,8 @@ public class LogService {
      *    fila independiente. Volver a abrir el mismo vídeo el mismo día
      *    crea otra fila — esto preserva la granularidad por sesión que
      *    necesita la analítica.
-     *  - grupoId segrega por contexto: ver el vídeo desde el Grupo A y
-     *    desde el Grupo B genera dos filas distintas aunque el sessionId
+     *  - grupoId segrega por contexto: ver el vídeo desde el Group A y
+     *    desde el Group B genera dos filas distintas aunque el sessionId
      *    fuera (improbablemente) el mismo.
      *
      * Si el ping llega con una combinación aún no vista (primer heartbeat
@@ -53,7 +53,7 @@ public class LogService {
                                    Long grupoId) {
 
         Video   video   = videoRepository.getByIdOrThrow(idVideo);
-        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
+        User usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         verificarAcceso(video, emailUsuario);
 
@@ -80,7 +80,7 @@ public class LogService {
 
     public void verificarAcceso(Video video, String emailUsuario) {
         if (video.getPropietario().getEmail().equals(emailUsuario)) return;
-        if (!miembrosGrupoRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
+        if (!miembrosGroupRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
             throw new AccessDeniedException("Acceso denegado al video");
         }
     }

@@ -6,15 +6,15 @@ import { PrivateLayoutComponent }   from './core/layouts/private-layout/private-
 
 import { HomeComponent }              from './features/home/home.component';
 import { LoginComponent }             from './features/auth/login/login.component';
-import { RegistroComponent }          from './features/auth/registro/registro.component';
+import { RegisterComponent }          from './features/auth/register/register.component';
 import { DashboardComponent }         from './features/dashboard/dashboard.component';
 import { VideosComponent }            from './features/videos/videos.component';
-import { GruposComponent }            from './features/grupos/grupos.component';
-import { GrupoDetalleComponent }      from './features/grupos/grupo-detalle/grupo-detalle.component';
-import { AjustesComponent }           from './features/ajustes/ajustes.component';
-import { PerfilComponent }            from './features/perfil/perfil.component';
-import { AnaliticasComponent }        from './features/analiticas/analiticas.component';
-import { AnaliticasVideoComponent }   from './features/analiticas/analiticas-video/analiticas-video.component';
+import { GroupsComponent }            from './features/groups/groups.component';
+import { GroupDetailComponent }      from './features/groups/group-detail/group-detail.component';
+import { SettingsComponent }           from './features/settings/settings.component';
+import { ProfileComponent }            from './features/profile/profile.component';
+import { AnalyticsComponent }        from './features/analytics/analytics.component';
+import { VideoAnalyticsComponent }   from './features/analytics/video-analytics/video-analytics.component';
 
 import { authGuard }   from './core/guards/auth.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
@@ -40,7 +40,7 @@ export const routes: Routes = [
           { path: '',         component: HomeComponent, pathMatch: 'full' },
           { path: 'home',     redirectTo: '',           pathMatch: 'full' },
           { path: 'login',    component: LoginComponent,    canActivate: [noAuthGuard] },
-          { path: 'registro', component: RegistroComponent, canActivate: [noAuthGuard] },
+          { path: 'registro', component: RegisterComponent, canActivate: [noAuthGuard] },
         ],
       },
 
@@ -60,15 +60,15 @@ export const routes: Routes = [
             children: [
               { path: '',           redirectTo: 'videos', pathMatch: 'full' },
               { path: 'videos',     component: VideosComponent },
-              { path: 'grupos',     component: GruposComponent },
-              { path: 'grupos/:id', component: GrupoDetalleComponent },
-              { path: 'analiticas',          component: AnaliticasComponent },
-              { path: 'analiticas/:idVideo', component: AnaliticasVideoComponent },
+              { path: 'grupos',     component: GroupsComponent },
+              { path: 'grupos/:id', component: GroupDetailComponent },
+              { path: 'analiticas',          component: AnalyticsComponent },
+              { path: 'analiticas/:idVideo', component: VideoAnalyticsComponent },
             ],
           },
 
-          { path: 'perfil',  component: PerfilComponent },
-          { path: 'ajustes', component: AjustesComponent },
+          { path: 'perfil',  component: ProfileComponent },
+          { path: 'ajustes', component: SettingsComponent },
 
           // Compatibilidad con rutas anteriores
           { path: 'videos', redirectTo: 'mi-espacio/videos', pathMatch: 'full' },

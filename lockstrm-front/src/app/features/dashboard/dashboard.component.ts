@@ -60,6 +60,6 @@ export class DashboardComponent implements OnInit {
     { icon: 'upload', text: 'Subiste <strong>Demo producto v2.mp4</strong> correctamente',   time: 'ayer'       },
     { icon: 'group',  text: 'Nuevo miembro en el grupo <strong>Ventas EMEA</strong>',        time: 'hace 2 d'  },
     { icon: 'share',  text: '<strong>Tutorial onboarding</strong> compartido con 3 grupos',  time: 'hace 3 d'  },
-    { icon: 'video',  text: 'Grupo <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
+    { icon: 'video',  text: 'Group <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
   ];
 }

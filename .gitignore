@@ -43,6 +43,7 @@ build/
 *.tmp
 *~
 
+
 ### Vídeos subidos por usuarios (no versionar contenido) ###
 uploads/
 !uploads/.gitkeep
