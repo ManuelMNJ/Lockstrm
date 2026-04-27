@@ -16,11 +16,12 @@ import { VideoService, Video, GrupoRef } from '../../../core/services/video.serv
 import { AnaliticasService, VideoLog } from '../../../core/services/analiticas.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
+import { CustomSelectComponent, SelectOption } from '../../../shared/components/custom-select/custom-select.component';
 
 @Component({
   selector: 'app-analiticas-video',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DatePipe, VideoDurationPipe, ThumbnailSrcPipe],
+  imports: [CommonModule, FormsModule, RouterLink, DatePipe, VideoDurationPipe, ThumbnailSrcPipe, CustomSelectComponent],
   templateUrl: './analiticas-video.component.html',
   styleUrl: './analiticas-video.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -229,6 +230,18 @@ export class AnaliticasVideoComponent implements OnInit {
 
   get hayLogsSinGrupo(): boolean {
     return this.logs.some(l => l.grupoId == null);
+  }
+
+  /** Opciones del desplegable de filtro de grupo para app-custom-select. */
+  get filtroGrupoOptions(): SelectOption[] {
+    const opts: SelectOption[] = [{ value: 'all', label: 'Todos los contextos' }];
+    if (this.hayLogsSinGrupo) {
+      opts.push({ value: 'none', label: 'Sin grupo (visualización directa)' });
+    }
+    for (const g of this.gruposDisponibles) {
+      opts.push({ value: g.idGrupo, label: g.nombre });
+    }
+    return opts;
   }
 
   /** Nombre del grupo de contexto, para mostrar en la cabecera. */

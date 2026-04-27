@@ -118,18 +118,14 @@
            el backend ya filtra a ese grupo y cambiar el desplegable no
            tendría datos que mostrar. -->
       @if (!cargando && logs.length > 0 && !fromGrupo) {
-        <label class="grupo-filter">
+        <div class="grupo-filter">
           <span class="grupo-filter__label">Visto desde:</span>
-          <select class="grupo-filter__select" [(ngModel)]="filtroGrupo">
-            <option [ngValue]="'all'">Todos los contextos</option>
-            @if (hayLogsSinGrupo) {
-              <option [ngValue]="'none'">Sin grupo (visualización directa)</option>
-            }
-            @for (g of gruposDisponibles; track g.idGrupo) {
-              <option [ngValue]="g.idGrupo">{{ g.nombre }}</option>
-            }
-          </select>
-        </label>
+          <app-custom-select
+            [options]="filtroGrupoOptions"
+            [(ngModel)]="filtroGrupo"
+            ariaLabel="Filtrar por contexto de grupo">
+          </app-custom-select>
+        </div>
       }
     </header>
 
