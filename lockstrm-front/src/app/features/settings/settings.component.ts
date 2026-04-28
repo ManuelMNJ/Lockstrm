@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { timer } from 'rxjs';
 import { UserService } from '../../core/services/user.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   passwordFortalezaValidator,
   confirmarPasswordValidator,
@@ -33,6 +34,7 @@ export class SettingsComponent {
   constructor(
     private fb: FormBuilder,
     private usuarioService: UserService,
+    private authService: AuthService,
   ) {
     this.formPassword = this.fb.group(
       {
@@ -68,17 +70,26 @@ export class SettingsComponent {
     this.usuarioService.cambiarContrasena(contrasenaActual, contrasenaNueva)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => {
+        next: () => {
           this.estadoPassword  = 'success';
-          this.mensajePassword = res.mensaje ?? 'Contraseña actualizada correctamente.';
+          this.mensajePassword = 'Contraseña actualizada. Cerrando sesión...';
           this.formPassword.reset();
-          timer(4000)
+          timer(2000)
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(() => { this.estadoPassword = 'idle'; });
+            .subscribe(() => this.authService.logout());
         },
         error: (err) => {
-          this.estadoPassword  = 'error';
-          this.mensajePassword = err?.error?.error || 'No se pudo actualizar la contraseña.';
+          const body = err?.error;
+          if (body?.error === 'La contraseña actual no es correcta') {
+            this.estadoPassword = 'idle';
+            this.ctrlActual.setErrors({ incorrecta: true });
+          } else {
+            this.estadoPassword  = 'error';
+            this.mensajePassword =
+              body?.campos?.['nueva'] ||
+              body?.message ||
+              'No se pudo actualizar la contraseña.';
+          }
         },
       });
   }

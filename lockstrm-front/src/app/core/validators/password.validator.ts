@@ -1,6 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-/** Patrón canónico de fortaleza: ≥8 chars, 1 mayúscula, 1 dígito, 1 carácter especial. */
+// Debe coincidir con ChangePasswordRequest.PASSWORD_REGEX en el backend
 export const PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 /**

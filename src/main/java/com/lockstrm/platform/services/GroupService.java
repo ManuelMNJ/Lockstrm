@@ -59,12 +59,6 @@ public class GroupService {
         return grupoRepository.findByCreador_Email(email);
     }
 
-    /** Grupos disponibles para asignar a un vídeo: solo donde el usuario es PROPIETARIO. */
-    @Transactional(readOnly = true)
-    public List<Group> obtenerGruposParaDesplegable(String email) {
-        return grupoRepository.findByCreador_Email(email);
-    }
-
     @Transactional(readOnly = true)
     public List<Group> obtenerGruposComoMiembro(String email) {
         return miembrosGroupRepository.findGruposComoMiembroNoCreador(email);

@@ -79,7 +79,7 @@ public class LogService {
     }
 
     public void verificarAcceso(Video video, String emailUsuario) {
-        if (video.getPropietario().getEmail().equals(emailUsuario)) return;
+        if (video.getPropietario() != null && video.getPropietario().getEmail().equals(emailUsuario)) return;
         if (!miembrosGroupRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
             throw new AccessDeniedException("Acceso denegado al video");
         }

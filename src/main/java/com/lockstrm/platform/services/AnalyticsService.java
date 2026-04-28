@@ -90,7 +90,7 @@ public class AnalyticsService {
     public List<VideoLogDto> logsDelVideo(Long idVideo, String emailSolicitante, Long grupoId,
                                           LocalDateTime desde, LocalDateTime hasta) {
         Video video = videoRepository.getByIdOrThrow(idVideo);
-        boolean esPropietario = video.getPropietario().getEmail().equals(emailSolicitante);
+        boolean esPropietario = video.getPropietario() != null && video.getPropietario().getEmail().equals(emailSolicitante);
 
         if (grupoId != null) {
             if (!permisosGroupRepository.existsById(new GroupPermissionId(idVideo, grupoId))) {

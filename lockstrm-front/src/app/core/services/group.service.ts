@@ -22,10 +22,9 @@ export class GroupService {
 
   private readonly apiUrl = `${environment.apiUrl}/api/grupos`;
 
-  private misGruposCache$:           Observable<Group[]> | null = null;
-  private gruposCreadosCache$:       Observable<Group[]> | null = null;
-  private gruposMiembroCache$:       Observable<Group[]> | null = null;
-  private gruposDesplegableCache$:   Observable<Group[]> | null = null;
+  private misGruposCache$:       Observable<Group[]> | null = null;
+  private gruposCreadosCache$:   Observable<Group[]> | null = null;
+  private gruposMiembroCache$:   Observable<Group[]> | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -41,13 +40,6 @@ export class GroupService {
       this.gruposCreadosCache$ = this.http.get<Group[]>(`${this.apiUrl}/creados`).pipe(shareReplay(1));
     }
     return this.gruposCreadosCache$;
-  }
-
-  obtenerGruposParaDesplegable(): Observable<Group[]> {
-    if (!this.gruposDesplegableCache$) {
-      this.gruposDesplegableCache$ = this.http.get<Group[]>(`${this.apiUrl}/desplegable`).pipe(shareReplay(1));
-    }
-    return this.gruposDesplegableCache$;
   }
 
   obtenerGruposComoMiembro(): Observable<Group[]> {
@@ -70,7 +62,6 @@ export class GroupService {
       tap(() => {
         this.misGruposCache$ = null;
         this.gruposCreadosCache$ = null;
-        this.gruposDesplegableCache$ = null;
         this.gruposMiembroCache$ = null;
       }),
     );
@@ -93,7 +84,6 @@ export class GroupService {
       tap(() => {
         this.misGruposCache$ = null;
         this.gruposCreadosCache$ = null;
-        this.gruposDesplegableCache$ = null;
         this.gruposMiembroCache$ = null;
       }),
     );

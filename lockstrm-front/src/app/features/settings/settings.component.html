@@ -29,10 +29,10 @@
           placeholder="••••••••"
           [class.form-input--error]="ctrlActual.invalid && ctrlActual.touched">
         @if (ctrlActual.touched && ctrlActual.errors?.['required']) {
-          <span
-            class="field-error" role="alert">
-            La contraseña actual es obligatoria.
-          </span>
+          <span class="field-error" role="alert">La contraseña actual es obligatoria.</span>
+        }
+        @if (ctrlActual.errors?.['incorrecta']) {
+          <span class="field-error" role="alert">La contraseña actual no es correcta.</span>
         }
       </div>
 

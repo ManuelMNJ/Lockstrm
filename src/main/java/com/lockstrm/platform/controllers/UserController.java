@@ -30,8 +30,7 @@ public class UserController {
             "username",       usuario.getUsername()      != null ? usuario.getUsername()      : "",
             "tag",            usuario.getTag()           != null ? usuario.getTag()           : "",
             "email",          usuario.getEmail(),
-            "fechaRegistro",  usuario.getFechaRegistro(),
-            "rolSistema",     usuario.getRolSistema()    != null ? usuario.getRolSistema()    : "USER"
+            "fechaRegistro",  usuario.getFechaRegistro()
         ));
     }
 

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Rate-limit por IP sobre /api/auth/*. Token bucket en memoria (suficiente para
+ * Rate-limit por IP sobre endpoints sensibles. Token bucket en memoria (suficiente para
  * un solo nodo; para cluster migrar a Redis + Bucket4j).
  */
 @Component
@@ -31,9 +31,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Value("${lockstrm.ratelimit.auth.refill-per-minute:10}")
     private long refillPerMinute;
 
+    private static final java.util.Set<String> PROTECTED_EXACT = java.util.Set.of(
+            "/api/usuarios/cambiar-contrasena"
+    );
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest req) {
-        return !req.getRequestURI().startsWith("/api/auth/");
+        String uri = req.getRequestURI();
+        return !(uri.startsWith("/api/auth/") || PROTECTED_EXACT.contains(uri));
     }
 
     @Override
