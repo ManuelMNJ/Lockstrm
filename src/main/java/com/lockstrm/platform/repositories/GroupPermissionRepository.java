@@ -13,12 +13,6 @@ import java.util.List;
 @Repository
 public interface GroupPermissionRepository extends JpaRepository<GroupPermission, GroupPermissionId> {
 
-    List<GroupPermission> findById_IdVideoId(Long idVideoId);
-
-    /**
-     * Carga los permisos de un conjunto de vídeos en una única query con JOIN FETCH del grupo,
-     * evitando el N+1 que se producía al llamar a {@code findById_IdVideoId} por cada vídeo.
-     */
     @Query("SELECT pg FROM GroupPermission pg JOIN FETCH pg.grupo WHERE pg.id.idVideoId IN :videoIds")
     List<GroupPermission> findByVideoIds(@Param("videoIds") List<Long> videoIds);
 

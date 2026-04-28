@@ -87,11 +87,6 @@ public class AnalyticsService {
      *    vídeo esté realmente compartido con ese grupo.
      */
     @Transactional(readOnly = true)
-    public List<VideoLogDto> logsDelVideo(Long idVideo, String emailSolicitante, Long grupoId) {
-        return logsDelVideo(idVideo, emailSolicitante, grupoId, null, null);
-    }
-
-    @Transactional(readOnly = true)
     public List<VideoLogDto> logsDelVideo(Long idVideo, String emailSolicitante, Long grupoId,
                                           LocalDateTime desde, LocalDateTime hasta) {
         Video video = videoRepository.getByIdOrThrow(idVideo);

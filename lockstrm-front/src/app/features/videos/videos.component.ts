@@ -147,7 +147,7 @@ export class VideosComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); },
-        error: (err)  => console.warn('[VideosComponent] Error al cargar espacio:', err?.status),
+        error: () => {},
       });
     this.grupoService.obtenerGruposParaDesplegable()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -156,7 +156,7 @@ export class VideosComponent implements OnInit {
           this.misGrupos = grupos;
           this.cdr.markForCheck();
         },
-        error: (err) => console.warn('[VideosComponent] Error al cargar grupos:', err?.status)
+        error: () => {}
       });
   }
 
@@ -335,8 +335,7 @@ export class VideosComponent implements OnInit {
         error: (err) => {
           this.estadoSubida = 'error';
           this.progreso     = 0;
-          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Comprueba la consola.');
-          console.warn('[VideosComponent] Error en subida:', err?.status, err?.statusText);
+          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Inténtalo de nuevo.');
           this.refresh();
         }
       });
@@ -375,7 +374,6 @@ export class VideosComponent implements OnInit {
             .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
         },
         error: (err) => {
-          console.warn('[VideosComponent] Error al eliminar vídeo:', err?.status, err?.statusText);
           this.mostrarErrorEliminacion(
             extractHttpErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
           );
@@ -490,7 +488,6 @@ export class VideosComponent implements OnInit {
         error: (err) => {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
           this.cargando   = false;
-          console.warn('[VideosComponent] Error al cargar videos:', err?.status);
           this.refresh();
         }
       });
@@ -518,8 +515,6 @@ export class VideosComponent implements OnInit {
     if (!idVideo) return;
     this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        error: (err) => console.warn('[Heartbeat]', err?.status),
-      });
+      .subscribe();
   }
 }
