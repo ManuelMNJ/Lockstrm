@@ -90,7 +90,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -137,7 +137,7 @@
 }
 
 .hero-subtitle {
-  font-size: 15px;
+  font-size: var(--font-lg);
   line-height: 1.75;
   color: var(--text-muted);
   max-width: 460px;
@@ -161,7 +161,7 @@
   padding: 12px 22px;
   background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 55%, var(--color-primary-hover) 100%);
   color: var(--color-white);
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   letter-spacing: 0.01em;
   border-radius: 8px;
@@ -176,7 +176,7 @@
 
 .btn-cta--lg {
   padding: 14px 28px;
-  font-size: 15px;
+  font-size: var(--font-lg);
 }
 
 .btn-cta:hover {
@@ -214,7 +214,7 @@
   padding: 12px 20px;
   background-color: transparent;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 500;
   border-radius: 8px;
   text-decoration: none;
@@ -265,7 +265,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   border: 2px solid var(--bg-main);
   flex-shrink: 0;
@@ -278,7 +278,7 @@
 .sa--c { background-color: var(--color-success-ghost-strong); color: var(--accent-green-soft); }
 
 .social-hint-text {
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--text-subtle);
   margin: 0;
   line-height: 1.4;
@@ -365,7 +365,7 @@
 
 .mk-filename {
   flex: 1;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: var(--text-subtle);
   letter-spacing: 0.01em;
@@ -423,7 +423,7 @@
   top: 10px;
   right: 10px;
   z-index: 4;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--text-muted);
@@ -462,7 +462,7 @@
 }
 
 .mk-duration {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--overlay-white-75);
   letter-spacing: 0.03em;
@@ -519,7 +519,7 @@
 .mk-ctrl-icon { width: 14px; height: 14px; color: var(--text-subtle); flex-shrink: 0; }
 
 .mk-time {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: var(--text-subtle);
   letter-spacing: 0.02em;
@@ -550,7 +550,7 @@
   border-radius: 50%;
   background-color: var(--color-primary-ghost);
   color: var(--color-primary);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -558,7 +558,7 @@
 .mk-owner-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 
 .mk-owner-name {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -566,13 +566,13 @@
   text-overflow: ellipsis;
 }
 
-.mk-owner-sub { font-size: 10px; color: var(--text-subtle); white-space: nowrap; }
+.mk-owner-sub { font-size: var(--font-2xs); color: var(--text-subtle); white-space: nowrap; }
 
 .mk-access {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -613,7 +613,7 @@
 }
 
 .stat-value {
-  font-size: 22px;
+  font-size: var(--font-3xl);
   font-weight: 700;
   letter-spacing: -0.03em;
   background: linear-gradient(135deg, var(--text-main) 40%, var(--color-primary-lightest) 100%);
@@ -624,7 +624,7 @@
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: var(--text-subtle);
   text-align: center;
@@ -658,7 +658,7 @@
 
 .features-eyebrow {
   display: inline-block;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -675,7 +675,7 @@
 }
 
 .features-subtitle {
-  font-size: 14px;
+  font-size: var(--font-md);
   line-height: 1.7;
   color: var(--text-muted);
   margin: 0;
@@ -722,15 +722,15 @@
 
 .feature-icon svg { width: 18px; height: 18px; }
 
-.feature-icon--purple { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10)); color: var(--color-primary-lighter); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
-.feature-icon--blue   { background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.09)); color: var(--color-secondary-light); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
-.feature-icon--green  { background: linear-gradient(135deg, rgba(16, 185, 129, 0.20), rgba(16, 185, 129, 0.08)); color: var(--color-success-light); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
-.feature-icon--amber  { background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.09)); color: var(--color-warning-light); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
-.feature-icon--teal   { background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(20, 184, 166, 0.09)); color: var(--accent-teal); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
-.feature-icon--rose   { background: linear-gradient(135deg, rgba(244, 63, 94, 0.20), rgba(244, 63, 94, 0.08)); color: var(--accent-rose); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
+.feature-icon--purple { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10)); color: var(--color-primary-lighter); box-shadow: var(--shadow-icon-inset); }
+.feature-icon--blue   { background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.09)); color: var(--color-secondary-light); box-shadow: var(--shadow-icon-inset); }
+.feature-icon--green  { background: linear-gradient(135deg, rgba(16, 185, 129, 0.20), rgba(16, 185, 129, 0.08)); color: var(--color-success-light); box-shadow: var(--shadow-icon-inset); }
+.feature-icon--amber  { background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.09)); color: var(--color-warning-light); box-shadow: var(--shadow-icon-inset); }
+.feature-icon--teal   { background: linear-gradient(135deg, rgba(20, 184, 166, 0.22), rgba(20, 184, 166, 0.09)); color: var(--accent-teal); box-shadow: var(--shadow-icon-inset); }
+.feature-icon--rose   { background: linear-gradient(135deg, rgba(244, 63, 94, 0.20), rgba(244, 63, 94, 0.08)); color: var(--accent-rose); box-shadow: var(--shadow-icon-inset); }
 
 .feature-card-title {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-main);
   letter-spacing: -0.01em;
@@ -738,7 +738,7 @@
 }
 
 .feature-card-body {
-  font-size: 13px;
+  font-size: var(--font-base);
   line-height: 1.65;
   color: var(--text-muted);
   margin: 0;
@@ -758,7 +758,7 @@
 }
 
 .social-label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -782,7 +782,7 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 9999px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.01em;
@@ -854,7 +854,7 @@
 }
 
 .cta-banner-sub {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-subtle);
   margin: 0;
 }

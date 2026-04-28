@@ -36,7 +36,7 @@
 }
 
 .auth-brand-name {
-  font-size: 18px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.01em;
@@ -44,7 +44,7 @@
 
 /* ── Cabecera ── */
 .auth-title {
-  font-size: 22px;
+  font-size: var(--font-3xl);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -52,7 +52,7 @@
 }
 
 .auth-subtitle {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-muted);
   margin-bottom: var(--space-6);
 }
@@ -67,7 +67,7 @@
   background-color: var(--color-error-ghost);
   border: 1px solid var(--color-error-ghost-strong);
   color: var(--color-error);
-  font-size: 13px;
+  font-size: var(--font-base);
   margin-bottom: var(--space-5);
 }
 
@@ -97,7 +97,7 @@
 }
 
 .form-label {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -111,7 +111,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: var(--font-md);
   font-family: inherit;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
@@ -191,12 +191,12 @@
 }
 
 .field-error {
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--color-error);
 }
 
 .password-hint {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
 }
 
@@ -213,7 +213,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   transition: color var(--transition-fast);
 }
 
@@ -225,7 +225,7 @@
   justify-content: center;
   width: 14px;
   height: 14px;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   border-radius: 50%;
   flex-shrink: 0;
@@ -260,7 +260,7 @@
   content: '·';
   background-color: transparent;
   color: var(--text-subtle);
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 700;
 }
 
@@ -269,7 +269,7 @@
   width: 100%;
   justify-content: center;
   padding: 11px;
-  font-size: 14px;
+  font-size: var(--font-md);
   margin-top: var(--space-2);
 }
 
@@ -294,7 +294,7 @@
 .auth-footer {
   text-align: center;
   margin-top: var(--space-6);
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-muted);
 }
 
@@ -320,6 +320,6 @@
   background-color: var(--color-success-ghost-soft);
   border: 1px solid var(--color-success-ghost-strong);
   color: var(--color-success);
-  font-size: 13px;
+  font-size: var(--font-base);
   margin-bottom: var(--space-5);
 }

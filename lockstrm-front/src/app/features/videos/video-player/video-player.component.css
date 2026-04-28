@@ -64,7 +64,7 @@
 .pause-overlay {
   position: absolute;
   inset: 0;
-  z-index: 15;
+  z-index: var(--z-player-pause);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,7 +114,7 @@
 .click-flash {
   position: absolute;
   inset: 0;
-  z-index: 25;
+  z-index: var(--z-player-flash);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,7 +144,7 @@
 .buffering-spinner {
   position: absolute;
   inset: 0;
-  z-index: 30;
+  z-index: var(--z-player-spinner);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -170,13 +170,13 @@
 
 .watermark {
   position: absolute;
-  z-index: 10;
+  z-index: var(--z-above);
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
   opacity: 0.25;
   color: var(--color-white);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -194,7 +194,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: var(--z-player-controls);
   /* Generous gradient so controls are readable over any video frame */
   background: linear-gradient(to top,
     var(--overlay-black-90) 0%,
@@ -386,7 +386,7 @@
    ========================================================================== */
 
 .time-display {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";

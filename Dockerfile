@@ -15,11 +15,9 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# =============================================
+
 # STAGE 2: RUN
-# Imagen final ligera solo con el JRE
 # La imagen de build (~700MB) queda descartada
-# =============================================
 FROM eclipse-temurin:21-jre-alpine AS run
 
 WORKDIR /app
