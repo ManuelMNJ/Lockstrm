@@ -299,7 +299,7 @@ public class VideoService {
     public VideoDto editarVideo(Long idVideo, String emailUsuario, String titulo, List<Long> idGrupos) {
         Video video = videoRepository.getByIdOrThrow(idVideo);
 
-        if (!video.getPropietario().getEmail().equals(emailUsuario)) {
+        if (video.getPropietario() == null || !video.getPropietario().getEmail().equals(emailUsuario)) {
             throw new AccessDeniedException("No tienes permiso para editar este vídeo");
         }
 
@@ -359,7 +359,7 @@ public class VideoService {
     public void eliminarVideo(Long idVideo, String userEmail) {
         Video video = videoRepository.getByIdOrThrow(idVideo);
 
-        if (!video.getPropietario().getEmail().equals(userEmail)) {
+        if (video.getPropietario() == null || !video.getPropietario().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("No tienes permiso para eliminar este vídeo");
         }
 

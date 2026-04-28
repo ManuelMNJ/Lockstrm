@@ -39,9 +39,7 @@ public class User {
 
     private LocalDateTime fechaRegistro;
 
-    private String rolSistema;
-
-    @OneToMany(mappedBy = "propietario", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "propietario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     @ToString.Exclude
     private List<Video> videosSubidos;

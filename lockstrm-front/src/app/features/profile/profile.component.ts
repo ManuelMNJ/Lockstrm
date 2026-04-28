@@ -49,12 +49,4 @@ export class ProfileComponent implements OnInit {
       });
   }
 
-  rolLegible(rol: string | undefined | null): string {
-    switch (rol) {
-      case 'SUPER_ADMIN': return 'Administrador';
-      case 'ADMIN':       return 'Admin';
-      case 'USER':        return 'Usuario';
-      default:            return rol || '—';
-    }
-  }
 }

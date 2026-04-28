@@ -40,12 +40,6 @@ public class GroupController {
         return ResponseEntity.ok(grupoService.obtenerGruposCreados(userDetails.getUsername()));
     }
 
-    /** Grupos disponibles para el desplegable de "Editar Vídeo": solo grupos propios. */
-    @GetMapping("/desplegable")
-    public ResponseEntity<List<Group>> obtenerGruposParaDesplegable(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(grupoService.obtenerGruposParaDesplegable(userDetails.getUsername()));
-    }
-
     /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
     @GetMapping("/miembro")
     public ResponseEntity<List<Group>> obtenerGruposComoMiembro(@AuthenticationPrincipal UserDetails userDetails) {

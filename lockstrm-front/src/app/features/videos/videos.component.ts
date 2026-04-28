@@ -149,7 +149,7 @@ export class VideosComponent implements OnInit {
         next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); },
         error: () => {},
       });
-    this.grupoService.obtenerGruposParaDesplegable()
+    this.grupoService.obtenerGruposCreados()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupos) => {

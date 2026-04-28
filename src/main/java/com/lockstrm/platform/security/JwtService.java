@@ -24,6 +24,7 @@ public class JwtService {
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .claim("cred", credFingerprint(userDetails.getPassword()))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigningKey())
@@ -35,8 +36,18 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String email = extractEmail(token);
-        return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        final String email      = extractEmail(token);
+        final String tokenCred  = extractClaim(token, c -> c.get("cred", String.class));
+        final String currentCred = credFingerprint(userDetails.getPassword());
+        return email.equals(userDetails.getUsername())
+                && !isTokenExpired(token)
+                && currentCred.equals(tokenCred);
+    }
+
+    /** 16 chars del salt BCrypt (posiciones 7-23): identifica unívocamente el hash sin exponerlo. */
+    private String credFingerprint(String bcryptHash) {
+        if (bcryptHash == null || bcryptHash.length() < 23) return "";
+        return bcryptHash.substring(7, 23);
     }
 
     private boolean isTokenExpired(String token) {

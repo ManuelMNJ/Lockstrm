@@ -42,7 +42,6 @@ public class UserService implements UserDetailsService {
         nuevo.setUsername(request.getUsername());
         nuevo.setEmail(request.getEmail());
         nuevo.setPassword(passwordEncoder.encode(request.getPassword()));
-        nuevo.setRolSistema("USER");
         nuevo.setTag(generarTagLibre(request.getUsername()));
         return userRepository.save(nuevo);
     }
@@ -103,13 +102,13 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
-        User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
-        if (!passwordEncoder.matches(actual, usuario.getPassword())) {
-            return false;
-        }
-        usuario.setPassword(passwordEncoder.encode(nueva));
-        userRepository.save(usuario);
-        return true;
+        return userRepository.findByEmail(email)
+                .filter(u -> passwordEncoder.matches(actual, u.getPassword()))
+                .map(u -> {
+                    u.setPassword(passwordEncoder.encode(nueva));
+                    userRepository.save(u);
+                    return true;
+                })
+                .orElse(false);
     }
 }

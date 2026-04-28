@@ -10,7 +10,6 @@ export interface PerfilUsuario {
   email: string;
   tag: string;
   fechaRegistro: string;
-  rolSistema: string;
 }
 
 @Injectable({ providedIn: 'root' })
