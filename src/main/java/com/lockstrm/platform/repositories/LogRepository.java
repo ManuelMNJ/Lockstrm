@@ -18,8 +18,6 @@ import java.util.Optional;
 @Repository
 public interface LogRepository extends JpaRepository<Log, Long> {
 
-    List<Log> findByUsuario(User usuario);
-
     /**
      * Fila de `logs` que identifica una sesión concreta del reproductor:
      * (usuario, vídeo, grupo, sessionId). El sessionId se genera en cliente

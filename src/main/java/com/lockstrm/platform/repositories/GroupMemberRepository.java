@@ -3,7 +3,6 @@ package com.lockstrm.platform.repositories;
 import com.lockstrm.platform.entities.Group;
 import com.lockstrm.platform.entities.GroupMember;
 import com.lockstrm.platform.entities.GroupMemberId;
-import com.lockstrm.platform.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -49,10 +48,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     @Modifying
     @Query("DELETE FROM GroupMember mg WHERE mg.id.idGrupoId = :idGrupo AND mg.id.idUsuarioId = :idUsuario")
     void deleteByGrupoIdAndUsuarioId(@Param("idGrupo") Long idGrupo, @Param("idUsuario") Long idUsuario);
-
-    /** Lista los usuarios miembros de un grupo. */
-    @Query("SELECT mg.usuario FROM GroupMember mg WHERE mg.id.idGrupoId = :idGrupo")
-    List<User> findUsuariosByGrupoId(@Param("idGrupo") Long idGrupo);
 
     /** Lista registros de membresía completos (usuario + rol) para un grupo. */
     @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.usuario WHERE mg.id.idGrupoId = :idGrupo")
