@@ -34,7 +34,7 @@
   box-shadow: 0 1px 0 rgba(124, 58, 237, 0.10), 0 2px 12px rgba(0, 0, 0, 0.20);
   flex-shrink: 0;
   gap: var(--space-4);
-  z-index: 100;
+  z-index: var(--z-fixed);
 }
 
 /* ── Brand ── */
@@ -65,7 +65,7 @@
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -85,7 +85,7 @@
   display: inline-flex;
   align-items: center;
   padding: 6px var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--text-muted);
   border-radius: var(--radius-sm);
@@ -108,7 +108,7 @@
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-primary);
   background-color: var(--color-primary-ghost);
@@ -175,11 +175,11 @@
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
   color: var(--color-white);
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25);
+  box-shadow: var(--shadow-avatar-sm);
 }
 
 .trigger-info {
@@ -192,7 +192,7 @@
 }
 
 .trigger-name {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -203,7 +203,7 @@
 }
 
 .trigger-tag {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
   white-space: nowrap;
   overflow: hidden;
@@ -231,7 +231,7 @@
 .menu-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 98;
+  z-index: var(--z-backdrop);
   background: transparent;
 }
 
@@ -250,7 +250,7 @@
     0 4px 6px -1px var(--overlay-black-20),
     0 12px 30px -4px var(--overlay-black-40),
     0 0 0 1px rgba(255, 255, 255, 0.03);
-  z-index: 99;
+  z-index: var(--z-dropdown);
   overflow: hidden;
 
   /* Entrada suave */
@@ -280,11 +280,11 @@
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
   color: var(--color-white);
-  font-size: 16px;
+  font-size: var(--font-xl);
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.20);
+  box-shadow: var(--shadow-avatar-md);
 }
 
 .dropdown-user-info {
@@ -295,7 +295,7 @@
 }
 
 .dropdown-username {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -304,7 +304,7 @@
 }
 
 .dropdown-role {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--color-primary-lighter);
   font-weight: 500;
 }
@@ -323,7 +323,7 @@
   gap: 10px;
   width: 100%;
   padding: 10px var(--space-4);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--text-muted);
   background: transparent;

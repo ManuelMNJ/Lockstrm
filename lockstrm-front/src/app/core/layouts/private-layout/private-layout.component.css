@@ -74,7 +74,7 @@
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
@@ -172,7 +172,7 @@
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
   color: var(--color-white);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
@@ -189,7 +189,7 @@
 }
 
 .user-name {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -198,7 +198,7 @@
 }
 
 .user-role {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--color-primary-lighter);
   font-weight: 500;
 }
@@ -259,7 +259,7 @@
 }
 
 .header-title {
-  font-size: 20px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.025em;

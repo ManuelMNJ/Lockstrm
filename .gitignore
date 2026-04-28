@@ -52,6 +52,9 @@ uploads/
 *.log
 logs/
 
+### Datos de base de datos (MySQL data dir montado por Docker) ###
+.data/
+
 ### Node / front ###
 node_modules/
 lockstrm-front/.angular/

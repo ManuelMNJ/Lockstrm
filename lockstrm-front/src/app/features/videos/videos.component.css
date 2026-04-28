@@ -41,7 +41,7 @@
   height: 36px;
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: var(--shadow-icon-inset);
   color: var(--color-primary-lighter);
   flex-shrink: 0;
 }
@@ -50,14 +50,14 @@
 .storage-text { display: flex; flex-direction: column; gap: 2px; }
 
 .storage-label {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-subtle);
 }
 
-.storage-values { font-size: 13px; color: var(--text-muted); }
+.storage-values { font-size: var(--font-base); color: var(--text-muted); }
 .storage-values strong { font-weight: 600; color: var(--text-main); }
 .storage-sep { margin: 0 3px; opacity: 0.4; }
 
@@ -91,7 +91,7 @@
 }
 
 .storage-pct {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
@@ -117,14 +117,14 @@
 .panel-header { display: flex; flex-direction: column; gap: var(--space-1); }
 
 .panel-title {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--text-main);
   letter-spacing: -0.01em;
   margin: 0;
 }
 
-.panel-subtitle { font-size: 12px; color: var(--text-muted); margin: 0; }
+.panel-subtitle { font-size: var(--font-sm); color: var(--text-muted); margin: 0; }
 
 /* ── 2-column layout ── */
 .upload-layout {
@@ -226,14 +226,14 @@
 .drop-zone__icon svg { width: 22px; height: 22px; }
 
 .drop-zone__text {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-main);
   margin: 0;
 }
 
 .drop-zone__hint {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
   margin: 0;
 }
@@ -271,7 +271,7 @@
 }
 
 .drop-zone__filename {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -280,12 +280,12 @@
 }
 
 .drop-zone__filesize {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
 }
 
 .drop-zone__change {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-primary);
   background-color: var(--color-primary-ghost);
@@ -301,7 +301,7 @@
 .form-field { display: flex; flex-direction: column; gap: var(--space-1); }
 
 .form-label {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.01em;
@@ -313,7 +313,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-family: inherit;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -364,7 +364,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-md);
@@ -402,7 +402,7 @@
   position: absolute;
   right: 0;
   top: 10px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -441,7 +441,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -457,7 +457,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   border-top: 1px solid var(--border-subtle);
 }
@@ -482,7 +482,7 @@
 .preview-placeholder svg { width: 36px; height: 36px; opacity: 0.3; }
 
 .preview-placeholder p {
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--text-subtle);
   line-height: 1.5;
   margin: 0;
@@ -513,7 +513,7 @@
 }
 
 .section-title {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 600;
   color: var(--text-main);
   letter-spacing: -0.01em;
@@ -521,7 +521,7 @@
 }
 
 .section-badge {
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 600;
   color: var(--color-primary-lighter);
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.07));
@@ -557,7 +557,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-family: inherit;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -692,7 +692,7 @@
   position: absolute;
   bottom: 8px;
   right: 8px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 700;
   color: var(--color-white);
   background: rgba(0, 0, 0, 0.72);
@@ -759,7 +759,7 @@
 }
 
 .card-title {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   margin: 0;
@@ -785,7 +785,7 @@
 
 .card-group {
   display: inline-block;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -827,7 +827,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-muted);
   user-select: none;
@@ -890,12 +890,12 @@
 
 .form-hint {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
 }
 
 .card-date {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
   white-space: nowrap;
 }
@@ -977,7 +977,7 @@
   width: auto;
   padding: 0 var(--space-3);
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--color-primary);
   background: var(--color-primary-ghost);
@@ -986,7 +986,7 @@
 
 .card-btn--play::after {
   content: 'Ver';
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 
@@ -1105,7 +1105,7 @@
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
@@ -1113,7 +1113,7 @@
 }
 
 .empty-hint {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-muted);
   line-height: 1.6;
   max-width: 300px;
@@ -1133,7 +1133,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   font-family: inherit;
   color: var(--text-muted);
@@ -1172,7 +1172,7 @@
   min-width: 32px;
   height: 32px;
   padding: 0 var(--space-2);
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   font-family: inherit;
   color: var(--text-muted);
@@ -1212,7 +1212,7 @@
 .page-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 .page-info {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
   margin-left: var(--space-2);
   white-space: nowrap;
@@ -1224,7 +1224,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-modal-bg);
   background-color: var(--overlay-black-82);
   backdrop-filter: blur(4px);
   display: flex;
@@ -1268,7 +1268,7 @@
 }
 
 .modal-title {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-main);
   letter-spacing: -0.01em;
@@ -1301,14 +1301,14 @@
 .video-no-disponible {
   padding: var(--space-6);
   text-align: center;
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-muted);
 }
 
 /* ==========================================================================
    EDIT DIALOG
    ========================================================================== */
-.edit-overlay { z-index: 1100; }
+.edit-overlay { z-index: var(--z-modal); }
 
 .edit-dialog {
   width: 100%;
@@ -1326,12 +1326,12 @@
 }
 
 .edit-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.edit-title { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; }
+.edit-title { font-size: var(--font-lg); font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; }
 .edit-body { display: flex; flex-direction: column; gap: var(--space-4); }
 .edit-field { display: flex; flex-direction: column; gap: var(--space-1); }
 
 .edit-error {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   padding: 8px 12px;
   border-radius: var(--radius-md);
@@ -1353,7 +1353,7 @@
 /* ==========================================================================
    DELETE CONFIRMATION DIALOG
    ========================================================================== */
-.confirm-overlay { z-index: 1100; }
+.confirm-overlay { z-index: var(--z-modal); }
 
 .confirm-dialog {
   width: 100%;
@@ -1385,10 +1385,10 @@
 .confirm-icon-wrap svg { width: 20px; height: 20px; }
 
 .confirm-body { display: flex; flex-direction: column; gap: var(--space-2); }
-.confirm-title { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; }
+.confirm-title { font-size: var(--font-lg); font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; margin: 0; }
 
 .confirm-video-name {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--color-error);
   background-color: var(--color-error-ghost-soft);
@@ -1401,7 +1401,7 @@
   text-overflow: ellipsis;
 }
 
-.confirm-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+.confirm-desc { font-size: var(--font-sm); color: var(--text-muted); line-height: 1.6; margin: 0; }
 .confirm-desc strong { color: var(--text-main); font-weight: 600; }
 
 .confirm-actions {
@@ -1418,7 +1418,7 @@
    ========================================================================== */
 .btn-confirm-cancel {
   padding: 7px 16px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   font-family: inherit;
   color: var(--text-muted);
@@ -1437,7 +1437,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: 7px 16px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   font-family: inherit;
   color: var(--color-white);
@@ -1462,7 +1462,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: 7px 16px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   font-family: inherit;
   color: var(--color-white);
@@ -1484,13 +1484,13 @@
   position: fixed;
   bottom: var(--space-6);
   right: var(--space-6);
-  z-index: 2000;
+  z-index: var(--z-toast);
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: 12px 18px;
   border-radius: var(--radius-lg);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   box-shadow: var(--shadow-lg);
   max-width: 380px;

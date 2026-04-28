@@ -20,7 +20,7 @@
 }
 
 .page-title {
-  font-size: 18px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -28,7 +28,7 @@
 }
 
 .page-sub {
-  font-size: 13px;
+  font-size: var(--font-base);
   color: var(--text-muted);
   margin: 0;
 }
@@ -42,7 +42,7 @@
    FEEDBACK MESSAGES
    ========================================================================== */
 .feedback-msg {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-md);
@@ -139,14 +139,14 @@
 }
 
 .empty-state p {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-muted);
   margin: 0;
 }
 
 .empty-hint {
-  font-size: 12px;
+  font-size: var(--font-sm);
   color: var(--text-subtle);
   max-width: 300px;
 }
@@ -164,7 +164,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -244,7 +244,7 @@
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.22) 0%, rgba(124, 58, 237, 0.10) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   color: var(--color-primary-lighter);
-  font-size: 18px;
+  font-size: var(--font-2xl);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -273,7 +273,7 @@
 }
 
 .grupo-card-name {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -286,7 +286,7 @@
 .role-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: var(--font-2xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   padding: 2px 7px;
@@ -309,7 +309,7 @@
 }
 
 .grupo-card-date {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-subtle);
 }
 
@@ -326,7 +326,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   font-weight: 500;
   color: var(--text-subtle);
   background-color: var(--bg-surface-active);
@@ -379,7 +379,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: var(--z-modal-bg);
   background-color: var(--overlay-black-75);
   backdrop-filter: blur(4px);
   display: flex;
@@ -420,7 +420,7 @@
 }
 
 .modal-title {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 600;
   color: var(--text-main);
 }
@@ -455,7 +455,7 @@
 }
 
 .form-label {
-  font-size: 12px;
+  font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-muted);
 }
@@ -466,7 +466,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-family: inherit;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
