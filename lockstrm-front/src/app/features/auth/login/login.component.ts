@@ -35,9 +35,11 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Mensaje de confirmación tras registro exitoso
     if (this.route.snapshot.queryParamMap.get('registrado') === '1') {
-      this.mensajeInfo = 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
+      const tag = this.route.snapshot.queryParamMap.get('tag');
+      this.mensajeInfo = tag
+        ? `Cuenta creada correctamente. Tu identificador es ${tag}.`
+        : 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
     }
   }
 

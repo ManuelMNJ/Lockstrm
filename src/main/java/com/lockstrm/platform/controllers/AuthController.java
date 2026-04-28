@@ -39,8 +39,9 @@ public class AuthController {
         if (!userService.emailDisponible(request.getEmail())) {
             throw new com.lockstrm.platform.exceptions.BusinessException("El email ya está registrado");
         }
-        userService.registrarUsuario(request);
-        return ResponseEntity.ok(Map.of("mensaje", "User registrado con exito"));
+        User nuevo = userService.registrarUsuario(request);
+        return ResponseEntity.ok(Map.of("mensaje", "User registrado con exito",
+                "displayTag", nuevo.getDisplayTag()));
     }
 
     @PostMapping("/login")

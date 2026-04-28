@@ -10,7 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { debounceTime, switchMap, map, catchError, first } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { passwordFortalezaValidator, calcPwReqs } from '../../../core/validators/password.validator';
+import { passwordFortalezaValidator, confirmarPasswordValidator, calcPwReqs } from '../../../core/validators/password.validator';
 
 @Component({
   selector: 'app-register',
@@ -25,9 +25,10 @@ export class RegisterComponent {
   private destroyRef                = inject(DestroyRef);
 
   form: FormGroup;
-  cargando     = false;
-  errorGlobal  = '';
-  showPassword = false;
+  cargando             = false;
+  errorGlobal          = '';
+  showPassword         = false;
+  showPasswordConfirm  = false;
 
   constructor(
     private fb: FormBuilder,
@@ -35,17 +36,18 @@ export class RegisterComponent {
     private router: Router
   ) {
     this.form = this.fb.group({
-      nombre:    ['', Validators.required],
-      apellidos: ['', Validators.required],
-      username:  ['', [
+      nombre:          ['', Validators.required],
+      apellidos:       ['', Validators.required],
+      username:        ['', [
         Validators.required,
         Validators.minLength(3),
         Validators.maxLength(20),
         Validators.pattern(/^[A-Za-z0-9_-]+$/)
       ], [this.usernameDisponibleValidator()]],
-      email:     ['', [Validators.required, Validators.email], [this.emailDisponibleValidator()]],
-      password:  ['', [Validators.required, passwordFortalezaValidator()]]
-    });
+      email:           ['', [Validators.required, Validators.email], [this.emailDisponibleValidator()]],
+      password:        ['', [Validators.required, passwordFortalezaValidator()]],
+      passwordConfirm: ['', Validators.required],
+    }, { validators: confirmarPasswordValidator('password', 'passwordConfirm') });
   }
 
   // Validador asíncrono: comprueba si quedan tags libres para este username.
@@ -90,11 +92,12 @@ export class RegisterComponent {
   }
 
   // Atajos para el template
-  get nombre()    { return this.form.get('nombre')!; }
-  get apellidos() { return this.form.get('apellidos')!; }
-  get username()  { return this.form.get('username')!; }
-  get email()     { return this.form.get('email')!; }
-  get password()  { return this.form.get('password')!; }
+  get nombre()          { return this.form.get('nombre')!; }
+  get apellidos()       { return this.form.get('apellidos')!; }
+  get username()        { return this.form.get('username')!; }
+  get email()           { return this.form.get('email')!; }
+  get password()        { return this.form.get('password')!; }
+  get passwordConfirm() { return this.form.get('passwordConfirm')!; }
 
   // Evalúa cada requisito de la contraseña en tiempo real contra el valor actual.
   get pwReqs() {
@@ -110,12 +113,14 @@ export class RegisterComponent {
     this.cargando    = true;
     this.errorGlobal = '';
 
-    this.http.post(`${this.apiUrl}/registro`, this.form.value)
+    this.http.post<{ displayTag?: string }>(`${this.apiUrl}/registro`, this.form.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (res) => {
           this.cargando = false;
-          this.router.navigate(['/login'], { queryParams: { registrado: '1' } });
+          const params: Record<string, string> = { registrado: '1' };
+          if (res?.displayTag) params['tag'] = res.displayTag;
+          this.router.navigate(['/login'], { queryParams: params });
         },
         error: (err) => {
           this.cargando    = false;
