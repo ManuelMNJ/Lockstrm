@@ -43,4 +43,10 @@ export class UserService {
     form.append('file', file);
     return this.http.post<{ avatarUrl: string }>(`${this.apiUrl}/avatar`, form);
   }
+
+  actualizarEmail(nuevoEmail: string, passwordActual: string): Observable<{ mensaje: string }> {
+    return this.http.put<{ mensaje: string }>(
+      `${this.apiUrl}/email`, { nuevoEmail, passwordActual }
+    );
+  }
 }
