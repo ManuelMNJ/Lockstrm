@@ -15,6 +15,7 @@ export interface Member {
   username: string;
   tag: string;
   rol: string;
+  avatarUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

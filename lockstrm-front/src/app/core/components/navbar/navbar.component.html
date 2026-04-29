@@ -8,14 +8,24 @@
 
     <a routerLink="/home" class="navbar-link">Inicio</a>
 
-    @if (usuarioLogueado) {
+    @if (currentUser()) {
       <a routerLink="/grupos" class="navbar-link">Grupos</a>
       <a routerLink="/videos" class="navbar-link">Mis Vídeos</a>
-      <span class="navbar-welcome">Hola, {{ usuarioLogueado.nombre }} {{ usuarioLogueado.apellidos }}</span>
+      <span class="navbar-welcome">Hola, {{ currentUser()!.nombre }} {{ currentUser()!.apellidos }}</span>
+
+      <!-- Avatar / iniciales con enlace al perfil -->
+      <a routerLink="/perfil" class="navbar-avatar" title="Mi perfil" aria-label="Ir a mi perfil">
+        @if (getAvatarSrc()) {
+          <img [src]="getAvatarSrc()!" alt="Avatar" class="navbar-avatar-img">
+        } @else {
+          <span class="navbar-avatar-initials" aria-hidden="true">{{ getInitials() }}</span>
+        }
+      </a>
+
       <button (click)="cerrarSesion()" class="navbar-logout">Salir</button>
     }
 
-    @if (!usuarioLogueado) {
+    @if (!currentUser()) {
       <a routerLink="/login" class="navbar-link">Entrar</a>
       <a routerLink="/registro" class="navbar-register">Registrarse</a>
     }

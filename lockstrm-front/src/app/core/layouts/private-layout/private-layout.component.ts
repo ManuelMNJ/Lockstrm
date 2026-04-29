@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } fro
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-private-layout',
@@ -40,6 +41,20 @@ export class PrivateLayoutComponent {
 
   cerrarSesion(): void {
     this.authService.logout(); // limpia signal + localStorage + navega a /
+  }
+
+  getAvatarSrc(): string | null {
+    const url = this.currentUser()?.avatarUrl;
+    return url ? `${environment.apiUrl}${url}` : null;
+  }
+
+  getInitials(): string {
+    const user = this.currentUser();
+    if (!user) return '?';
+    const n       = user.nombre?.[0]   ?? '';
+    const a       = user.apellidos?.[0] ?? '';
+    const initials = (n + a).toUpperCase();
+    return initials || user.username?.[0]?.toUpperCase() || '?';
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

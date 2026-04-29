@@ -1,12 +1,14 @@
 <div class="perfil-page">
 
+  <!-- ================================================================
+  MI PERFIL
+  ================================================================ -->
   <section class="settings-section" aria-labelledby="perfil-heading">
 
     <div class="section-header">
       <div class="section-icon section-icon--purple">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
@@ -20,38 +22,304 @@
     @if (cargando) {
       <div class="info-loading" aria-live="polite">Cargando perfil…</div>
     }
-
     @if (error) {
       <p class="feedback-msg feedback-msg--error" role="alert">{{ error }}</p>
     }
 
-    @if (!cargando && !perfil && !error) {
-      <p class="feedback-msg feedback-msg--error" role="alert">
-        No se pudo obtener la información. Recarga la página.
-      </p>
-    }
-
     @if (!cargando && perfil) {
-      <div class="info-grid">
-        <div class="info-row">
-          <span class="info-label">Nombre</span>
-          <span class="info-value">{{ perfil.nombre }} {{ perfil.apellidos }}</span>
+
+      <!-- Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-container"
+             (click)="avatarInput.click()"
+             [class.avatar-container--uploading]="subiendoAvatar"
+             title="Cambiar foto de perfil"
+             role="button"
+             tabindex="0"
+             (keydown.enter)="avatarInput.click()"
+             [attr.aria-label]="'Cambiar foto de perfil'">
+
+          @if (getAvatarUrl()) {
+            <img [src]="getAvatarUrl()!" alt="Foto de perfil" class="avatar-img">
+          } @else {
+            <span class="avatar-initials" aria-hidden="true">{{ getInitials() }}</span>
+          }
+
+          <div class="avatar-overlay" aria-hidden="true">
+            @if (subiendoAvatar) {
+              <div class="avatar-spinner"></div>
+            } @else {
+              <!-- Icono cámara -->
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8
+                         a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            }
+          </div>
         </div>
-        <div class="info-row">
-          <span class="info-label">Identificador</span>
-          <span class="info-value">{{ perfil.username }}#{{ perfil.tag }}</span>
+
+        <div class="avatar-meta">
+          <p class="avatar-name">{{ perfil.nombre }} {{ perfil.apellidos }}</p>
+          <p class="avatar-tag">{{ perfil.username }}#{{ perfil.tag }}</p>
+          <p class="avatar-hint">Haz clic en la foto para cambiarla · JPG, PNG, GIF, WebP · máx. 5 MB</p>
+          @if (avatarError) {
+            <p class="avatar-error" role="alert">{{ avatarError }}</p>
+          }
         </div>
-        <div class="info-row">
-          <span class="info-label">Correo electrónico</span>
-          <span class="info-value">{{ perfil.email }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Miembro desde</span>
-          <span class="info-value">{{ perfil.fechaRegistro | dateLocale:'long' }}</span>
-        </div>
+
+        <input #avatarInput type="file"
+               accept="image/jpeg,image/png,image/gif,image/webp"
+               class="visually-hidden"
+               (change)="onAvatarSelected($event)">
       </div>
+
+      <!-- Vista de lectura -->
+      @if (!modoEdicion) {
+        <div class="info-grid">
+          <div class="info-row">
+            <span class="info-label">Nombre</span>
+            <span class="info-value">{{ perfil.nombre }} {{ perfil.apellidos }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Identificador</span>
+            <span class="info-value">{{ perfil.username }}#{{ perfil.tag }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Correo electrónico</span>
+            <span class="info-value">{{ perfil.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Miembro desde</span>
+            <span class="info-value">{{ perfil.fechaRegistro | dateLocale:'long' }}</span>
+          </div>
+        </div>
+
+        @if (estadoPerfil === 'success') {
+          <p class="feedback-msg" role="status">{{ mensajePerfil }}</p>
+        }
+        @if (estadoPerfil === 'error') {
+          <p class="feedback-msg feedback-msg--error" role="alert">{{ mensajePerfil }}</p>
+        }
+
+        <div class="form-actions">
+          <button type="button" class="btn-primary" (click)="activarEdicion()">
+            Editar perfil
+          </button>
+        </div>
+      }
+
+      <!-- Modo edición -->
+      @if (modoEdicion) {
+        <div class="profile-form" [formGroup]="formPerfil">
+
+          <div class="form-row-double">
+            <div class="form-field">
+              <label class="form-label" for="edit-nombre">Nombre</label>
+              <input id="edit-nombre" type="text" class="form-input"
+                formControlName="nombre"
+                [class.form-input--error]="fNombre.invalid && fNombre.touched"
+                autocomplete="given-name">
+              @if (fNombre.touched && fNombre.errors?.['required']) {
+                <span class="field-error" role="alert">El nombre es obligatorio.</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="edit-apellidos">Apellidos</label>
+              <input id="edit-apellidos" type="text" class="form-input"
+                formControlName="apellidos"
+                [class.form-input--error]="fApellidos.invalid && fApellidos.touched"
+                autocomplete="family-name">
+              @if (fApellidos.touched && fApellidos.errors?.['required']) {
+                <span class="field-error" role="alert">Los apellidos son obligatorios.</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="edit-username">Nombre de usuario</label>
+            <input id="edit-username" type="text" class="form-input"
+              formControlName="username"
+              [class.form-input--error]="fUsername.invalid && fUsername.touched"
+              autocomplete="username">
+            @if (fUsername.touched && fUsername.errors?.['required']) {
+              <span class="field-error" role="alert">El nombre de usuario es obligatorio.</span>
+            }
+            @if (fUsername.touched && (fUsername.errors?.['minlength'] || fUsername.errors?.['maxlength'])) {
+              <span class="field-error" role="alert">Debe tener entre 3 y 20 caracteres.</span>
+            }
+            @if (fUsername.touched && fUsername.errors?.['pattern']) {
+              <span class="field-error" role="alert">Solo letras, números, guion (-) y guion bajo (_).</span>
+            }
+            @if (fUsername.dirty && fUsername.errors?.['usernameSaturado']) {
+              <span class="field-error" role="alert">No quedan tags libres para este nombre. Prueba otro.</span>
+            }
+            @if (fUsername.dirty && fUsername.pending) {
+              <span class="field-hint">Verificando disponibilidad…</span>
+            }
+            @if (!fUsername.errors && fUsername.dirty && !fUsername.pending &&
+                 fUsername.value?.toLowerCase() !== perfil.username.toLowerCase()) {
+              <span class="field-hint field-hint--info">
+                Al cambiar el nombre de usuario se te asignará un nuevo tag.
+              </span>
+            }
+          </div>
+
+          @if (estadoPerfil === 'error') {
+            <p class="feedback-msg feedback-msg--error" role="alert">{{ mensajePerfil }}</p>
+          }
+
+          <div class="form-actions form-actions--gap">
+            <button type="button" class="btn-primary"
+              [disabled]="formPerfil.invalid || formPerfil.pending || estadoPerfil === 'loading'"
+              (click)="guardarPerfil()">
+              {{ estadoPerfil === 'loading' ? 'Guardando…' : 'Guardar cambios' }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="cancelarEdicion()">
+              Cancelar
+            </button>
+          </div>
+
+        </div>
+      }
+
     }
 
+  </section>
+
+  <!-- ================================================================
+  SEGURIDAD — Cambio de contraseña
+  ================================================================ -->
+  <section class="settings-section" aria-labelledby="seguridad-heading">
+    <div class="section-header">
+      <div class="section-icon section-icon--blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title" id="seguridad-heading">Seguridad</h2>
+        <p class="section-sub">Cambia tu contraseña de acceso.</p>
+      </div>
+    </div>
+
+    <div class="password-form" [formGroup]="formPassword">
+
+      <div class="form-field">
+        <label class="form-label" for="pwd-actual">Contraseña actual</label>
+        <input id="pwd-actual" class="form-input" type="password"
+          formControlName="contrasenaActual"
+          autocomplete="current-password"
+          placeholder="••••••••"
+          [class.form-input--error]="ctrlActual.invalid && ctrlActual.touched">
+        @if (ctrlActual.touched && ctrlActual.errors?.['required']) {
+          <span class="field-error" role="alert">La contraseña actual es obligatoria.</span>
+        }
+        @if (ctrlActual.errors?.['incorrecta']) {
+          <span class="field-error" role="alert">La contraseña actual no es correcta.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="pwd-nueva">Nueva contraseña</label>
+        <div class="pw-wrapper">
+          <input id="pwd-nueva" class="form-input"
+            [type]="showNuevaPassword ? 'text' : 'password'"
+            formControlName="contrasenaNueva"
+            autocomplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+            [class.form-input--error]="ctrlNueva.invalid && ctrlNueva.touched">
+          <button type="button" class="pw-toggle"
+            (click)="showNuevaPassword = !showNuevaPassword"
+            [attr.aria-label]="showNuevaPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            @if (!showNuevaPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 10C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            }
+            @if (showNuevaPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 10C3.226 14.338 7.244 17.5 12 17.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (ctrlNueva.dirty) {
+          <ul class="pw-checklist" aria-label="Requisitos de contraseña">
+            <li [class.req--ok]="pwReqsNueva.length"
+              [class.req--fail]="!pwReqsNueva.length && ctrlNueva.touched"
+              [class.req--pending]="!pwReqsNueva.length && !ctrlNueva.touched">Mínimo 8 caracteres</li>
+            <li [class.req--ok]="pwReqsNueva.uppercase"
+              [class.req--fail]="!pwReqsNueva.uppercase && ctrlNueva.touched"
+              [class.req--pending]="!pwReqsNueva.uppercase && !ctrlNueva.touched">Una letra mayúscula</li>
+            <li [class.req--ok]="pwReqsNueva.number"
+              [class.req--fail]="!pwReqsNueva.number && ctrlNueva.touched"
+              [class.req--pending]="!pwReqsNueva.number && !ctrlNueva.touched">Un número</li>
+            <li [class.req--ok]="pwReqsNueva.special"
+              [class.req--fail]="!pwReqsNueva.special && ctrlNueva.touched"
+              [class.req--pending]="!pwReqsNueva.special && !ctrlNueva.touched">Un símbolo especial (!@#$…)</li>
+          </ul>
+        }
+        @if (!ctrlNueva.dirty) {
+          <p class="password-hint">Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="pwd-confirmar">Confirmar nueva contraseña</label>
+        <div class="pw-wrapper">
+          <input id="pwd-confirmar" class="form-input"
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            formControlName="contrasenaConfirm"
+            autocomplete="new-password"
+            placeholder="Repite la nueva contraseña"
+            [class.form-input--error]="formPassword.errors?.['passwordNoCoincide'] && ctrlConfirm.touched">
+          <button type="button" class="pw-toggle"
+            (click)="showConfirmPassword = !showConfirmPassword"
+            [attr.aria-label]="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            @if (!showConfirmPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 10C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            }
+            @if (showConfirmPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 10C3.226 14.338 7.244 17.5 12 17.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (formPassword.errors?.['passwordNoCoincide'] && ctrlConfirm.touched) {
+          <span class="field-error" role="alert">Las contraseñas nuevas no coinciden.</span>
+        }
+      </div>
+
+      @if (estadoPassword === 'success') {
+        <p class="feedback-msg" role="status">{{ mensajePassword }}</p>
+      }
+      @if (estadoPassword === 'error') {
+        <p class="feedback-msg feedback-msg--error" role="alert">{{ mensajePassword }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="btn-primary"
+          (click)="cambiarContrasena()"
+          [disabled]="estadoPassword === 'loading'">
+          {{ estadoPassword === 'loading' ? 'Guardando...' : 'Actualizar contraseña' }}
+        </button>
+      </div>
+
+    </div>
   </section>
 
 </div>

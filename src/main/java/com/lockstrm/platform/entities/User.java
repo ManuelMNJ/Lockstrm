@@ -39,6 +39,9 @@ public class User {
 
     private LocalDateTime fechaRegistro;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @OneToMany(mappedBy = "propietario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     @ToString.Exclude

@@ -2,23 +2,36 @@ package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.RegisterRequest;
 import com.lockstrm.platform.entities.User;
+import com.lockstrm.platform.exceptions.InvalidFileException;
 import com.lockstrm.platform.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
-    private static final SecureRandom TAG_RNG = new SecureRandom();
-    private static final int TAG_MAX_INTENTOS = 20;
+    private static final SecureRandom TAG_RNG      = new SecureRandom();
+    private static final int          TAG_MAX_INTENTOS = 20;
+    private static final long         MAX_AVATAR_SIZE  = 5L * 1024 * 1024; // 5 MB
+
+    @Value("${lockstrm.upload.avatars.dir}")
+    private String avatarsDir;
 
     private final UserRepository  userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -101,6 +114,19 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    public User actualizarPerfil(String email, String nombre, String apellidos, String nuevoUsername) {
+        User usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+        usuario.setNombre(nombre);
+        usuario.setApellidos(apellidos);
+        if (!usuario.getUsername().equalsIgnoreCase(nuevoUsername)) {
+            usuario.setUsername(nuevoUsername);
+            usuario.setTag(generarTagLibre(nuevoUsername));
+        }
+        return userRepository.save(usuario);
+    }
+
+    @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
         return userRepository.findByEmail(email)
                 .filter(u -> passwordEncoder.matches(actual, u.getPassword()))
@@ -110,5 +136,81 @@ public class UserService implements UserDetailsService {
                     return true;
                 })
                 .orElse(false);
+    }
+
+    // ── Avatar ────────────────────────────────────────────────────────
+
+    @Transactional
+    public User actualizarAvatar(String email, MultipartFile file) throws IOException {
+        validateImageFile(file);
+
+        Path baseDir = Paths.get(avatarsDir).toAbsolutePath().normalize();
+        Files.createDirectories(baseDir);
+
+        String ext         = getImageExtension(file.getContentType());
+        String newFileName = UUID.randomUUID() + "." + ext;
+        Path   dest        = baseDir.resolve(newFileName);
+
+        User usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+
+        // Eliminar avatar anterior si existe
+        String oldFileName = usuario.getAvatarUrl();
+        if (oldFileName != null && !oldFileName.isBlank()) {
+            try {
+                Files.deleteIfExists(baseDir.resolve(oldFileName).normalize());
+            } catch (IOException ignored) { /* el archivo ya no existe, no es crítico */ }
+        }
+
+        file.transferTo(dest);
+        usuario.setAvatarUrl(newFileName);
+        return userRepository.save(usuario);
+    }
+
+    private void validateImageFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidFileException("El archivo está vacío");
+        }
+        if (file.getSize() > MAX_AVATAR_SIZE) {
+            throw new InvalidFileException("El avatar no puede superar 5 MB");
+        }
+        String ct = file.getContentType();
+        if (ct == null || !ct.toLowerCase().startsWith("image/")) {
+            throw new InvalidFileException("El archivo debe ser una imagen");
+        }
+
+        byte[] header = new byte[12];
+        try (InputStream in = file.getInputStream()) {
+            int read = in.readNBytes(header, 0, 12);
+            if (read < 4) throw new InvalidFileException("El archivo es demasiado pequeño");
+        } catch (IOException e) {
+            throw new InvalidFileException("No se pudo leer el archivo");
+        }
+        if (!isValidImageHeader(header)) {
+            throw new InvalidFileException("El contenido del archivo no es una imagen válida");
+        }
+    }
+
+    private boolean isValidImageHeader(byte[] h) {
+        // JPEG: FF D8 FF
+        if ((h[0] & 0xFF) == 0xFF && (h[1] & 0xFF) == 0xD8 && (h[2] & 0xFF) == 0xFF) return true;
+        // PNG: 89 50 4E 47
+        if ((h[0] & 0xFF) == 0x89 && h[1] == 'P' && h[2] == 'N' && h[3] == 'G') return true;
+        // GIF: GIF8
+        if (h[0] == 'G' && h[1] == 'I' && h[2] == 'F' && h[3] == '8') return true;
+        // WebP: RIFF????WEBP
+        if (h.length >= 12 && h[0] == 'R' && h[1] == 'I' && h[2] == 'F' && h[3] == 'F'
+                && h[8] == 'W' && h[9] == 'E' && h[10] == 'B' && h[11] == 'P') return true;
+        return false;
+    }
+
+    private String getImageExtension(String contentType) {
+        if (contentType == null) return "jpg";
+        return switch (contentType.toLowerCase()) {
+            case "image/png"  -> "png";
+            case "image/gif"  -> "gif";
+            case "image/webp" -> "webp";
+            default           -> "jpg";  // jpeg / jpg / fallback
+        };
     }
 }

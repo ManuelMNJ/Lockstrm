@@ -49,3 +49,40 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+/* ── Avatar en navbar ── */
+.navbar-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35), rgba(124, 58, 237, 0.15));
+  border: 2px solid var(--color-primary-a20);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.navbar-avatar:hover,
+.navbar-avatar:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-ghost);
+}
+
+.navbar-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.navbar-avatar-initials {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary-lighter);
+  line-height: 1;
+  user-select: none;
+}
