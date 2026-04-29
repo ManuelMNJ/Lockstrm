@@ -138,7 +138,11 @@
       @if (currentUser(); as user) {
         <div class="user-profile">
           <div class="user-avatar" aria-hidden="true">
-            {{ user.nombre.charAt(0).toUpperCase() }}
+            @if (getAvatarSrc()) {
+              <img [src]="getAvatarSrc()!" alt="" class="avatar-circle-img">
+            } @else {
+              {{ getInitials() }}
+            }
           </div>
           <div class="user-info">
             <span class="user-name">{{ user.nombre }} {{ user.apellidos }}</span>

@@ -56,8 +56,13 @@ public class AuthController {
         UserDetails userDetails = userService.loadUserByUsername(usuario.getEmail());
         String token = jwtService.generateToken(userDetails);
 
+        String avatarUrl = usuario.getAvatarUrl() != null
+                ? "/api/usuarios/avatars/" + usuario.getAvatarUrl()
+                : null;
+
         return ResponseEntity.ok(new AuthResponse(
                 token, usuario.getUsername(), usuario.getTag(),
-                usuario.getNombre(), usuario.getApellidos(), usuario.getIdUsuario()));
+                usuario.getNombre(), usuario.getApellidos(), usuario.getIdUsuario(),
+                avatarUrl));
     }
 }

@@ -166,7 +166,11 @@
               @for (m of miembros; track m.idUsuario) {
                 <li class="member-item" role="listitem">
                   <div class="member-avatar" aria-hidden="true">
-                    {{ m.username.charAt(0).toUpperCase() }}
+                    @if (m.avatarUrl) {
+                      <img [src]="m.avatarUrl | thumbnailSrc" alt="" class="avatar-circle-img">
+                    } @else {
+                      {{ m.username.charAt(0).toUpperCase() }}
+                    }
                   </div>
                   <div class="member-info">
                     <span class="member-name">{{ m.username }}#{{ m.tag }}</span>

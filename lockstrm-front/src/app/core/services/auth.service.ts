@@ -11,6 +11,7 @@ export interface AuthResponse {
   nombre: string;
   apellidos: string;
   id: number;
+  avatarUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,13 +36,21 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(commands: string[] = ['/login'], queryParams?: Record<string, string>): void {
     localStorage.removeItem(this.STORAGE_KEY);
     sessionStorage.clear();
     this._currentUser.set(null);
-    this.router.navigate(['/login']).then(() => {
+    this.router.navigate(commands, { queryParams }).then(() => {
       window.location.reload();
     });
+  }
+
+  updateUserData(data: Partial<AuthResponse>): void {
+    const current = this._currentUser();
+    if (!current) return;
+    const updated = { ...current, ...data };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));
+    this._currentUser.set(updated);
   }
 
   getToken(): string | null {

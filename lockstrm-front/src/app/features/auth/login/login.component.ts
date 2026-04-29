@@ -35,11 +35,17 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.route.snapshot.queryParamMap.get('registrado') === '1') {
-      const tag = this.route.snapshot.queryParamMap.get('tag');
+    const params = this.route.snapshot.queryParamMap;
+    const tag    = params.get('tag');
+
+    if (params.get('registrado') === '1') {
       this.mensajeInfo = tag
         ? `Cuenta creada correctamente. Tu identificador es ${tag}.`
         : 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
+    } else if (params.get('identificadorCambiado') === '1') {
+      this.mensajeInfo = tag
+        ? `Nombre de usuario actualizado. Tu nuevo identificador es ${tag}.`
+        : 'Nombre de usuario actualizado. Ya puedes iniciar sesión.';
     }
   }
 

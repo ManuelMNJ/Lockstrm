@@ -112,11 +112,18 @@ public class GroupService {
 
         return miembrosGroupRepository.findMiembrosByGrupoId(idGrupo)
                 .stream()
-                .map(mg -> new MemberDto(
-                        mg.getUsuario().getIdUsuario(),
-                        mg.getUsuario().getUsername(),
-                        mg.getUsuario().getTag(),
-                        mg.getRol()))
+                .map(mg -> {
+                    String rawAvatar = mg.getUsuario().getAvatarUrl();
+                    String avatarUrl = (rawAvatar != null && !rawAvatar.isBlank())
+                            ? "/api/usuarios/avatars/" + rawAvatar
+                            : null;
+                    return new MemberDto(
+                            mg.getUsuario().getIdUsuario(),
+                            mg.getUsuario().getUsername(),
+                            mg.getUsuario().getTag(),
+                            mg.getRol(),
+                            avatarUrl);
+                })
                 .toList();
     }
 

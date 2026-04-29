@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-shell',
@@ -39,5 +40,19 @@ export class AppShellComponent {
   cerrarSesion(): void {
     this.menuOpen.set(false);
     this.authService.logout();
+  }
+
+  getAvatarSrc(): string | null {
+    const url = this.authService.currentUser()?.avatarUrl;
+    return url ? `${environment.apiUrl}${url}` : null;
+  }
+
+  getInitials(): string {
+    const user = this.authService.currentUser();
+    if (!user) return '?';
+    const n       = user.nombre?.[0]   ?? '';
+    const a       = user.apellidos?.[0] ?? '';
+    const initials = (n + a).toUpperCase();
+    return initials || user.username?.[0]?.toUpperCase() || '?';
   }
 }
