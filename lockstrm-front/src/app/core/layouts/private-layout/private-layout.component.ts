@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,7 +8,6 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-private-layout',
   standalone: true,
-  // CommonModule eliminado: usamos @if nativo de Angular 17+
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './private-layout.component.html',
   styleUrl:    './private-layout.component.css',
@@ -17,6 +16,13 @@ export class PrivateLayoutComponent {
 
   /** Título dinámico de la cabecera, sincronizado con la ruta activa. */
   pageTitle = 'Dashboard';
+
+  /** Estado del sidebar: colapsado o expandido. */
+  readonly sidebarCollapsed = signal(false);
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed.update(v => !v);
+  }
 
   // Acceso directo al signal de sólo lectura expuesto por AuthService.
   // Como PrivateLayout sólo se monta tras pasar el authGuard, currentUser()

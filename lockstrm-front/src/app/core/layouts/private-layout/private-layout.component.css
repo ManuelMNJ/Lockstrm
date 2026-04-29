@@ -28,17 +28,21 @@
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  /* Llena exactamente el host; height:100% funciona porque :host tiene
-     flex:1 y una altura definida por la cadena superior */
   height: 100%;
   overflow: hidden;
   background-color: var(--bg-main);
+  transition: grid-template-columns 250ms ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 56px 1fr;
 }
 
 /* ==========================================================================
    SIDEBAR
    ========================================================================== */
 .sidebar {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg,
@@ -47,7 +51,48 @@
   );
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
+}
+
+/* ── Toggle button ── */
+.sidebar-toggle {
+  position: absolute;
+  right: -12px;
+  top: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25);
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sidebar-toggle svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 250ms ease;
+}
+
+.sidebar-toggle svg.rotated {
+  transform: rotate(180deg);
 }
 
 /* ── Navigation ── */
@@ -142,6 +187,54 @@
   background: linear-gradient(90deg, transparent, var(--border-subtle) 30%, var(--border-subtle) 70%, transparent);
   margin: var(--space-2) var(--space-3);
   flex-shrink: 0;
+}
+
+/* ── Collapsed state ── */
+
+.sidebar-collapsed .nav-label {
+  display: none;
+}
+
+.sidebar-collapsed .nav-section-label {
+  padding: var(--space-2) 0;
+  justify-content: center;
+}
+
+/* En modo colapsado, ::before del punto de sección actúa como separador visual */
+.sidebar-collapsed .nav-section-label::before {
+  width: 20px;
+  height: 1px;
+  border-radius: 0;
+  opacity: 0.3;
+}
+
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
+  border-left: none;
+}
+
+.sidebar-collapsed .nav-item.active {
+  border-left: 2px solid var(--color-primary);
+  padding-left: 0;
+}
+
+.sidebar-collapsed .sidebar-nav {
+  padding: var(--space-3) var(--space-1);
+}
+
+.sidebar-collapsed .nav-divider {
+  margin: var(--space-2) var(--space-1);
+}
+
+.sidebar-collapsed .sidebar-footer {
+  padding: var(--space-3) var(--space-1);
+}
+
+.sidebar-collapsed .user-profile {
+  justify-content: center;
+  padding: 8px;
+  gap: 0;
 }
 
 /* ── Sidebar footer ── */

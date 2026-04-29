@@ -32,7 +32,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private long refillPerMinute;
 
     private static final java.util.Set<String> PROTECTED_EXACT = java.util.Set.of(
-            "/api/usuarios/cambiar-contrasena"
+            "/api/usuarios/cambiar-contrasena",
+            "/api/usuarios/email"
     );
 
     @Override

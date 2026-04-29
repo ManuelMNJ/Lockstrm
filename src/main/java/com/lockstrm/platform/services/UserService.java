@@ -127,6 +127,23 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
+    public boolean actualizarEmail(String emailActual, String nuevoEmail, String passwordActual) {
+        User usuario = userRepository.findByEmail(emailActual)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+
+        if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
+            return false; // contraseña incorrecta → el caller devuelve 400
+        }
+        String cleanEmail = nuevoEmail.toLowerCase().trim();
+        if (!emailActual.equalsIgnoreCase(cleanEmail) && !emailDisponible(cleanEmail)) {
+            throw new com.lockstrm.platform.exceptions.BusinessException("El email ya está registrado");
+        }
+        usuario.setEmail(cleanEmail);
+        userRepository.save(usuario);
+        return true;
+    }
+
+    @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
         return userRepository.findByEmail(email)
                 .filter(u -> passwordEncoder.matches(actual, u.getPassword()))

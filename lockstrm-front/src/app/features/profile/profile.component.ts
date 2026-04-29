@@ -38,6 +38,7 @@ export class ProfileComponent implements OnInit {
   mensajePerfil = '';
 
   // ── Cambio de contraseña ──────────────────────────────────────────
+  modoPasswordAbierto = false;
   formPassword!: FormGroup;
   showNuevaPassword   = false;
   showConfirmPassword = false;
@@ -48,6 +49,16 @@ export class ProfileComponent implements OnInit {
   avatarPreview: string | null = null;  // objectURL temporal durante la subida
   subiendoAvatar = false;
   avatarError    = '';
+
+  // ── Copiar handle ─────────────────────────────────────────────────
+  handleCopiado = false;
+
+  // ── Cambio de correo ──────────────────────────────────────────────
+  modoEditarEmail   = false;
+  formEmail!: FormGroup;
+  showPasswordEmail = false;
+  estadoEmail: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  mensajeEmail      = '';
 
   private readonly authApiUrl = `${environment.apiUrl}/api/auth`;
   private usuarioService = inject(UserService);
@@ -97,7 +108,8 @@ export class ProfileComponent implements OnInit {
   }
 
   cancelarEdicion(): void {
-    this.modoEdicion = false;
+    this.modoEdicion     = false;
+    this.modoEditarEmail = false;
   }
 
   guardarPerfil(): void {
@@ -161,11 +173,40 @@ export class ProfileComponent implements OnInit {
     };
   }
 
+  copiarHandle(): void {
+    if (!this.perfil) return;
+    const handle = `${this.perfil.username}#${this.perfil.tag}`;
+    navigator.clipboard.writeText(handle).then(() => {
+      this.handleCopiado = true;
+      this.cdr.markForCheck();
+      timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => { this.handleCopiado = false; this.cdr.markForCheck(); });
+    });
+  }
+
   get fNombre()    { return this.formPerfil.get('nombre')!; }
   get fApellidos() { return this.formPerfil.get('apellidos')!; }
   get fUsername()  { return this.formPerfil.get('username')!; }
 
   // ── Cambio de contraseña ──────────────────────────────────────────
+
+  togglePassword(): void {
+    if (this.modoPasswordAbierto) {
+      // Cerrar: resetear todo
+      this.modoPasswordAbierto = false;
+      this.estadoPassword      = 'idle';
+      this.mensajePassword     = '';
+      this.showNuevaPassword   = false;
+      this.showConfirmPassword = false;
+      this.formPassword.reset();
+    } else {
+      this.modoPasswordAbierto = true;
+      this.estadoPassword      = 'idle';
+      this.mensajePassword     = '';
+      this.formPassword.reset();
+    }
+    this.cdr.markForCheck();
+  }
 
   private initFormPassword(): void {
     this.formPassword = this.fb.group(
@@ -216,9 +257,96 @@ export class ProfileComponent implements OnInit {
       });
   }
 
+  // ── Cambio de correo ──────────────────────────────────────────────
+
+  activarEditarEmail(): void {
+    this.formEmail = this.fb.group({
+      nuevoEmail: [
+        this.perfil?.email ?? '',
+        [Validators.required, Validators.email],
+        [this.emailDisponibleValidator()],
+      ],
+      passwordActual: ['', Validators.required],
+    });
+    this.modoEditarEmail = true;
+    this.estadoEmail     = 'idle';
+    this.mensajeEmail    = '';
+    this.cdr.markForCheck();
+  }
+
+  cancelarEditarEmail(): void {
+    this.modoEditarEmail = false;
+    this.cdr.markForCheck();
+  }
+
+  cambiarEmail(): void {
+    this.formEmail.markAllAsTouched();
+    if (this.formEmail.invalid) return;
+
+    const { nuevoEmail, passwordActual } = this.formEmail.value;
+    if (nuevoEmail.toLowerCase() === this.perfil?.email?.toLowerCase()) {
+      this.cancelarEditarEmail();
+      return;
+    }
+
+    this.estadoEmail  = 'loading';
+    this.mensajeEmail = '';
+    this.cdr.markForCheck();
+
+    this.usuarioService.actualizarEmail(nuevoEmail, passwordActual)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.estadoEmail  = 'success';
+          this.mensajeEmail = 'Correo actualizado. Cerrando sesión...';
+          this.cdr.markForCheck();
+          timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.authService.logout(
+              ['/login'],
+              { identificadorCambiado: '1', tag: `${this.perfil?.username}#${this.perfil?.tag}` }
+            ));
+        },
+        error: (err) => {
+          const body = err?.error;
+          if (body?.error === 'Contraseña incorrecta') {
+            this.estadoEmail = 'idle';
+            this.formEmail.get('passwordActual')?.setErrors({ incorrecta: true });
+          } else {
+            this.estadoEmail  = 'error';
+            this.mensajeEmail = body?.message || 'No se pudo actualizar el correo.';
+          }
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  private emailDisponibleValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      const value = (control.value ?? '').trim().toLowerCase();
+      if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return of(null);
+      if (this.perfil && value === this.perfil.email.toLowerCase()) return of(null);
+      return of(value).pipe(
+        debounceTime(500),
+        switchMap(email =>
+          this.http.get<{ disponible: boolean }>(
+            `${this.authApiUrl}/check-email?email=${encodeURIComponent(email)}`
+          )
+        ),
+        map(res => res.disponible ? null : { emailTomado: true }),
+        catchError(() => of(null)),
+        first(),
+        takeUntilDestroyed(this.destroyRef),
+      );
+    };
+  }
+
+  get fNuevoEmail()    { return this.formEmail.get('nuevoEmail')!; }
+  get fPasswordEmail() { return this.formEmail.get('passwordActual')!; }
+
   // ── Avatar ────────────────────────────────────────────────────────
 
   onAvatarSelected(event: Event): void {
+    if (!this.modoEdicion) return;          // solo activo en modo edición
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0];
     if (!file) return;

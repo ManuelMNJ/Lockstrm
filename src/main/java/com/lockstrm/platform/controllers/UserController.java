@@ -1,5 +1,6 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.ActualizarEmailRequest;
 import com.lockstrm.platform.dto.ChangePasswordRequest;
 import com.lockstrm.platform.dto.UpdatePerfilRequest;
 import com.lockstrm.platform.entities.User;
@@ -108,6 +109,22 @@ public class UserController {
                 .contentType(mediaType)
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
                 .body(resource);
+    }
+
+    // ── Email ─────────────────────────────────────────────────────────
+
+    @PutMapping("/email")
+    public ResponseEntity<Map<String, String>> actualizarEmail(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ActualizarEmailRequest body) {
+
+        boolean ok = userService.actualizarEmail(
+                userDetails.getUsername(), body.getNuevoEmail(), body.getPasswordActual());
+        if (!ok) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Contraseña incorrecta"));
+        }
+        return ResponseEntity.ok(Map.of("mensaje", "Correo actualizado correctamente"));
     }
 
     // ── Contraseña ────────────────────────────────────────────────────
