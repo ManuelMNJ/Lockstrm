@@ -11,18 +11,21 @@
     ================================================================ -->
   <aside class="sidebar" role="complementary" aria-label="Navegación principal">
 
-    <!-- ── Toggle button ── -->
-    <button class="sidebar-toggle"
-            (click)="toggleSidebar()"
-            [attr.aria-label]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'"
-            [title]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true"
-           [class.rotated]="sidebarCollapsed()">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-    </button>
+    <!-- ── Sidebar header con botón de colapso ── -->
+    <div class="sidebar-header">
+      <span class="sidebar-title nav-label">Menú</span>
+      <button class="sidebar-toggle"
+              (click)="toggleSidebar()"
+              [attr.aria-label]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'"
+              [title]="sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true"
+             [class.rotated]="sidebarCollapsed()">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+    </div>
 
     <!-- ── Primary navigation ── -->
     <nav class="sidebar-nav" aria-label="Secciones">
