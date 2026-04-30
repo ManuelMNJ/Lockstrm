@@ -106,79 +106,29 @@
         <span class="nav-label">Analíticas</span>
       </a>
 
-      <!-- ── Sección: General ── -->
-      <span class="nav-section-label"><span class="nav-label">General</span></span>
-
-      <a routerLink="/perfil"
-         routerLinkActive="active"
-         class="nav-item"
-         title="Mi Perfil">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span class="nav-label">Mi Perfil</span>
-      </a>
-
-      <a routerLink="/ajustes"
-         routerLinkActive="active"
-         class="nav-item"
-         title="Ajustes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
-                   a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
-                   A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06
-                   a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15
-                   a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
-                   A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06
-                   a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68
-                   a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
-                   a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06
-                   a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9
-                   a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
-                   a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-        <span class="nav-label">Ajustes</span>
-      </a>
-
     </nav>
 
-    <!-- ── Sidebar footer: usuario autenticado ── -->
-    <!-- guestBlock eliminado: authGuard garantiza que currentUser() != null -->
-    <div class="sidebar-footer">
-      @if (currentUser(); as user) {
-        <div class="user-profile">
-          <div class="user-avatar" aria-hidden="true">
-            @if (getAvatarSrc()) {
-              <img [src]="getAvatarSrc()!" alt="" class="avatar-circle-img">
-            } @else {
-              {{ getInitials() }}
-            }
-          </div>
-          <div class="user-info nav-label">
-            <span class="user-name">{{ user.nombre }} {{ user.apellidos }}</span>
-            <span class="user-role">@{{ user.username }}#{{ user.tag }}</span>
-          </div>
-          <button class="btn-logout nav-label"
-                  (click)="cerrarSesion()"
-                  title="Cerrar sesión"
-                  aria-label="Cerrar sesión">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-          </button>
-        </div>
-      }
-    </div>
+    <!-- ── Grupos recientes ── -->
+    @if (gruposRecientes.length > 0) {
+      <div class="recent-groups">
+        <span class="nav-section-label recent-label">
+          <span class="nav-label">Recientes</span>
+        </span>
+
+        @for (g of gruposRecientes; track g.idGrupo) {
+          <a [routerLink]="['/mi-espacio/grupos', g.idGrupo]"
+             routerLinkActive="active"
+             class="nav-item recent-item"
+             [title]="g.nombre">
+            <span class="recent-avatar" aria-hidden="true">{{ grupoInicial(g.nombre) }}</span>
+            <span class="nav-label recent-name">{{ g.nombre }}</span>
+          </a>
+        }
+      </div>
+    }
+
+    <div class="sidebar-version nav-label">Lockstrm v1.0.0</div>
+
   </aside>
 
   <!-- ================================================================

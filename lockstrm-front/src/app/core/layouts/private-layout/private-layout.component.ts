@@ -2,8 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth.service';
-import { environment } from '../../../../environments/environment';
+import { GroupService, Group } from '../../services/group.service';
+import { switchMap, of } from 'rxjs';
 
 @Component({
   selector: 'app-private-layout',
@@ -24,55 +24,61 @@ export class PrivateLayoutComponent {
     this.sidebarCollapsed.update(v => !v);
   }
 
-  // Acceso directo al signal de sólo lectura expuesto por AuthService.
-  // Como PrivateLayout sólo se monta tras pasar el authGuard, currentUser()
-  // siempre tiene valor; no hace falta lógica defensiva en la plantilla.
-  private readonly authService = inject(AuthService);
-  private readonly router      = inject(Router);
-  readonly currentUser         = this.authService.currentUser;
+  /** Últimos grupos accedidos por el usuario (máx. 3). */
+  gruposRecientes: Group[] = [];
+
+  private readonly router       = inject(Router);
+  private readonly groupService = inject(GroupService);
 
   constructor() {
-    // Sincroniza el título con la URL en el momento de montar el componente
     this.actualizarHeader(this.router.url);
 
-    // Se actualiza en cada navegación; takeUntilDestroyed limpia la suscripción
-    // automáticamente cuando Angular destruye el componente
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
       .subscribe(e => this.actualizarHeader(e.urlAfterRedirects));
+
+    // 1º intenta los grupos por historial de reproducción (más reciente primero).
+    // 2º si no hay historial aún, usa los grupos del usuario ordenados por
+    //    fecha de creación descendente como fallback visible desde el inicio.
+    this.groupService.obtenerGruposRecientes(3)
+      .pipe(
+        switchMap(recientes =>
+          recientes.length > 0
+            ? of(recientes)
+            : this.groupService.obtenerMisGrupos()
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe({
+        next: (grupos) => {
+          // Fallback: ordena por fechaCreacion DESC y toma los 3 más nuevos
+          this.gruposRecientes = grupos
+            .slice()
+            .sort((a, b) => (b.fechaCreacion ?? '').localeCompare(a.fechaCreacion ?? ''))
+            .slice(0, 3);
+        },
+        error: () => { /* silencioso — sección opcional */ },
+      });
   }
 
-  cerrarSesion(): void {
-    this.authService.logout(); // limpia signal + localStorage + navega a /
-  }
-
-  getAvatarSrc(): string | null {
-    const url = this.currentUser()?.avatarUrl;
-    return url ? `${environment.apiUrl}${url}` : null;
-  }
-
-  getInitials(): string {
-    const user = this.currentUser();
-    if (!user) return '?';
-    const n       = user.nombre?.[0]   ?? '';
-    const a       = user.apellidos?.[0] ?? '';
-    const initials = (n + a).toUpperCase();
-    return initials || user.username?.[0]?.toUpperCase() || '?';
+  /** Primera(s) letra(s) del nombre del grupo para el avatar pill. */
+  grupoInicial(nombre: string): string {
+    return nombre.trim().charAt(0).toUpperCase();
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
 
   private actualizarHeader(url: string): void {
-    if      (url.startsWith('/dashboard'))            this.pageTitle = 'Dashboard';
-    else if (url.startsWith('/mi-espacio/videos'))    this.pageTitle = 'Mis Vídeos';
-    else if (url.startsWith('/mi-espacio/grupos'))      this.pageTitle = 'Mis Grupos';
+    if      (url.startsWith('/dashboard'))             this.pageTitle = 'Dashboard';
+    else if (url.startsWith('/mi-espacio/videos'))     this.pageTitle = 'Mis Vídeos';
+    else if (url.startsWith('/mi-espacio/grupos'))     this.pageTitle = 'Mis Grupos';
     else if (url.startsWith('/mi-espacio/analiticas')) this.pageTitle = 'Analíticas';
-    else if (url.startsWith('/compartido'))             this.pageTitle = 'Vídeos Disponibles';
-    else if (url.startsWith('/perfil'))               this.pageTitle = 'Mi Perfil';
-    else if (url.startsWith('/ajustes'))              this.pageTitle = 'Ajustes';
-    else                                              this.pageTitle = 'Lockstrm';
+    else if (url.startsWith('/compartido'))            this.pageTitle = 'Vídeos Disponibles';
+    else if (url.startsWith('/perfil'))                this.pageTitle = 'Mi Perfil';
+    else if (url.startsWith('/ajustes'))               this.pageTitle = 'Ajustes';
+    else                                               this.pageTitle = 'Lockstrm';
   }
 }

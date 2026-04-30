@@ -21,6 +21,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../../shared/pipes/thumbnail-src.pipe';
+import { DateLocalePipe } from '../../../shared/pipes/date-locale.pipe';
 import { VideoPlayerComponent } from '../../videos/video-player/video-player.component';
 import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 import { CustomSelectComponent, SelectOption } from '../../../shared/components/custom-select/custom-select.component';
@@ -28,7 +29,7 @@ import { CustomSelectComponent, SelectOption } from '../../../shared/components/
 @Component({
   selector: 'app-group-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe, InitialPipe, VideoDurationPipe, ThumbnailSrcPipe, VideoPlayerComponent, CustomSelectComponent],
+  imports: [FormsModule, RouterLink, DatePipe, DecimalPipe, InitialPipe, VideoDurationPipe, ThumbnailSrcPipe, DateLocalePipe, VideoPlayerComponent, CustomSelectComponent],
   templateUrl: './group-detail.component.html',
   styleUrl: './group-detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

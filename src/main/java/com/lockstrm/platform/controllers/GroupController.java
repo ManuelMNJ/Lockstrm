@@ -40,6 +40,20 @@ public class GroupController {
         return ResponseEntity.ok(grupoService.obtenerGruposCreados(userDetails.getUsername()));
     }
 
+    /**
+     * Últimos N grupos en los que el usuario ha reproducido un vídeo.
+     * Usado por el sidebar para la sección "Grupos recientes".
+     * El parámetro `limit` se acota a [1, 10] para evitar abuso.
+     */
+    @GetMapping("/recientes")
+    public ResponseEntity<List<Group>> obtenerGruposRecientes(
+            @RequestParam(defaultValue = "3") int limit,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        int safeLimit = Math.max(1, Math.min(limit, 10));
+        return ResponseEntity.ok(
+                grupoService.obtenerGruposRecientes(userDetails.getUsername(), safeLimit));
+    }
+
     /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
     @GetMapping("/miembro")
     public ResponseEntity<List<Group>> obtenerGruposComoMiembro(@AuthenticationPrincipal UserDetails userDetails) {

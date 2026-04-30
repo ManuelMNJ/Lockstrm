@@ -16,11 +16,16 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.PageRequest;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +57,30 @@ public class GroupService {
                 resultado.add(g);
             }
         }
+    }
+
+    /**
+     * Devuelve los últimos {@code limit} grupos en los que el usuario ha
+     * reproducido algún vídeo, ordenados de más reciente a más antiguo.
+     * La fuente es la tabla Log (grupoId + fechaHora), por lo que refleja
+     * actividad real sin necesidad de un campo extra en la entidad Group.
+     * Grupos eliminados no aparecen porque nullifyGrupoId() pone su id a NULL.
+     */
+    @Transactional(readOnly = true)
+    public List<Group> obtenerGruposRecientes(String email, int limit) {
+        List<Long> ids = logRepository.findGruposRecientesByEmail(
+                email, PageRequest.of(0, limit));
+        if (ids.isEmpty()) return List.of();
+
+        Map<Long, Group> porId = grupoRepository.findAllById(ids)
+                .stream()
+                .collect(Collectors.toMap(Group::getIdGrupo, g -> g));
+
+        // Preservar el orden devuelto por la query (más reciente primero)
+        return ids.stream()
+                .map(porId::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

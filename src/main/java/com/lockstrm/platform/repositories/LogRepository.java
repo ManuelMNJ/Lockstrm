@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface LogRepository extends JpaRepository<Log, Long> {
 
@@ -209,6 +211,23 @@ public interface LogRepository extends JpaRepository<Log, Long> {
     List<DiaVisitasRow> visitasPorDia(@Param("idGrupo")    Long          idGrupo,
                                       @Param("autorEmail") String        autorEmail,
                                       @Param("desde")      LocalDateTime desde);
+
+    /**
+     * IDs de los grupos a los que el usuario ha accedido más recientemente
+     * (medido por MAX fechaHora de sus sesiones en cada grupo).
+     * Solo incluye entradas con grupoId no nulo — las sesiones fuera de un
+     * grupo (reproducción privada del propietario) se ignoran.
+     * El Pageable permite limitar el resultado a N grupos en la capa de servicio.
+     */
+    @Query("""
+            SELECT l.grupoId
+            FROM Log l
+            WHERE l.usuario.email = :email
+              AND l.grupoId IS NOT NULL
+            GROUP BY l.grupoId
+            ORDER BY MAX(l.fechaHora) DESC
+            """)
+    List<Long> findGruposRecientesByEmail(@Param("email") String email, Pageable pageable);
 
     @Query("""
             SELECT AVG(

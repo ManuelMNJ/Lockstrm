@@ -50,6 +50,13 @@ export class GroupService {
     return this.gruposMiembroCache$;
   }
 
+  /** Últimos N grupos en los que el usuario ha reproducido algún vídeo. Sin caché — es dinámica. */
+  obtenerGruposRecientes(limit = 3): Observable<Group[]> {
+    return this.http.get<Group[]>(`${this.apiUrl}/recientes`, {
+      params: { limit: limit.toString() },
+    });
+  }
+
   obtenerGrupoPorId(idGrupo: number): Observable<Group> {
     return this.http.get<Group>(`${this.apiUrl}/${idGrupo}`);
   }
