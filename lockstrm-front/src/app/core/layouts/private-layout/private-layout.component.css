@@ -249,112 +249,73 @@
   margin: var(--space-2) 8px;
 }
 
-/* Footer: solo avatar centrado */
-.sidebar-collapsed .sidebar-footer {
-  padding: var(--space-2) 6px;
-}
 
-.sidebar-collapsed .user-profile {
-  justify-content: center;
-  padding: 8px 4px;
-  gap: 0;
-}
-
-/* ── Sidebar footer ── */
-.sidebar-footer {
-  padding: var(--space-3) var(--space-2);
-  border-top: 1px solid var(--border-subtle);
+/* ── Grupos recientes ── */
+.recent-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-2) var(--space-2);
   flex-shrink: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(124, 58, 237, 0.04) 100%);
 }
 
-/* User card */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 8px var(--space-3);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--bg-surface-hover) 0%, rgba(124, 58, 237, 0.08) 100%);
-  border: 1px solid rgba(124, 58, 237, 0.12);
+/* Ocultar el punto decorativo del label en esta subsección */
+.recent-label::before { display: none; }
+
+.recent-item {
+  gap: 8px;
 }
 
-.user-avatar {
+/* Avatar pill: círculo con inicial del grupo */
+.recent-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
-  color: var(--color-white);
-  font-size: var(--font-base);
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.30), rgba(124, 58, 237, 0.14));
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  color: var(--color-primary-lighter);
+  font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.22);
-  overflow: hidden;
+  letter-spacing: 0;
 }
 
-.avatar-circle-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 50%;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: var(--font-base);
-  font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
+.recent-name {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.user-role {
-  font-size: var(--font-xs);
-  color: var(--color-primary-lighter);
-  font-weight: 500;
+/* En modo colapsado: solo el avatar, centrado */
+.sidebar-collapsed .recent-groups {
+  padding: 0 6px var(--space-2);
 }
 
-/* Logout icon button */
-.btn-logout {
-  display: flex;
-  align-items: center;
+.sidebar-collapsed .recent-label {
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  padding: 8px 0 4px;
+}
+
+.sidebar-collapsed .recent-item {
+  justify-content: center;
   padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
+}
+
+/* ── Version tag ── */
+.sidebar-version {
+  padding: var(--space-3) var(--space-4);
+  font-size: 10px;
+  font-weight: 500;
   color: var(--text-subtle);
-  cursor: pointer;
+  opacity: 0.45;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
   flex-shrink: 0;
-  transition:
-    color            var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.btn-logout:hover {
-  background-color: var(--color-error-ghost);
-  color: var(--color-error);
-}
-
-.btn-logout svg {
-  width: 15px;
-  height: 15px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* ==========================================================================

@@ -36,13 +36,26 @@
   </div>
 
   <!-- ================================================================
-  UPLOAD PANEL
+  UPLOAD PANEL (colapsable)
   ================================================================ -->
+  @if (uploadPanelOpen) {
   <section class="upload-panel" aria-labelledby="upload-heading">
 
     <div class="panel-header">
-      <h2 class="panel-title" id="upload-heading">Subir nuevo vídeo</h2>
-      <p class="panel-subtitle">MP4, MOV, WebM · Tamaño máximo: 200 MB por archivo</p>
+      <div class="panel-header-text">
+        <h2 class="panel-title" id="upload-heading">Subir nuevo vídeo</h2>
+        <p class="panel-subtitle">MP4, MOV, WebM · Tamaño máximo: 200 MB por archivo</p>
+      </div>
+      <button class="panel-close"
+              (click)="cerrarPanelSubida()"
+              aria-label="Cerrar panel de subida"
+              title="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
 
     <!-- 2 columnas: form | preview -->
@@ -222,6 +235,7 @@
 
     </div><!-- /upload-layout -->
   </section>
+  } <!-- /uploadPanelOpen -->
 
   <!-- ================================================================
   VIDEO LIBRARY — Card Grid
@@ -230,7 +244,7 @@
 
     <div class="section-header">
       <div class="section-header__left">
-        <h2 class="section-title" id="library-heading">Biblioteca de vídeos</h2>
+        <h2 class="section-title" id="library-heading">Mis vídeos</h2>
         @if (!cargando) {
           <span class="section-badge">
             {{ filteredVideos.length }}{{ searchQuery && filteredVideos.length !== videos.length ? ' de ' + videos.length : '' }}
@@ -238,6 +252,20 @@
           </span>
         }
       </div>
+      <div class="section-header__actions">
+        <button class="btn-upload-trigger"
+                (click)="abrirPanelSubida()"
+                [class.btn-upload-trigger--active]="uploadPanelOpen"
+                title="{{ uploadPanelOpen ? 'Cerrar panel de subida' : 'Subir nuevo vídeo' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Subir vídeo
+        </button>
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -261,6 +289,7 @@
           </button>
         }
       </div>
+      </div><!-- /section-header__actions -->
     </div>
 
     @if (listaError) {
@@ -411,7 +440,7 @@
             <h3 class="empty-title">Tu biblioteca está vacía</h3>
             <p class="empty-hint">Sube tu primer vídeo y empieza a compartirlo con tus grupos.</p>
           </div>
-          <button class="btn-primary empty-cta" (click)="archivoInput.click()">
+          <button class="btn-primary empty-cta" (click)="abrirPanelSubida()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                  aria-hidden="true" class="btn-icon">

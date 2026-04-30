@@ -1,60 +1,14 @@
 <div class="detalle-page">
 
-  <div class="page-header">
+  <!-- ── Navigation row ── -->
+  <div class="detalle-nav">
     <button class="btn-back" (click)="volver()" aria-label="Volver a grupos">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
-      Volver
+      Volver a grupos
     </button>
-
-    @if (grupo && !cargando) {
-      <div class="header-info">
-        
-        @if (!editandoNombre) {
-          <div class="nombre-wrap">
-            <div class="grupo-icon" aria-hidden="true">{{ grupo.nombre | initial }}</div>
-            <h2 class="page-title">{{ grupo.nombre }}</h2>
-            @if (esAdmin) {
-              <button class="btn-icon-action" (click)="activarEdicion()" title="Editar nombre" aria-label="Editar nombre del grupo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-            }
-          </div>
-        }
-
-        @if (esAdmin && editandoNombre) {
-          <div class="nombre-edit-row">
-            <input
-              class="form-input nombre-input"
-              type="text"
-              [(ngModel)]="nombreEditado"
-              placeholder="Nombre del grupo"
-              maxlength="100"
-              autocomplete="off"
-              (keydown.enter)="guardarNombre()"
-              (keydown.escape)="cancelarEdicion()">
-            <button class="btn-save"
-                    (click)="guardarNombre()"
-                    [disabled]="estadoRenombrar === 'loading' || !nombreEditado.trim()">
-              {{ estadoRenombrar === 'loading' ? 'Guardando…' : 'Guardar' }}
-            </button>
-            <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
-          </div>
-
-          @if (estadoRenombrar === 'error') {
-            <p class="feedback-msg feedback-msg--error" role="alert">
-              {{ errorRenombrar }}
-            </p>
-          }
-        }
-      </div>
-    }
 
     @if (esSuperAdmin && grupo && !cargando) {
       <button class="btn-danger"
@@ -77,21 +31,120 @@
   }
 
   @if (cargando) {
-    <div class="empty-state"><p>Cargando...</p></div>
+    <div class="grupo-hero-skeleton">
+      <div class="hero-skeleton-icon"></div>
+      <div class="hero-skeleton-body">
+        <div class="hero-skeleton-line hero-skeleton-line--title"></div>
+        <div class="hero-skeleton-line hero-skeleton-line--sub"></div>
+      </div>
+    </div>
   }
 
-  @if (!cargando && grupo) {
+  <!-- ── Hero Banner ── -->
+  @if (grupo && !cargando) {
+    <div class="grupo-hero">
+      <div class="grupo-hero-glow" aria-hidden="true"></div>
 
-    <!-- ── Navegador de pestañas ───────────────────────────────────────
-         "Resumen" siempre visible. "Analíticas" solo para EDITOR+ porque
-         el endpoint del backend exige ese rol y mostrar la pestaña a un
-         usuario que recibirá 403 al pulsarla sería confuso. -->
+      <div class="grupo-hero-content">
+        <div class="grupo-hero-icon" aria-hidden="true">{{ grupo.nombre | initial }}</div>
+
+        <div class="grupo-hero-body">
+
+          @if (!editandoNombre) {
+            <div class="grupo-hero-name-row">
+              <h2 class="grupo-hero-title">{{ grupo.nombre }}</h2>
+              @if (esAdmin) {
+                <button class="btn-icon-action" (click)="activarEdicion()"
+                        title="Editar nombre" aria-label="Editar nombre del grupo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+
+          @if (esAdmin && editandoNombre) {
+            <div class="nombre-edit-row">
+              <input
+                class="form-input nombre-input"
+                type="text"
+                [(ngModel)]="nombreEditado"
+                placeholder="Nombre del grupo"
+                maxlength="100"
+                autocomplete="off"
+                (keydown.enter)="guardarNombre()"
+                (keydown.escape)="cancelarEdicion()">
+              <button class="btn-save"
+                      (click)="guardarNombre()"
+                      [disabled]="estadoRenombrar === 'loading' || !nombreEditado.trim()">
+                {{ estadoRenombrar === 'loading' ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+            </div>
+
+            @if (estadoRenombrar === 'error') {
+              <p class="feedback-msg feedback-msg--error" role="alert">
+                {{ errorRenombrar }}
+              </p>
+            }
+          }
+
+          <div class="grupo-hero-meta">
+            <span class="hero-meta-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {{ miembros.length }} miembro{{ miembros.length !== 1 ? 's' : '' }}
+            </span>
+
+            <span class="hero-meta-pill hero-meta-pill--video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+              {{ videosGrupo.length }} vídeo{{ videosGrupo.length !== 1 ? 's' : '' }}
+            </span>
+
+            <span class="hero-meta-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Creado el {{ grupo.fechaCreacion | dateLocale }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Tabs ── -->
+  @if (!cargando && grupo) {
     <nav class="detalle-tabs" role="tablist" aria-label="Secciones del grupo">
       <button class="detalle-tab"
               role="tab"
               [class.detalle-tab--active]="pestanaActiva === 'resumen'"
               [attr.aria-selected]="pestanaActiva === 'resumen'"
               (click)="cambiarPestana('resumen')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
         Resumen
       </button>
       @if (puedeGestionarVideos) {
@@ -111,7 +164,6 @@
         </button>
       }
     </nav>
-
   }
 
   @if (!cargando && grupo && pestanaActiva === 'resumen') {
@@ -123,7 +175,16 @@
 
           @if (esAdmin) {
             <section class="section-card" aria-labelledby="add-member-title">
-              <h3 class="section-title" id="add-member-title">Añadir miembro</h3>
+              <h3 class="section-title" id="add-member-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="8.5" cy="7" r="4"/>
+                  <line x1="20" y1="8" x2="20" y2="14"/>
+                  <line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+                Añadir miembro
+              </h3>
 
               <div class="add-row">
                 <input
@@ -151,6 +212,13 @@
 
           <section class="section-card" aria-labelledby="members-title">
             <h3 class="section-title" id="members-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
               Miembros
               <span class="count-badge">{{ miembros.length }}</span>
             </h3>
@@ -173,7 +241,7 @@
                     }
                   </div>
                   <div class="member-info">
-                    <span class="member-name">{{ m.username }}#{{ m.tag }}</span>
+                    <span class="member-name">{{ m.username }}<span class="member-tag">#{{ m.tag }}</span></span>
                   </div>
 
                   @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
@@ -234,6 +302,11 @@
           <section class="section-card" aria-labelledby="videos-title">
             <div class="section-title-row">
               <h3 class="section-title" id="videos-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
                 Vídeos del grupo
                 <span class="count-badge">{{ videosGrupo.length }}</span>
               </h3>
@@ -301,7 +374,7 @@
                         </svg>
                       </div>
                     }
-                    
+
                     @if (puedeQuitarVideo(v)) {
                       <button class="btn-remove video-card-remove"
                               (click)="$event.stopPropagation(); quitarVideoDelGrupo(v)"
@@ -326,6 +399,13 @@
                         </svg>
                       </button>
                     }
+
+                    <div class="video-card-play-overlay" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.55)"/>
+                        <polygon points="10 8 18 12 10 16 10 8" fill="white"/>
+                      </svg>
+                    </div>
                   </div>
                   <div class="video-card-footer">
                     <span class="video-card-title">{{ v.titulo }}</span>
@@ -351,11 +431,7 @@
     </div><!-- /.detalle-body -->
   }
 
-  <!-- ── Pestaña "Analíticas" ────────────────────────────────────────────
-       Solo se renderiza cuando está activa y el usuario tiene rol EDITOR+.
-       Datos acotados al contexto de este grupo (segregación B2B): las
-       reproducciones desde otros grupos donde el vídeo también esté
-       compartido NO entran en estos agregados. -->
+  <!-- ── Pestaña Analíticas ── -->
   @if (!cargando && grupo && pestanaActiva === 'analiticas' && puedeGestionarVideos) {
     <section class="analiticas-panel" aria-labelledby="analiticas-title">
 
@@ -368,8 +444,6 @@
           </p>
         </div>
         <div class="analiticas-actions">
-          <!-- Presets de rango: aplican filtro server-side a los agregados.
-               El sparkline son SIEMPRE los últimos 30 días, indistinto. -->
           <div class="rango-presets" role="tablist" aria-label="Rango de fechas">
             <button class="rango-preset" role="tab"
                     [class.rango-preset--active]="rangoActivo === '7d'"
@@ -415,7 +489,6 @@
         </div>
       } @else {
 
-        <!-- ── KPIs agregados ─────────────────────────────────────────── -->
         <div class="kpi-grid">
           <div class="kpi-card kpi-card--purple">
             <span class="kpi-label">Visitas totales</span>
@@ -439,7 +512,6 @@
           </div>
         </div>
 
-        <!-- ── Tabla por vídeo ────────────────────────────────────────── -->
         <div class="analiticas-table-wrap">
           <table class="stats-table">
             <thead>

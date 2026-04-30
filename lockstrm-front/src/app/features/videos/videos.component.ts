@@ -44,6 +44,19 @@ export class VideosComponent implements OnInit {
   private duracionVideo = 0;
   private objectUrl: string | null = null;
 
+  /** Controla si el panel de subida está visible. */
+  uploadPanelOpen = false;
+
+  abrirPanelSubida(): void {
+    this.uploadPanelOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarPanelSubida(): void {
+    this.uploadPanelOpen = false;
+    this.cdr.markForCheck();
+  }
+
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
   progreso = 0;
   mensajeError = '';
@@ -131,9 +144,10 @@ export class VideosComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoEnEdicion)    { this.cancelarEdicion();    return; }
-    if (this.videoAEliminar)    { this.cancelarEliminacion(); return; }
-    if (this.videoReproduciendose) { this.cerrarReproductor(); }
+    if (this.videoEnEdicion)       { this.cancelarEdicion();    return; }
+    if (this.videoAEliminar)       { this.cancelarEliminacion(); return; }
+    if (this.videoReproduciendose) { this.cerrarReproductor();   return; }
+    if (this.uploadPanelOpen)      { this.cerrarPanelSubida();   return; }
   }
 
   ngOnInit(): void {
@@ -327,10 +341,12 @@ export class VideosComponent implements OnInit {
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 
+          // Cierra el panel automáticamente tras 2 s (el usuario ya ve el toast de éxito)
           setTimeout(() => {
-            this.estadoSubida = 'idle';
+            this.estadoSubida    = 'idle';
+            this.uploadPanelOpen = false;
             this.cdr.markForCheck();
-          }, 3000);
+          }, 2000);
         },
         error: (err) => {
           this.estadoSubida = 'error';
