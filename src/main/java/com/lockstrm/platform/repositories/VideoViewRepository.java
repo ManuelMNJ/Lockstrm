@@ -24,6 +24,11 @@ public interface VideoViewRepository extends JpaRepository<VideoView, Long> {
     @Query("DELETE FROM VideoView vv WHERE vv.video.idVideo = :idVideo")
     void deleteByVideoId(@Param("idVideo") Long idVideo);
 
+    /** Elimina todas las vistas registradas por el usuario (usado al borrar la cuenta). */
+    @Modifying
+    @Query("DELETE FROM VideoView vv WHERE vv.usuario.idUsuario = :idUsuario")
+    void deleteByUsuarioId(@Param("idUsuario") Long idUsuario);
+
     /** Total de reproducciones acumuladas en todos los vídeos del propietario. */
     @Query("SELECT COALESCE(SUM(vv.contador), 0) FROM VideoView vv WHERE vv.video.propietario.email = :email")
     long sumVistasByOwnerEmail(@Param("email") String email);

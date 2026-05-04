@@ -49,6 +49,11 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     @Query("DELETE FROM GroupMember mg WHERE mg.id.idGrupoId = :idGrupo AND mg.id.idUsuarioId = :idUsuario")
     void deleteByGrupoIdAndUsuarioId(@Param("idGrupo") Long idGrupo, @Param("idUsuario") Long idUsuario);
 
+    /** Elimina todas las membresías del usuario en cualquier grupo (usado al borrar la cuenta). */
+    @Modifying
+    @Query("DELETE FROM GroupMember mg WHERE mg.id.idUsuarioId = :idUsuario")
+    void deleteByUsuarioId(@Param("idUsuario") Long idUsuario);
+
     /** Lista registros de membresía completos (usuario + rol) para un grupo. */
     @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.usuario WHERE mg.id.idGrupoId = :idGrupo")
     List<GroupMember> findMiembrosByGrupoId(@Param("idGrupo") Long idGrupo);

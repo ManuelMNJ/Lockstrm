@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { STORAGE_KEYS } from '../constants/storage-keys';
 
 export interface AuthResponse {
   token: string;
@@ -18,7 +19,7 @@ export interface AuthResponse {
 export class AuthService {
 
   private readonly apiUrl      = `${environment.apiUrl}/api/auth`;
-  private readonly STORAGE_KEY = 'usuarioLogueado';
+  private readonly STORAGE_KEY = STORAGE_KEYS.user;
 
   private readonly _currentUser = signal<AuthResponse | null>(this.loadFromStorage());
 
@@ -68,6 +69,12 @@ export class AuthService {
   private loadFromStorage(): AuthResponse | null {
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (!stored) return null;
-    try { return JSON.parse(stored) as AuthResponse; } catch { return null; }
+    try {
+      return JSON.parse(stored) as AuthResponse;
+    } catch (e) {
+      console.warn('[AuthService] Sesión corrupta en localStorage, se descarta.', e);
+      localStorage.removeItem(this.STORAGE_KEY); // evita que el usuario quede bloqueado
+      return null;
+    }
   }
 }

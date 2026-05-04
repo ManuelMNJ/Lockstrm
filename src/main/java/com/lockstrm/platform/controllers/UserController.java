@@ -143,6 +143,21 @@ public class UserController {
         return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada correctamente"));
     }
 
+    // ── Cuenta ────────────────────────────────────────────────────────
+
+    /**
+     * Elimina la cuenta del usuario autenticado y todos sus datos en cascada
+     * (vídeos, grupos, membresías, logs, vistas y archivos en disco).
+     * El frontend invalida el token JWT en local y redirige al login.
+     */
+    @DeleteMapping("/cuenta")
+    public ResponseEntity<Void> eliminarCuenta(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        userService.eliminarCuenta(userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────
 
     private static String resolveAvatarUrl(String fileName) {

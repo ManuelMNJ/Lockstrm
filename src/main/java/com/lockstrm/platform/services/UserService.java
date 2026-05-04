@@ -1,10 +1,19 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.dto.RegisterRequest;
+import com.lockstrm.platform.entities.Group;
 import com.lockstrm.platform.entities.User;
+import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.exceptions.InvalidFileException;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
+import com.lockstrm.platform.repositories.GroupPermissionRepository;
+import com.lockstrm.platform.repositories.GroupRepository;
+import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.UserRepository;
+import com.lockstrm.platform.repositories.VideoRepository;
+import com.lockstrm.platform.repositories.VideoViewRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,8 +29,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
@@ -33,8 +44,20 @@ public class UserService implements UserDetailsService {
     @Value("${lockstrm.upload.avatars.dir}")
     private String avatarsDir;
 
-    private final UserRepository  userRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Value("${lockstrm.upload.dir}")
+    private String uploadDir;
+
+    @Value("${lockstrm.upload.thumbnails.dir}")
+    private String thumbnailsDir;
+
+    private final UserRepository             userRepository;
+    private final PasswordEncoder            passwordEncoder;
+    private final VideoRepository            videoRepository;
+    private final GroupRepository            grupoRepository;
+    private final GroupMemberRepository      groupMemberRepository;
+    private final GroupPermissionRepository  groupPermissionRepository;
+    private final VideoViewRepository        videoViewRepository;
+    private final LogRepository              logRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -229,5 +252,90 @@ public class UserService implements UserDetailsService {
             case "image/webp" -> "webp";
             default           -> "jpg";  // jpeg / jpg / fallback
         };
+    }
+
+    // ── Eliminar cuenta ───────────────────────────────────────────────
+
+    /**
+     * Elimina la cuenta del usuario y todos sus datos en cascada:
+     *
+     *  1. Vídeos propios — permisos de grupo, vistas, logs de sesión y archivos en disco.
+     *  2. Grupos propios — logs históricos (grupoId → NULL para conservar el historial
+     *     de otros miembros), membresías y permisos de vídeo del grupo.
+     *  3. Membresías del usuario en grupos ajenos.
+     *  4. Logs y vistas del usuario como espectador en vídeos de otros.
+     *  5. Avatar del disco.
+     *  6. Entidad User.
+     *
+     * Toda la operación corre en una sola transacción; si algo falla no queda
+     * ningún dato parcialmente eliminado.
+     */
+    @Transactional
+    public void eliminarCuenta(String email) {
+        User usuario = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado: " + email));
+
+        Long idUsuario    = usuario.getIdUsuario();
+        Path videoBaseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path thumbBaseDir = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
+
+        // 1. Vídeos propiedad del usuario
+        List<Video> videos = videoRepository.findByPropietario_Email(email);
+        for (Video video : videos) {
+            Long idVideo = video.getIdVideo();
+            groupPermissionRepository.deleteByVideoId(idVideo);
+            videoViewRepository.deleteByVideoId(idVideo);
+            logRepository.deleteByVideoId(idVideo);
+            videoRepository.delete(video);
+
+            if (video.getFileName() != null) {
+                try {
+                    Files.deleteIfExists(videoBaseDir.resolve(video.getFileName()).normalize());
+                } catch (IOException e) {
+                    log.warn("No se pudo eliminar vídeo '{}': {}", video.getFileName(), e.getMessage());
+                }
+            }
+            String thumbRaw = video.getMiniaturaUrl();
+            if (thumbRaw != null && !thumbRaw.startsWith("data:")) {
+                try {
+                    Files.deleteIfExists(thumbBaseDir.resolve(thumbRaw).normalize());
+                } catch (IOException e) {
+                    log.warn("No se pudo eliminar miniatura '{}': {}", thumbRaw, e.getMessage());
+                }
+            }
+        }
+
+        // 2. Grupos creados por el usuario
+        List<Group> grupos = grupoRepository.findByCreador_Email(email);
+        for (Group grupo : grupos) {
+            Long idGrupo = grupo.getIdGrupo();
+            // SET NULL en logs para conservar el historial de otros miembros
+            logRepository.nullifyGrupoId(idGrupo);
+            groupMemberRepository.deleteByGrupoId(idGrupo);
+            groupPermissionRepository.deleteByGrupoId(idGrupo);
+            grupoRepository.delete(grupo);
+        }
+
+        // 3. Membresías del usuario en grupos ajenos
+        groupMemberRepository.deleteByUsuarioId(idUsuario);
+
+        // 4. Logs y vistas del usuario como espectador en vídeos de otros
+        logRepository.deleteByUsuarioId(idUsuario);
+        videoViewRepository.deleteByUsuarioId(idUsuario);
+
+        // 5. Avatar del disco
+        String avatarFileName = usuario.getAvatarUrl();
+        if (avatarFileName != null && !avatarFileName.isBlank()) {
+            Path avatarBaseDir = Paths.get(avatarsDir).toAbsolutePath().normalize();
+            try {
+                Files.deleteIfExists(avatarBaseDir.resolve(avatarFileName).normalize());
+            } catch (IOException e) {
+                log.warn("No se pudo eliminar avatar '{}': {}", avatarFileName, e.getMessage());
+            }
+        }
+
+        // 6. Usuario
+        userRepository.delete(usuario);
+        log.info("Cuenta eliminada: {}", email);
     }
 }
