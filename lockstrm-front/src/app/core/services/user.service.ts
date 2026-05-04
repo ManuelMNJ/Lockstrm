@@ -49,4 +49,8 @@ export class UserService {
       `${this.apiUrl}/email`, { nuevoEmail, passwordActual }
     );
   }
+
+  eliminarCuenta(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cuenta`);
+  }
 }

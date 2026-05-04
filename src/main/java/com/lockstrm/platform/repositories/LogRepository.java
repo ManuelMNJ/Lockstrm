@@ -55,6 +55,11 @@ public interface LogRepository extends JpaRepository<Log, Long> {
     @Query("DELETE FROM Log l WHERE l.video.idVideo = :idVideo")
     void deleteByVideoId(@Param("idVideo") Long idVideo);
 
+    /** Elimina todos los logs en los que el usuario fue espectador (usado al borrar la cuenta). */
+    @Modifying
+    @Query("DELETE FROM Log l WHERE l.usuario.idUsuario = :idUsuario")
+    void deleteByUsuarioId(@Param("idUsuario") Long idUsuario);
+
     /**
      * Limpia la referencia al grupo eliminado en los logs históricos.
      * Se usa SET NULL en lugar de DELETE para conservar el historial de
