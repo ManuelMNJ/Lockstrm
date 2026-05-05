@@ -373,3 +373,41 @@
   flex-direction: column;
   min-height: 0;
 }
+
+/* ==========================================================================
+   RESPONSIVE — NAVBAR
+   ≤ 640px: ocultar nombre/tag del perfil, compactar acciones
+   ========================================================================== */
+@media (max-width: 640px) {
+  .global-nav {
+    padding: 0 var(--space-4);
+  }
+
+  /* Ocultar nombre y tag — solo avatar + chevron */
+  .trigger-info {
+    display: none;
+  }
+
+  /* Reducir padding del trigger para que quede como botón de avatar */
+  .profile-trigger {
+    padding: 4px;
+  }
+
+  /* "Ir al Panel": solo icono, sin texto */
+  .btn-panel {
+    padding: 7px 9px;
+    font-size: 0; /* oculta el texto sin romper el elemento */
+  }
+
+  .btn-panel svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Nombre de marca: ocultar en pantallas muy pequeñas (< 400px) */
+  @media (max-width: 400px) {
+    .brand-name {
+      display: none;
+    }
+  }
+}

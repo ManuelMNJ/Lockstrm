@@ -17,11 +17,22 @@ export class PrivateLayoutComponent {
   /** Título dinámico de la cabecera, sincronizado con la ruta activa. */
   pageTitle = 'Dashboard';
 
-  /** Estado del sidebar: colapsado o expandido. */
+  /** Estado del sidebar en desktop: colapsado (56px) o expandido (240px). */
   readonly sidebarCollapsed = signal(false);
+
+  /** Estado del sidebar en móvil: drawer visible u oculto. */
+  readonly mobileSidebarOpen = signal(false);
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen.update(v => !v);
+  }
+
+  closeMobileSidebar(): void {
+    this.mobileSidebarOpen.set(false);
   }
 
   /** Últimos grupos accedidos por el usuario (máx. 3). */
@@ -38,7 +49,10 @@ export class PrivateLayoutComponent {
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(e => this.actualizarHeader(e.urlAfterRedirects));
+      .subscribe(e => {
+        this.actualizarHeader(e.urlAfterRedirects);
+        this.mobileSidebarOpen.set(false);
+      });
 
     // 1º intenta los grupos por historial de reproducción (más reciente primero).
     // 2º si no hay historial aún, usa los grupos del usuario ordenados por

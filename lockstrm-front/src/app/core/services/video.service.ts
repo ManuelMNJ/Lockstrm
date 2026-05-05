@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, map, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, merge, throwError } from 'rxjs';
+import { filter, map, mergeMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
 
@@ -76,8 +76,9 @@ export class VideoService {
   private readonly apiUrl = `${environment.apiUrl}/api/videos`;
 
   // null = aún no cargado; [] = cargado sin vídeos; Video[] = datos reales
-  private readonly _misVideos$      = new BehaviorSubject<Video[] | null>(null);
-  private _misVideosLoaded          = false;
+  private readonly _misVideos$    = new BehaviorSubject<Video[] | null>(null);
+  private readonly _misVideosErr$ = new Subject<unknown>();
+  private _misVideosLoaded        = false;
 
   constructor(
     private http:          HttpClient,
@@ -98,8 +99,9 @@ export class VideoService {
       this._misVideosLoaded = true;
       this._fetchMisVideos();
     }
-    return this._misVideos$.pipe(
-      filter((v): v is Video[] => v !== null),
+    return merge(
+      this._misVideos$.pipe(filter((v): v is Video[] => v !== null)),
+      this._misVideosErr$.pipe(mergeMap(err => throwError(() => err))),
     );
   }
 
@@ -107,8 +109,11 @@ export class VideoService {
     this.http.get<VideoRaw[]>(`${this.apiUrl}/mios`).pipe(
       map(arr => arr.map(mapVideo)),
     ).subscribe({
-      next:  v  => this._misVideos$.next(v),
-      error: () => { this._misVideosLoaded = false; },
+      next:  v   => this._misVideos$.next(v),
+      error: err => {
+        this._misVideosLoaded = false;
+        this._misVideosErr$.next(err);
+      },
     });
   }
 
