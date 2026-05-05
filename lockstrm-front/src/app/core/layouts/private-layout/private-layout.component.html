@@ -7,9 +7,19 @@
 <div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
 
   <!-- ================================================================
+    BACKDROP móvil (cierra el drawer al hacer clic fuera)
+    ================================================================ -->
+  @if (mobileSidebarOpen()) {
+    <div class="mobile-backdrop" (click)="closeMobileSidebar()" aria-hidden="true"></div>
+  }
+
+  <!-- ================================================================
     SIDEBAR
     ================================================================ -->
-  <aside class="sidebar" role="complementary" aria-label="Navegación principal">
+  <aside class="sidebar"
+         [class.mobile-open]="mobileSidebarOpen()"
+         role="complementary"
+         aria-label="Navegación principal">
 
     <!-- ── Sidebar header con botón de colapso ── -->
     <div class="sidebar-header">
@@ -138,6 +148,19 @@
 
     <!-- ── Page header ── -->
     <header class="main-header">
+      <!-- Hamburguesa: solo visible en móvil -->
+      <button class="mobile-menu-btn"
+              (click)="toggleMobileSidebar()"
+              [attr.aria-expanded]="mobileSidebarOpen()"
+              aria-label="Abrir menú de navegación">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <h1 class="header-title">{{ pageTitle }}</h1>
     </header>
 

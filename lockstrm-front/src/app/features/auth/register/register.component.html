@@ -99,6 +99,9 @@
             No quedan tags libres para este nombre de usuario. Prueba otro.
           </span>
         }
+        @if (username.dirty && username.pending) {
+          <span class="field-hint">Verificando disponibilidad…</span>
+        }
         @if (!username.errors && username.dirty && !username.pending) {
           <div class="tag-preview">
             <span class="tag-preview__badge">{{ username.value }}#????</span>

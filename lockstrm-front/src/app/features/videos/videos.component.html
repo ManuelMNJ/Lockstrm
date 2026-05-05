@@ -678,6 +678,17 @@
   <!-- ================================================================
   TOASTS
   ================================================================ -->
+  @if (exitoSubidaVisible) {
+    <div class="toast toast--success" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="toast-icon" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span>Vídeo subido correctamente.</span>
+    </div>
+  }
+
   @if (exitoEdicionVisible) {
     <div class="toast toast--success" role="status" aria-live="polite">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"

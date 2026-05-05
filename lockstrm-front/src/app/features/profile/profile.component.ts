@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { PendingChanges } from '../../core/guards/pending-changes.guard';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import {
@@ -25,7 +26,7 @@ import {
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, PendingChanges {
 
   perfil: PerfilUsuario | null = null;
   cargando = true;
@@ -406,5 +407,12 @@ export class ProfileComponent implements OnInit {
     const initials = (n + a).toUpperCase();
     if (initials) return initials;
     return this.perfil?.username?.[0]?.toUpperCase() ?? '?';
+  }
+
+  hasPendingChanges(): boolean {
+    if (this.modoEdicion       && this.formPerfil?.dirty)   return true;
+    if (this.modoPasswordAbierto && this.formPassword?.dirty) return true;
+    if (this.modoEditarEmail   && this.formEmail?.dirty)    return true;
+    return false;
   }
 }
