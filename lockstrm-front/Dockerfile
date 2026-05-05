@@ -4,14 +4,20 @@
 # =============================================
 FROM node:20-alpine AS build
 
+ARG API_URL=''
+
 WORKDIR /app
 
 # Copiamos manifiestos primero para cache de dependencias
 COPY package.json package-lock.json ./
 RUN npm ci --silent
 
-# Copiamos el resto del codigo y compilamos en modo produccion
+# Copiamos el resto del codigo
 COPY . .
+
+# Inyectamos la URL del backend antes de compilar
+RUN sed -i "s|apiUrl: ''|apiUrl: '${API_URL}'|g" src/environments/environment.prod.ts
+
 RUN npm run build
 
 # =============================================
