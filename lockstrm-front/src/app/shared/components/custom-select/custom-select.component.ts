@@ -10,7 +10,7 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface SelectOption {
-  value: any;
+  value: unknown;
   label: string;
   disabled?: boolean;
 }
@@ -285,9 +285,9 @@ export class CustomSelectComponent implements ControlValueAccessor {
 
   isOpen     = false;
   isDisabled = false;
-  selectedValue: any = null;
+  selectedValue: unknown = null;
 
-  private onChange   = (_: any) => {};
+  private onChange   = (_: unknown) => {};
   private onTouched  = () => {};
 
   constructor(private el: ElementRef, private cdr: ChangeDetectorRef) {}
@@ -327,7 +327,7 @@ export class CustomSelectComponent implements ControlValueAccessor {
     }
   }
 
-  writeValue(value: any): void {
+  writeValue(value: unknown): void {
     this.selectedValue = value;
     this.cdr.markForCheck();
   }

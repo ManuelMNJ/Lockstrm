@@ -531,6 +531,6 @@ export class VideosComponent implements OnInit {
     if (!idVideo) return;
     this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+      .subscribe({ error: () => {} });
   }
 }

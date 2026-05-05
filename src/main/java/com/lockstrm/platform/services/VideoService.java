@@ -270,7 +270,7 @@ public class VideoService {
                 .collect(Collectors.groupingBy(
                         pg -> pg.getId().getIdVideoId(),
                         Collectors.mapping(
-                                pg -> new GroupRef(pg.getId().getIdGrupoId(), pg.getGrupo().getNombre()),
+                                pg -> new GroupRef(pg.getId().getIdGrupoId(), pg.getGrupo() != null ? pg.getGrupo().getNombre() : ""),
                                 Collectors.toList()
                         )
                 ));

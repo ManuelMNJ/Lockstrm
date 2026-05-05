@@ -42,6 +42,8 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    // CascadeType.REMOVE ausente a propósito: la eliminación de vídeos pasa por
+    // UserService.eliminarCuenta, que también borra los ficheros del filesystem.
     @OneToMany(mappedBy = "propietario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     @ToString.Exclude

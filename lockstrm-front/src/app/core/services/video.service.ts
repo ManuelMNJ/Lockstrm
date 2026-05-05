@@ -62,11 +62,11 @@ function mapVideo(raw: VideoRaw): Video {
   return {
     idVideo:      raw.idVideo,
     titulo:       raw.titulo,
-    duracion:     raw.duracion ?? null,
-    fechaSubida:  raw.fechaSubida ?? null,
+    duracion:     raw.duracion,
+    fechaSubida:  raw.fechaSubida,
     grupos:       raw.grupos ?? [],
-    miniaturaUrl: raw.miniaturaUrl ?? null,
-    fileName:     raw.fileName ?? null,
+    miniaturaUrl: raw.miniaturaUrl,
+    fileName:     raw.fileName,
   };
 }
 

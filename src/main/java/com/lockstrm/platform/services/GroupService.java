@@ -101,7 +101,8 @@ public class GroupService {
     }
 
     private void verifyGrupoAccess(Group grupo, String email) {
-        boolean esCreador = grupo.getCreador().getEmail().equals(email);
+        User creador = grupo.getCreador();
+        boolean esCreador = creador != null && creador.getEmail().equals(email);
         boolean esMiembro = miembrosGroupRepository.countMiembroByEmailAndGrupo(email, grupo.getIdGrupo()) > 0;
 
         if (!esCreador && !esMiembro) {

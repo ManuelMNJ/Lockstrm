@@ -12,6 +12,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -39,8 +41,8 @@ services:
       THUMBNAILS_DIR: /var/lockstrm/thumbnails
       CORS_ORIGIN: ${CORS_ORIGIN}
     volumes:
-      - video_storage:/var/lockstrm/videos
-      - thumbnail_storage:/var/lockstrm/thumbnails
+      - ./uploads/videos:/var/lockstrm/videos
+      - ./uploads/thumbnails:/var/lockstrm/thumbnails
     ports:
       - "8080:8080"
 
@@ -59,8 +61,4 @@ services:
 # VOLUMENES
 volumes:
   mysql_data:
-    driver: local
-  video_storage:
-    driver: local
-  thumbnail_storage:
     driver: local

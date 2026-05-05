@@ -183,7 +183,7 @@ export class VideoAnalyticsComponent implements OnInit {
   }
 
   /** Ruta del back-link: al grupo si vienes de él, al panel global si no. */
-  get backLink(): unknown[] {
+  get backLink(): (string | number)[] {
     return this.fromGrupo && this.grupoIdCtx != null
       ? ['/mi-espacio/grupos', this.grupoIdCtx]
       : ['/mi-espacio/analiticas'];
