@@ -43,6 +43,7 @@ build/
 *.tmp
 *~
 
+
 ### Vídeos subidos por usuarios (no versionar contenido) ###
 uploads/
 !uploads/.gitkeep
@@ -50,6 +51,9 @@ uploads/
 ### Logs ###
 *.log
 logs/
+
+### Datos de base de datos (MySQL data dir montado por Docker) ###
+.data/
 
 ### Node / front ###
 node_modules/

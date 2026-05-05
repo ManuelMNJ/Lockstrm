@@ -31,9 +31,10 @@
   padding: 0 var(--space-8);
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 0 rgba(124, 58, 237, 0.10), 0 2px 12px rgba(0, 0, 0, 0.20);
   flex-shrink: 0;
   gap: var(--space-4);
-  z-index: 100;
+  z-index: var(--z-fixed);
 }
 
 /* ── Brand ── */
@@ -51,10 +52,11 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 60%, var(--color-primary-active) 100%);
   border-radius: var(--radius-md);
   color: var(--color-white);
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.40);
 }
 
 .brand-icon svg {
@@ -63,7 +65,7 @@
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--font-lg);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -83,7 +85,7 @@
   display: inline-flex;
   align-items: center;
   padding: 6px var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--text-muted);
   border-radius: var(--radius-sm);
@@ -106,7 +108,7 @@
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--color-primary);
   background-color: var(--color-primary-ghost);
@@ -168,25 +170,47 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
-  font-size: 11px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
+  color: var(--color-white);
+  font-size: var(--font-xs);
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
+  box-shadow: var(--shadow-avatar-sm);
+  overflow: hidden;
+}
+
+.trigger-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0px;
+  overflow: hidden;
+  max-width: 130px;
 }
 
 .trigger-name {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-base);
+  font-weight: 600;
   color: var(--text-main);
-  max-width: 120px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.3;
+}
+
+.trigger-tag {
+  font-size: var(--font-xs);
+  color: var(--text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  line-height: 1.2;
 }
 
 .trigger-chevron {
@@ -208,7 +232,7 @@
 .menu-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 98;
+  z-index: var(--z-backdrop);
   background: transparent;
 }
 
@@ -219,14 +243,15 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 200px;
+  min-width: 220px;
   background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--radius-lg, var(--radius-md));
   box-shadow:
-    0 4px 6px -1px var(--overlay-black-10),
-    0 2px 4px -1px var(--overlay-black-06);
-  z-index: 99;
+    0 4px 6px -1px var(--overlay-black-20),
+    0 12px 30px -4px var(--overlay-black-40),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  z-index: var(--z-dropdown);
   overflow: hidden;
 
   /* Entrada suave */
@@ -244,21 +269,33 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, transparent 100%);
 }
 
 .dropdown-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
-  font-size: 15px;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
+  color: var(--color-white);
+  font-size: var(--font-xl);
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
+  box-shadow: var(--shadow-avatar-md);
+  overflow: hidden;
+}
+
+/* Imagen dentro de cualquier círculo de avatar del shell */
+.avatar-circle-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
 }
 
 .dropdown-user-info {
@@ -269,7 +306,7 @@
 }
 
 .dropdown-username {
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -278,9 +315,9 @@
 }
 
 .dropdown-role {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 400;
+  font-size: var(--font-xs);
+  color: var(--color-primary-lighter);
+  font-weight: 500;
 }
 
 /* ── Divider ── */
@@ -297,7 +334,7 @@
   gap: 10px;
   width: 100%;
   padding: 10px var(--space-4);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   color: var(--text-muted);
   background: transparent;
@@ -335,4 +372,42 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE — NAVBAR
+   ≤ 640px: ocultar nombre/tag del perfil, compactar acciones
+   ========================================================================== */
+@media (max-width: 640px) {
+  .global-nav {
+    padding: 0 var(--space-4);
+  }
+
+  /* Ocultar nombre y tag — solo avatar + chevron */
+  .trigger-info {
+    display: none;
+  }
+
+  /* Reducir padding del trigger para que quede como botón de avatar */
+  .profile-trigger {
+    padding: 4px;
+  }
+
+  /* "Ir al Panel": solo icono, sin texto */
+  .btn-panel {
+    padding: 7px 9px;
+    font-size: 0; /* oculta el texto sin romper el elemento */
+  }
+
+  .btn-panel svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Nombre de marca: ocultar en pantallas muy pequeñas (< 400px) */
+  @media (max-width: 400px) {
+    .brand-name {
+      display: none;
+    }
+  }
 }

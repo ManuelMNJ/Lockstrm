@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { STORAGE_KEYS } from './core/constants/storage-keys';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +15,7 @@ export class AppComponent {
   constructor() {
     // Restaura el tema guardado antes de que Angular pinte el primer frame,
     // evitando el flash de modo oscuro al recargar con F5 en modo claro.
-    if (localStorage.getItem('lockstrm-theme') === 'light') {
+    if (localStorage.getItem(STORAGE_KEYS.theme) === 'light') {
       document.body.classList.add('light-mode');
     }
   }

@@ -29,20 +29,28 @@ export class LoginComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.form = this.fb.group({
-      email:    ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      identificador: ['', [Validators.required]],
+      password:      ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
-    // Mensaje de confirmación tras registro exitoso
-    if (this.route.snapshot.queryParamMap.get('registrado') === '1') {
-      this.mensajeInfo = 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
+    const params = this.route.snapshot.queryParamMap;
+    const tag    = params.get('tag');
+
+    if (params.get('registrado') === '1') {
+      this.mensajeInfo = tag
+        ? `Cuenta creada correctamente. Tu identificador es ${tag}.`
+        : 'Cuenta creada correctamente. Ya puedes iniciar sesión.';
+    } else if (params.get('identificadorCambiado') === '1') {
+      this.mensajeInfo = tag
+        ? `Nombre de usuario actualizado. Tu nuevo identificador es ${tag}.`
+        : 'Nombre de usuario actualizado. Ya puedes iniciar sesión.';
     }
   }
 
-  get email()    { return this.form.get('email')!; }
-  get password() { return this.form.get('password')!; }
+  get identificador() { return this.form.get('identificador')!; }
+  get password()      { return this.form.get('password')!; }
 
   hacerLogin(): void {
     if (this.form.invalid) {
@@ -53,14 +61,13 @@ export class LoginComponent implements OnInit {
     this.cargando   = true;
     this.errorLogin = '';
 
-    this.authService.login(this.email.value, this.password.value)
+    this.authService.login(this.identificador.value, this.password.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next:  () => this.router.navigate(['/videos']),
+        next:  () => this.router.navigate(['/mi-espacio/videos']),
         error: (err) => {
           this.cargando   = false;
           this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';
-          console.error('[LoginComponent] Error de autenticacion:', err);
         }
       });
   }

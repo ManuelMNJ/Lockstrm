@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService, AuthResponse } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -10,17 +10,26 @@ import { AuthService, AuthResponse } from '../../services/auth.service';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent {
 
-  usuarioLogueado: AuthResponse | null = null;
-
-  constructor(private authService: AuthService) {}
-
-  ngOnInit(): void {
-    this.usuarioLogueado = this.authService.getUser();
-  }
+  private authService  = inject(AuthService);
+  readonly currentUser = this.authService.currentUser;
 
   cerrarSesion(): void {
     this.authService.logout();
+  }
+
+  getAvatarSrc(): string | null {
+    const url = this.currentUser()?.avatarUrl;
+    return url ? `${environment.apiUrl}${url}` : null;
+  }
+
+  getInitials(): string {
+    const user = this.currentUser();
+    if (!user) return '?';
+    const n       = user.nombre?.[0]   ?? '';
+    const a       = user.apellidos?.[0] ?? '';
+    const initials = (n + a).toUpperCase();
+    return initials || user.username?.[0]?.toUpperCase() || '?';
   }
 }

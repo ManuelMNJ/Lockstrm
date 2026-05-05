@@ -1,0 +1,292 @@
+<div class="auth-root">
+  <div class="auth-card">
+
+    <!-- Marca -->
+    <div class="auth-brand">
+      <svg class="auth-logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="var(--color-primary)"/>
+        <path d="M8 22 L16 10 L24 22" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="16" cy="22" r="2.5" fill="#fff"/>
+      </svg>
+      <span class="auth-brand-name">Lockstrm</span>
+    </div>
+
+    <h1 class="auth-title">Crear cuenta</h1>
+    <p class="auth-subtitle">Únete a la plataforma B2B de streaming</p>
+
+    <!-- Error global (email duplicado, error de servidor) -->
+    @if (errorGlobal) {
+      <div class="auth-alert" role="alert" aria-live="assertive">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+            clip-rule="evenodd"/>
+        </svg>
+        {{ errorGlobal }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="registrar()" novalidate class="auth-form">
+
+      <!-- Fila: Nombre + Apellidos -->
+      <div class="form-row-double">
+
+        <div class="form-field">
+          <label class="form-label" for="reg-nombre">Nombre</label>
+          <input
+            id="reg-nombre"
+            type="text"
+            class="form-input"
+            [class.form-input--error]="nombre.invalid && nombre.touched"
+            formControlName="nombre"
+            autocomplete="given-name"
+            placeholder="Tu nombre">
+          @if (nombre.invalid && nombre.touched) {
+            <span class="field-error" role="alert">
+              El nombre es obligatorio.
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="reg-apellidos">Apellidos</label>
+          <input
+            id="reg-apellidos"
+            type="text"
+            class="form-input"
+            [class.form-input--error]="apellidos.invalid && apellidos.touched"
+            formControlName="apellidos"
+            autocomplete="family-name"
+            placeholder="Tus apellidos">
+          @if (apellidos.invalid && apellidos.touched) {
+            <span class="field-error" role="alert">
+              Los apellidos son obligatorios.
+            </span>
+          }
+        </div>
+
+      </div>
+
+      <!-- Nombre de usuario (handle público) -->
+      <div class="form-field">
+        <label class="form-label" for="reg-username">Nombre de usuario</label>
+        <input
+          id="reg-username"
+          type="text"
+          class="form-input"
+          [class.form-input--error]="username.invalid && username.touched"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="Ej. Manu_Dev">
+        @if (username.touched && username.errors?.['required']) {
+          <span class="field-error" role="alert">
+            El nombre de usuario es obligatorio.
+          </span>
+        }
+        @if (username.touched && (username.errors?.['minlength'] || username.errors?.['maxlength'])) {
+          <span class="field-error" role="alert">
+            Debe tener entre 3 y 20 caracteres.
+          </span>
+        }
+        @if (username.touched && username.errors?.['pattern']) {
+          <span class="field-error" role="alert">
+            Solo letras, números, guion (-) y guion bajo (_).
+          </span>
+        }
+        @if (username.dirty && username.errors?.['usernameSaturado']) {
+          <span class="field-error" role="alert">
+            No quedan tags libres para este nombre de usuario. Prueba otro.
+          </span>
+        }
+        @if (username.dirty && username.pending) {
+          <span class="field-hint">Verificando disponibilidad…</span>
+        }
+        @if (!username.errors && username.dirty && !username.pending) {
+          <div class="tag-preview">
+            <span class="tag-preview__badge">{{ username.value }}#????</span>
+            <span class="tag-preview__hint">Tu tag definitivo se asignará al crear la cuenta</span>
+          </div>
+        }
+      </div>
+
+      <!-- Email -->
+      <div class="form-field">
+        <label class="form-label" for="reg-email">Correo electrónico</label>
+        <div class="email-wrapper">
+          <input
+            id="reg-email"
+            type="email"
+            class="form-input"
+            [class.form-input--error]="(email.invalid && email.touched) || (email.errors?.['emailTomado'] && email.dirty)"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="tu@empresa.com">
+          <!-- Spinner mientras valida en el backend -->
+          @if (email.pending) {
+            <span class="email-checking" aria-label="Verificando disponibilidad">
+              <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5"
+                  stroke-dasharray="28 28" stroke-linecap="round"/>
+              </svg>
+            </span>
+          }
+          <!-- Tick si disponible y válido -->
+          @if (!email.pending && email.dirty && email.valid) {
+            <span class="email-ok" aria-label="Email disponible">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                  clip-rule="evenodd"/>
+              </svg>
+            </span>
+          }
+        </div>
+        @if (email.touched && email.errors?.['required']) {
+          <span class="field-error" role="alert">
+            El email es obligatorio.
+          </span>
+        }
+        @if (email.dirty && email.errors?.['email']) {
+          <span class="field-error" role="alert">
+            Introduce un email válido.
+          </span>
+        }
+        @if (email.dirty && email.errors?.['emailTomado']) {
+          <span class="field-error" role="alert">
+            Este email ya está registrado.
+          </span>
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="form-field">
+        <label class="form-label" for="reg-password">Contraseña</label>
+        <div class="pw-wrapper">
+          <input
+            id="reg-password"
+            [type]="showPassword ? 'text' : 'password'"
+            class="form-input"
+            [class.form-input--error]="password.invalid && password.touched"
+            formControlName="password"
+            autocomplete="new-password"
+            placeholder="Crea una contraseña segura">
+          <button type="button" class="pw-toggle" (click)="showPassword = !showPassword"
+            [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <!-- Ojo abierto -->
+            @if (!showPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 10C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            }
+            <!-- Ojo tachado -->
+            @if (showPassword) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 10C3.226 14.338 7.244 17.5 12 17.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (password.touched && password.errors?.['required']) {
+          <span class="field-error" role="alert">
+            La contraseña es obligatoria.
+          </span>
+        }
+
+        <!-- Checklist dinámica: aparece al escribir, rojo solo tras perder el foco -->
+        @if (password.dirty) {
+          <ul class="pw-checklist" aria-label="Requisitos de contraseña">
+            <li [class.req--ok]="pwReqs.length"
+              [class.req--fail]="!pwReqs.length && password.touched"
+              [class.req--pending]="!pwReqs.length && !password.touched">
+              Mínimo 8 caracteres
+            </li>
+            <li [class.req--ok]="pwReqs.uppercase"
+              [class.req--fail]="!pwReqs.uppercase && password.touched"
+              [class.req--pending]="!pwReqs.uppercase && !password.touched">
+              Una letra mayúscula
+            </li>
+            <li [class.req--ok]="pwReqs.number"
+              [class.req--fail]="!pwReqs.number && password.touched"
+              [class.req--pending]="!pwReqs.number && !password.touched">
+              Un número
+            </li>
+            <li [class.req--ok]="pwReqs.special"
+              [class.req--fail]="!pwReqs.special && password.touched"
+              [class.req--pending]="!pwReqs.special && !password.touched">
+              Un símbolo especial (!@#$…)
+            </li>
+          </ul>
+        }
+
+        <!-- Hint inicial antes de que el usuario empiece a escribir -->
+        @if (!password.dirty) {
+          <p class="password-hint">
+            Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo.
+          </p>
+        }
+      </div>
+
+      <!-- Confirmar contraseña -->
+      <div class="form-field">
+        <label class="form-label" for="reg-password-confirm">Confirmar contraseña</label>
+        <div class="pw-wrapper">
+          <input
+            id="reg-password-confirm"
+            [type]="showPasswordConfirm ? 'text' : 'password'"
+            class="form-input"
+            [class.form-input--error]="form.errors?.['passwordNoCoincide'] && passwordConfirm.touched"
+            formControlName="passwordConfirm"
+            autocomplete="new-password"
+            placeholder="Repite la contraseña">
+          <button type="button" class="pw-toggle" (click)="showPasswordConfirm = !showPasswordConfirm"
+            [attr.aria-label]="showPasswordConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            @if (!showPasswordConfirm) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 10C3.732 5.943 7.523 3 12 3c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            }
+            @if (showPasswordConfirm) {
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 001.934 10C3.226 14.338 7.244 17.5 12 17.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+              </svg>
+            }
+          </button>
+        </div>
+        @if (passwordConfirm.touched && passwordConfirm.errors?.['required']) {
+          <span class="field-error" role="alert">Repite la contraseña.</span>
+        }
+        @if (form.errors?.['passwordNoCoincide'] && passwordConfirm.touched) {
+          <span class="field-error" role="alert">Las contraseñas no coinciden.</span>
+        }
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="btn-primary auth-submit"
+        [disabled]="form.invalid || cargando">
+        @if (cargando) {
+          <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5"
+              stroke-dasharray="28 28" stroke-linecap="round"/>
+          </svg>
+        }
+        {{ cargando ? 'Creando cuenta…' : 'Crear cuenta' }}
+      </button>
+
+    </form>
+
+    <p class="auth-footer">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login" class="auth-link">Inicia sesión</a>
+    </p>
+
+  </div>
+</div>

@@ -5,20 +5,27 @@ import { RouterLink } from '@angular/router';
 import { DashboardService, DashboardStats } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, VideoDurationPipe],
+  imports: [CommonModule, RouterLink, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
 
-  stats:    DashboardStats | null = null;
-  cargando  = true;
-  error     = '';
+  stats:        DashboardStats | null = null;
+  cargando      = true;
+  error         = '';
+  failedThumbs  = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
 
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
@@ -53,6 +60,6 @@ export class DashboardComponent implements OnInit {
     { icon: 'upload', text: 'Subiste <strong>Demo producto v2.mp4</strong> correctamente',   time: 'ayer'       },
     { icon: 'group',  text: 'Nuevo miembro en el grupo <strong>Ventas EMEA</strong>',        time: 'hace 2 d'  },
     { icon: 'share',  text: '<strong>Tutorial onboarding</strong> compartido con 3 grupos',  time: 'hace 3 d'  },
-    { icon: 'video',  text: 'Grupo <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
+    { icon: 'video',  text: 'Group <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
   ];
 }

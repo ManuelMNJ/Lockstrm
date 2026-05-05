@@ -1,0 +1,830 @@
+<div class="detalle-page">
+
+  <!-- ── Navigation row ── -->
+  <div class="detalle-nav">
+    <button class="btn-back" (click)="volver()" aria-label="Volver a grupos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Volver a grupos
+    </button>
+
+    @if (esSuperAdmin && grupo && !cargando) {
+      <button class="btn-danger"
+              (click)="solicitarEliminarGrupo()"
+              [disabled]="estadoEliminarGrupo === 'loading'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="btn-icon">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+        Eliminar grupo
+      </button>
+    }
+  </div>
+
+  @if (errorCarga) {
+    <p class="feedback-msg feedback-msg--error" role="alert">{{ errorCarga }}</p>
+  }
+
+  @if (cargando) {
+    <div class="grupo-hero-skeleton">
+      <div class="hero-skeleton-icon"></div>
+      <div class="hero-skeleton-body">
+        <div class="hero-skeleton-line hero-skeleton-line--title"></div>
+        <div class="hero-skeleton-line hero-skeleton-line--sub"></div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Hero Banner ── -->
+  @if (grupo && !cargando) {
+    <div class="grupo-hero">
+      <div class="grupo-hero-glow" aria-hidden="true"></div>
+
+      <div class="grupo-hero-content">
+        <div class="grupo-hero-icon" aria-hidden="true">{{ grupo.nombre | initial }}</div>
+
+        <div class="grupo-hero-body">
+
+          @if (!editandoNombre) {
+            <div class="grupo-hero-name-row">
+              <h2 class="grupo-hero-title">{{ grupo.nombre }}</h2>
+              @if (esAdmin) {
+                <button class="btn-icon-action" (click)="activarEdicion()"
+                        title="Editar nombre" aria-label="Editar nombre del grupo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+
+          @if (esAdmin && editandoNombre) {
+            <div class="nombre-edit-row">
+              <input
+                class="form-input nombre-input"
+                type="text"
+                [(ngModel)]="nombreEditado"
+                placeholder="Nombre del grupo"
+                maxlength="100"
+                autocomplete="off"
+                (keydown.enter)="guardarNombre()"
+                (keydown.escape)="cancelarEdicion()">
+              <button class="btn-save"
+                      (click)="guardarNombre()"
+                      [disabled]="estadoRenombrar === 'loading' || !nombreEditado.trim()">
+                {{ estadoRenombrar === 'loading' ? 'Guardando…' : 'Guardar' }}
+              </button>
+              <button class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+            </div>
+
+            @if (estadoRenombrar === 'error') {
+              <p class="feedback-msg feedback-msg--error" role="alert">
+                {{ errorRenombrar }}
+              </p>
+            }
+          }
+
+          <div class="grupo-hero-meta">
+            <span class="hero-meta-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {{ miembros.length }} miembro{{ miembros.length !== 1 ? 's' : '' }}
+            </span>
+
+            <span class="hero-meta-pill hero-meta-pill--video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+              {{ videosGrupo.length }} vídeo{{ videosGrupo.length !== 1 ? 's' : '' }}
+            </span>
+
+            <span class="hero-meta-date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Creado el {{ grupo.fechaCreacion | dateLocale }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Tabs ── -->
+  @if (!cargando && grupo) {
+    <nav class="detalle-tabs" role="tablist" aria-label="Secciones del grupo">
+      <button class="detalle-tab"
+              role="tab"
+              [class.detalle-tab--active]="pestanaActiva === 'resumen'"
+              [attr.aria-selected]="pestanaActiva === 'resumen'"
+              (click)="cambiarPestana('resumen')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Resumen
+      </button>
+      @if (puedeGestionarVideos) {
+        <button class="detalle-tab"
+                role="tab"
+                [class.detalle-tab--active]="pestanaActiva === 'analiticas'"
+                [attr.aria-selected]="pestanaActiva === 'analiticas'"
+                (click)="cambiarPestana('analiticas')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          Analíticas
+        </button>
+      }
+    </nav>
+  }
+
+  @if (!cargando && grupo && pestanaActiva === 'resumen') {
+    <div class="detalle-body">
+
+      <div class="detalle-columns">
+
+        <div class="detalle-col" [class.detalle-col--sidebar]="!esAdmin">
+
+          @if (esAdmin) {
+            <section class="section-card" aria-labelledby="add-member-title">
+              <h3 class="section-title" id="add-member-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="8.5" cy="7" r="4"/>
+                  <line x1="20" y1="8" x2="20" y2="14"/>
+                  <line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+                Añadir miembro
+              </h3>
+
+              <div class="add-row">
+                <input
+                  class="form-input add-input"
+                  type="text"
+                  [(ngModel)]="identificadorNuevoMiembro"
+                  placeholder="correo@ejemplo.com o Usuario#1234"
+                  autocomplete="off"
+                  (keydown.enter)="aniadirMiembro()">
+                <button class="btn-primary"
+                        (click)="aniadirMiembro()"
+                        [disabled]="estadoAnadir === 'loading' || !identificadorNuevoMiembro.trim()">
+                  {{ estadoAnadir === 'loading' ? 'Añadiendo…' : 'Añadir' }}
+                </button>
+              </div>
+
+              @if (estadoAnadir === 'success') {
+                <p class="feedback-msg" role="status">Miembro añadido correctamente.</p>
+              }
+              @if (estadoAnadir === 'error') {
+                <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnadir }}</p>
+              }
+            </section>
+          }
+
+          <section class="section-card" aria-labelledby="members-title">
+            <h3 class="section-title" id="members-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Miembros
+              <span class="count-badge">{{ miembros.length }}</span>
+            </h3>
+
+            @if (errorEliminarMiembro) {
+              <p class="feedback-msg feedback-msg--error" role="alert">{{ errorEliminarMiembro }}</p>
+            }
+            @if (errorCambioRol) {
+              <p class="feedback-msg feedback-msg--error" role="alert">{{ errorCambioRol }}</p>
+            }
+
+            <ul class="members-list" role="list">
+              @for (m of miembros; track m.idUsuario) {
+                <li class="member-item" role="listitem">
+                  <div class="member-avatar" aria-hidden="true">
+                    @if (m.avatarUrl) {
+                      <img [src]="m.avatarUrl | thumbnailSrc" alt="" class="avatar-circle-img">
+                    } @else {
+                      {{ m.username.charAt(0).toUpperCase() }}
+                    }
+                  </div>
+                  <div class="member-info">
+                    <span class="member-name">{{ m.username }}<span class="member-tag">#{{ m.tag }}</span></span>
+                  </div>
+
+                  @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
+                    <app-custom-select
+                      variant="pill"
+                      [options]="rolOptionsParaAsignar"
+                      [ngModel]="m.rol"
+                      (ngModelChange)="cambiarRolMiembro(m, $event)"
+                      [disabled]="cambiandoRoles.has(m.idUsuario)"
+                      [ariaLabel]="'Rol de ' + m.username">
+                    </app-custom-select>
+                  } @else {
+                    <span class="rol-badge"
+                          [class.rol-badge--super]="m.rol === 'SUPER_ADMIN'"
+                          [class.rol-badge--admin]="m.rol === 'ADMIN'"
+                          [class.rol-badge--editor]="m.rol === 'EDITOR'"
+                          [attr.title]="m.rol === 'SUPER_ADMIN' ? 'Creador del grupo · rol inmutable' : null">
+                      @if (m.rol === 'SUPER_ADMIN') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 2l3 6 6 1-4.5 4.4 1 6.1L12 17l-5.5 2.5 1-6.1L3 9l6-1z"/>
+                        </svg>
+                      }
+                      {{ m.rol === 'SUPER_ADMIN' ? 'PROPIETARIO' : m.rol }}
+                    </span>
+                  }
+
+                  @if (esAdmin && puedeActuarSobreRol(m.rol)) {
+                    <button class="btn-remove"
+                            (click)="eliminarMiembro(m)"
+                            [disabled]="eliminandoMiembros.has(m.idUsuario)"
+                            [attr.aria-label]="'Eliminar ' + m.username + ' del grupo'">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  }
+                </li>
+              } @empty {
+                <div class="empty-state">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                  </svg>
+                  <p>Este grupo aún no tiene miembros.</p>
+                </div>
+              }
+            </ul>
+          </section>
+
+        </div>
+
+        <div class="detalle-col detalle-col--main">
+
+          <section class="section-card" aria-labelledby="videos-title">
+            <div class="section-title-row">
+              <h3 class="section-title" id="videos-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                Vídeos del grupo
+                <span class="count-badge">{{ videosGrupo.length }}</span>
+              </h3>
+
+              @if (videosGrupo.length > 1) {
+                <div class="sort-bar">
+                  <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="3" y1="6"  x2="21" y2="6"/>
+                    <line x1="6" y1="12" x2="18" y2="12"/>
+                    <line x1="9" y1="18" x2="15" y2="18"/>
+                  </svg>
+                  <app-custom-select
+                    size="sm"
+                    [options]="sortOptions"
+                    [ngModel]="criterioOrden"
+                    (ngModelChange)="onCambioOrden($event)"
+                    ariaLabel="Ordenar vídeos">
+                  </app-custom-select>
+                </div>
+              }
+            </div>
+
+            @if (puedeGestionarVideos) {
+              <div class="add-row">
+                <app-custom-select
+                  [fullWidth]="true"
+                  [options]="videoOptions"
+                  [(ngModel)]="idVideoAAnadir"
+                  placeholder="Selecciona un vídeo…"
+                  [disabled]="estadoAnadirVideo === 'loading'">
+                </app-custom-select>
+                <button class="btn-primary"
+                        (click)="aniadirVideoExistente()"
+                        [disabled]="idVideoAAnadir == null || estadoAnadirVideo === 'loading'">
+                  {{ estadoAnadirVideo === 'loading' ? 'Añadiendo…' : 'Añadir' }}
+                </button>
+              </div>
+
+              @if (estadoAnadirVideo === 'success') {
+                <p class="feedback-msg" role="status">Vídeo añadido al grupo correctamente.</p>
+              }
+              @if (estadoAnadirVideo === 'error') {
+                <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnadirVideo }}</p>
+              }
+            }
+
+            @if (errorVideos) {
+              <p class="feedback-msg feedback-msg--error" role="alert">{{ errorVideos }}</p>
+            }
+
+            <div class="videos-grid" role="list">
+              @for (v of videosGrupoOrdenados; track v.idVideo) {
+                <div class="video-card" role="listitem" (click)="verVideo(v)">
+                  <div class="video-card-thumb">
+                    @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
+                      <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img"
+                           (error)="onThumbError(v.idVideo)">
+                    } @else {
+                      <div class="video-card-placeholder" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <polygon points="23 7 16 12 23 17 23 7"/>
+                          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                      </div>
+                    }
+
+                    @if (puedeQuitarVideo(v)) {
+                      <button class="btn-remove video-card-remove"
+                              (click)="$event.stopPropagation(); quitarVideoDelGrupo(v)"
+                              [disabled]="quitandoVideos.has(v.idVideo)"
+                              [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    }
+                    @if (puedeGestionarVideos) {
+                      <button class="btn-stats video-card-stats"
+                              (click)="$event.stopPropagation(); abrirStats(v)"
+                              [attr.aria-label]="'Estadísticas de ' + v.titulo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <line x1="18" y1="20" x2="18" y2="10"/>
+                          <line x1="12" y1="20" x2="12" y2="4"/>
+                          <line x1="6"  y1="20" x2="6"  y2="14"/>
+                        </svg>
+                      </button>
+                    }
+
+                    <div class="video-card-play-overlay" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.55)"/>
+                        <polygon points="10 8 18 12 10 16 10 8" fill="white"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="video-card-footer">
+                    <span class="video-card-title">{{ v.titulo }}</span>
+                    <span class="video-card-duration">{{ v.duracion | videoDuration }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  </svg>
+                  <p>Este grupo aún no tiene vídeos.</p>
+                </div>
+              }
+            </div>
+          </section>
+
+        </div>
+
+      </div><!-- /.detalle-columns -->
+    </div><!-- /.detalle-body -->
+  }
+
+  <!-- ── Pestaña Analíticas ── -->
+  @if (!cargando && grupo && pestanaActiva === 'analiticas' && puedeGestionarVideos) {
+    <section class="analiticas-panel" aria-labelledby="analiticas-title">
+
+      <header class="section-header section-header--with-action">
+        <div>
+          <h3 class="section-title" id="analiticas-title">Analíticas del grupo</h3>
+          <p class="section-sub">
+            Visualizaciones únicas y tiempo de reproducción de cada vídeo
+            <strong>solo</strong> en el contexto de este grupo.
+          </p>
+        </div>
+        <div class="analiticas-actions">
+          <div class="rango-presets" role="tablist" aria-label="Rango de fechas">
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '7d'"
+                    [attr.aria-selected]="rangoActivo === '7d'"
+                    (click)="cambiarRango('7d')">7 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '30d'"
+                    [attr.aria-selected]="rangoActivo === '30d'"
+                    (click)="cambiarRango('30d')">30 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === '90d'"
+                    [attr.aria-selected]="rangoActivo === '90d'"
+                    (click)="cambiarRango('90d')">90 días</button>
+            <button class="rango-preset" role="tab"
+                    [class.rango-preset--active]="rangoActivo === 'all'"
+                    [attr.aria-selected]="rangoActivo === 'all'"
+                    (click)="cambiarRango('all')">Todo</button>
+          </div>
+
+          <button class="btn-secondary"
+                  (click)="refrescarAnaliticas()"
+                  [disabled]="cargandoAnaliticas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"/>
+              <polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            {{ cargandoAnaliticas ? 'Cargando…' : 'Refrescar' }}
+          </button>
+        </div>
+      </header>
+
+      @if (errorAnaliticas) {
+        <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnaliticas }}</p>
+      }
+
+      @if (cargandoAnaliticas && !analiticasGrupo.length) {
+        <div class="empty-state"><p>Cargando analíticas…</p></div>
+      } @else if (!analiticasGrupo.length) {
+        <div class="empty-state">
+          <p>No hay vídeos en este grupo todavía. Añade contenido para empezar a recibir métricas.</p>
+        </div>
+      } @else {
+
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-card--purple">
+            <span class="kpi-label">Visitas totales</span>
+            <span class="kpi-value">{{ kpiVisitasTotales }}</span>
+            <span class="kpi-hint">Aperturas del reproductor</span>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <span class="kpi-label">Vídeos con vistas</span>
+            <span class="kpi-value">{{ kpiVideosConVistas }} / {{ analiticasGrupo.length }}</span>
+            <span class="kpi-hint">Catálogo activo</span>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <span class="kpi-label">Tiempo total consumido</span>
+            <span class="kpi-value">{{ kpiTiempoTotalSegundos | videoDuration:true }}</span>
+            <span class="kpi-hint">Suma de todas las sesiones</span>
+          </div>
+          <div class="kpi-card kpi-card--amber">
+            <span class="kpi-label">Retención media</span>
+            <span class="kpi-value">{{ kpiRetencionMedia }}%</span>
+            <span class="kpi-hint">Promedio ponderado por visitas</span>
+          </div>
+        </div>
+
+        <div class="analiticas-table-wrap">
+          <table class="stats-table">
+            <thead>
+              <tr>
+                <th>Vídeo</th>
+                @if (esAdmin) {
+                  <th title="Usuario que subió el vídeo">Subido por</th>
+                }
+                <th class="num-col" title="Aperturas totales del reproductor en este grupo">Visitas</th>
+                <th class="num-col" title="Usuarios distintos">Únicos</th>
+                <th class="num-col" title="Visitas dividido por usuarios únicos">Visitas / usuario</th>
+                <th class="num-col" title="Tiempo medio que la gente ve el vídeo en una sesión">Duración media</th>
+                <th title="Promedio del % visto por sesión, capado a 100">Completado medio</th>
+                <th class="spark-col" title="Visitas/día de los últimos 30 días">Tendencia</th>
+                <th title="Última vez que alguien abrió el vídeo">Última visita</th>
+                <th class="chevron-col" aria-hidden="true"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of analiticasGrupo; track s.idVideo) {
+                <tr class="row--clickable"
+                    [class.row--inactive]="s.visitasTotales === 0"
+                    [routerLink]="['/mi-espacio/analiticas', s.idVideo]"
+                    [queryParams]="{ grupoId: idGrupo, from: 'grupo', rango: rangoActivo }"
+                    role="link"
+                    tabindex="0"
+                    [attr.aria-label]="'Ver sesiones individuales de ' + s.titulo">
+                  <td>
+                    <div class="analiticas-video-cell">
+                      @if (s.miniaturaUrl) {
+                        <img class="analiticas-thumb" [src]="s.miniaturaUrl | thumbnailSrc" [alt]="s.titulo" loading="lazy"
+                             (error)="onThumbError(s.idVideo)">
+                      } @else {
+                        <div class="analiticas-thumb analiticas-thumb--placeholder" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                          </svg>
+                        </div>
+                      }
+                      <div class="analiticas-video-meta">
+                        <span class="analiticas-video-title" [title]="s.titulo">{{ s.titulo }}</span>
+                        @if (s.duracion) {
+                          <span class="analiticas-video-dur">{{ s.duracion | videoDuration:true }} totales</span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  @if (esAdmin) {
+                    <td>
+                      <div class="autor-cell">
+                        <div class="autor-avatar" aria-hidden="true">
+                          {{ s.autorUsername.charAt(0).toUpperCase() }}
+                        </div>
+                        <span class="autor-handle" [title]="s.autorUsername + '#' + s.autorTag">
+                          {{ s.autorUsername }}<span class="autor-tag">#{{ s.autorTag }}</span>
+                        </span>
+                      </div>
+                    </td>
+                  }
+
+                  <td class="num-col">
+                    @if (s.visitasTotales > 0) {
+                      <span class="stats-badge">{{ s.visitasTotales }}</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="num-col">
+                    @if (s.espectadoresUnicos > 0) {
+                      <span class="stats-badge stats-badge--soft">{{ s.espectadoresUnicos }}</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="num-col">
+                    <span class="stats-num">{{ visitasPorUsuario(s) }}</span>
+                  </td>
+
+                  <td class="num-col">
+                    @if (s.visitasTotales > 0) {
+                      <span class="stats-num">{{ (s.duracionMediaSegundos | number:'1.0-0') }}s</span>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td>
+                    @if (s.visitasTotales > 0) {
+                      <div class="retention-cell">
+                        <div class="retention-track retention-track--inline">
+                          <div class="retention-fill" [style.width.%]="retencionPctVideo(s)"></div>
+                        </div>
+                        <span class="retention-pct">{{ retencionPctVideo(s) }}%</span>
+                      </div>
+                    } @else {
+                      <span class="stats-empty">—</span>
+                    }
+                  </td>
+
+                  <td class="spark-col">
+                    @if (sparklinePath(s.sparkline); as path) {
+                      <svg class="sparkline" [attr.viewBox]="'0 0 ' + SPARK_W + ' ' + SPARK_H"
+                           [attr.aria-label]="sparklineTitle(s.sparkline)"
+                           [attr.title]="sparklineTitle(s.sparkline)"
+                           preserveAspectRatio="none">
+                        <path [attr.d]="path" fill="none" stroke="currentColor"
+                              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else {
+                      <span class="stats-empty" [title]="sparklineTitle(s.sparkline)">—</span>
+                    }
+                  </td>
+
+                  <td>
+                    @if (s.ultimaVisita) {
+                      <span class="log-date" [title]="s.ultimaVisita | date:'dd MMM yyyy, HH:mm'">
+                        {{ s.ultimaVisita | date:'dd MMM yyyy' }}
+                      </span>
+                    } @else {
+                      <span class="stats-empty">Sin visitas</span>
+                    }
+                  </td>
+                  <td class="chevron-col" aria-hidden="true">
+                    <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    </section>
+  }
+
+</div>
+
+@if (videoReproduciendose) {
+  <div class="modal-overlay"
+       (click)="cerrarReproductor()"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+        <button class="modal-close" (click)="cerrarReproductor()" aria-label="Cerrar reproductor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-player">
+        @if (videoReproduciendose.fileName) {
+          <app-video-player
+            [fileName]="videoReproduciendose.fileName"
+            [idVideo]="videoReproduciendose.idVideo"
+            [grupoId]="idGrupo"
+            (heartbeat)="onHeartbeat($event)">
+          </app-video-player>
+        } @else {
+          <p class="video-no-disponible">Vídeo no disponible. El archivo no está en el servidor.</p>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (videoStats) {
+  <div class="modal-overlay"
+       (click)="cerrarStats()"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="'Estadísticas: ' + videoStats.titulo">
+
+    <div class="stats-dialog" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="stats-header-icon">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          {{ videoStats.titulo }}
+        </span>
+        <button class="modal-close" (click)="cerrarStats()" aria-label="Cerrar estadísticas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6"  y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="stats-body">
+
+        @if (cargandoStats) {
+          <div class="empty-state"><p>Cargando estadísticas…</p></div>
+        }
+
+        @if (errorStats) {
+          <p class="feedback-msg feedback-msg--error" role="alert">{{ errorStats }}</p>
+        }
+
+        @if (!cargandoStats && !errorStats) {
+          @if (estadisticas.length === 0) {
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+              </svg>
+              <p>Ningún miembro ha visto este vídeo todavía.</p>
+            </div>
+          } @else {
+            <table class="stats-table" aria-label="Estadísticas de vistas">
+              <thead>
+                <tr>
+                  <th>Miembro</th>
+                  <th class="stats-col-views">Vistas</th>
+                  <th class="stats-col-views">Tiempo visto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of estadisticas; track s.username + '#' + s.tag) {
+                  <tr>
+                    <td>
+                      <div class="stats-member">
+                        <div class="member-avatar stats-avatar" aria-hidden="true">{{ s.username.charAt(0).toUpperCase() }}</div>
+                        <div class="member-info">
+                          <span class="member-name">{{ s.username }}#{{ s.tag }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="stats-col-views">
+                      <span class="stats-badge">{{ s.contador }}</span>
+                    </td>
+                    <td class="stats-col-views">
+                      <span class="stats-badge">{{ s.segundosVistos | videoDuration:true }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmandoEliminarGrupo) {
+  <div class="modal-overlay"
+       (click)="cancelarEliminarGrupo()"
+       role="alertdialog"
+       aria-modal="true"
+       aria-labelledby="del-grupo-title"
+       aria-describedby="del-grupo-desc">
+
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+
+      <div class="confirm-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+
+      <div class="confirm-body">
+        <h3 class="confirm-title" id="del-grupo-title">Eliminar grupo</h3>
+        <p class="confirm-group-name">{{ grupo?.nombre }}</p>
+        <p class="confirm-desc" id="del-grupo-desc">
+          Se eliminarán todos los permisos de acceso asociados a este grupo.
+          Los vídeos <strong>no se borran</strong>, pero dejarán de ser accesibles para los miembros.
+          <strong>Esta acción no se puede deshacer.</strong>
+        </p>
+        @if (estadoEliminarGrupo === 'error') {
+          <p class="feedback-msg feedback-msg--error" role="alert">
+            {{ errorEliminarGrupo }}
+          </p>
+        }
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" (click)="cancelarEliminarGrupo()">Cancelar</button>
+        <button class="btn-confirm-delete"
+                (click)="confirmarEliminarGrupo()"
+                [disabled]="estadoEliminarGrupo === 'loading'">
+          {{ estadoEliminarGrupo === 'loading' ? 'Eliminando…' : 'Eliminar grupo' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

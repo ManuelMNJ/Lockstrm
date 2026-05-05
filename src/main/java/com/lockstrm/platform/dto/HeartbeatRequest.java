@@ -20,6 +20,13 @@ public record HeartbeatRequest(
 
         @NotBlank(message = "El sessionId es obligatorio")
         @Size(max = 36, message = "El sessionId no puede exceder 36 caracteres")
-        String sessionId
+        String sessionId,
+
+        /**
+         * Group desde el que se está viendo el vídeo. Opcional: puede ser null
+         * si la reproducción no ocurre dentro de un grupo (p. ej. el propietario
+         * accediendo a su propio vídeo desde "Mis vídeos").
+         */
+        Long grupoId
 
 ) {}

@@ -28,11 +28,14 @@
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
-  /* Llena exactamente el host; height:100% funciona porque :host tiene
-     flex:1 y una altura definida por la cadena superior */
   height: 100%;
   overflow: hidden;
   background-color: var(--bg-main);
+  transition: grid-template-columns 250ms ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 56px 1fr;
 }
 
 /* ==========================================================================
@@ -41,11 +44,69 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  /* El grid estira el item al 100% de la fila — no hace falta height:100% */
-  background-color: var(--bg-surface);
+  background: linear-gradient(180deg,
+    var(--bg-surface) 0%,
+    rgba(22, 25, 37, 0.97) 100%
+  );
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* ── Sidebar header (título + botón colapso) ── */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ── Toggle button ── */
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.sidebar-toggle svg {
+  width: 13px;
+  height: 13px;
+  transition: transform 250ms ease;
+}
+
+.sidebar-toggle svg.rotated {
+  transform: rotate(180deg);
 }
 
 /* ── Navigation ── */
@@ -72,7 +133,7 @@
   padding: 0 var(--space-3);
   border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
@@ -91,13 +152,15 @@
 }
 
 .nav-item:hover {
-  background-color: var(--bg-surface-hover);
+  background: linear-gradient(90deg, var(--bg-surface-hover) 0%, rgba(124, 58, 237, 0.04) 100%);
   color: var(--text-main);
 }
 
 /* Activo: sólo color/fondo — sin cambio de font-weight */
 .nav-item.active {
-  background-color: var(--color-primary-ghost);
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.20) 0%, rgba(124, 58, 237, 0.08) 100%);
+  border-left: 2px solid var(--color-primary);
+  padding-left: calc(var(--space-3) - 2px);
   color: var(--color-primary);
 }
 
@@ -107,10 +170,12 @@
 
 /* ── Section labels ── */
 .nav-section-label {
-  display: block;
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--text-subtle);
   padding: var(--space-4) var(--space-3) var(--space-1);
@@ -119,96 +184,169 @@
   user-select: none;
 }
 
+.nav-section-label::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
 /* ── Divider (entre "Inicio" y el resto de la nav) ── */
 .nav-divider {
   height: 1px;
-  background-color: var(--border-subtle);
+  background: linear-gradient(90deg, transparent, var(--border-subtle) 30%, var(--border-subtle) 70%, transparent);
   margin: var(--space-2) var(--space-3);
   flex-shrink: 0;
 }
 
-/* ── Sidebar footer ── */
-.sidebar-footer {
-  padding: var(--space-3) var(--space-2);
-  border-top: 1px solid var(--border-subtle);
+/* ── Collapsed state ── */
+
+/* Ocultar todos los textos */
+.sidebar-collapsed .nav-label {
+  display: none;
+}
+
+/* Header: solo el botón, centrado */
+.sidebar-collapsed .sidebar-header {
+  justify-content: center;
+  padding: 10px 0 6px;
+}
+
+/* Etiquetas de sección: línea divisora en lugar de texto */
+.sidebar-collapsed .nav-section-label {
+  justify-content: center;
+  padding: 8px 8px 2px;
+}
+
+.sidebar-collapsed .nav-section-label::before {
+  width: 24px;
+  height: 1px;
+  border-radius: 0;
+  opacity: 0.25;
+}
+
+/* Nav items: icono centrado */
+.sidebar-collapsed .sidebar-nav {
+  padding: var(--space-2) 6px;
+  align-items: center;
+}
+
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar-collapsed .nav-item.active {
+  border-left: 2px solid var(--color-primary);
+}
+
+.sidebar-collapsed .nav-divider {
+  margin: var(--space-2) 8px;
+}
+
+
+/* ── Grupos recientes ── */
+.recent-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--space-2) var(--space-2);
   flex-shrink: 0;
 }
 
-/* User card */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 8px var(--space-3);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-surface-hover);
+/* Ocultar el punto decorativo del label en esta subsección */
+.recent-label::before { display: none; }
+
+.recent-item {
+  gap: 8px;
 }
 
-.user-avatar {
+/* Avatar pill: círculo con inicial del grupo */
+.recent-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: var(--color-primary-ghost);
-  color: var(--color-primary);
-  font-size: 13px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.30), rgba(124, 58, 237, 0.14));
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  color: var(--color-primary-lighter);
+  font-size: 10px;
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
+  letter-spacing: 0;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
+.recent-name {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.user-role {
-  font-size: 11px;
-  color: var(--text-muted);
+/* En modo colapsado: solo el avatar, centrado */
+.sidebar-collapsed .recent-groups {
+  padding: 0 6px var(--space-2);
 }
 
-/* Logout icon button */
-.btn-logout {
-  display: flex;
+.sidebar-collapsed .recent-label {
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.sidebar-collapsed .recent-item {
+  justify-content: center;
+  padding: 0;
+}
+
+/* ── Botón hamburguesa (solo visible en móvil) ── */
+.mobile-menu-btn {
+  display: none;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   background: transparent;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
   transition:
     color            var(--transition-fast),
-    background-color var(--transition-fast);
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
 }
 
-.btn-logout:hover {
-  background-color: var(--color-error-ghost);
-  color: var(--color-error);
+.mobile-menu-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
-.btn-logout svg {
-  width: 15px;
-  height: 15px;
+.mobile-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Version tag ── */
+.sidebar-version {
+  padding: var(--space-3) var(--space-4);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-subtle);
+  opacity: 0.45;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* ==========================================================================
@@ -219,7 +357,10 @@
   flex-direction: column;
   /* El grid estira el item — no hace falta height:100% */
   overflow: hidden;
-  background-color: var(--bg-main);
+  background:
+    radial-gradient(ellipse at 80% 0%, rgba(124, 58, 237, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 5% 95%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+    var(--bg-main);
 }
 
 /* ── Page header (título de sección, fijo) ── */
@@ -235,7 +376,7 @@
 }
 
 .header-title {
-  font-size: 20px;
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.025em;
@@ -248,4 +389,71 @@
   min-height: 0;
   overflow-y: auto;
   padding: var(--space-8);
+}
+
+/* ==========================================================================
+   RESPONSIVE — MÓVIL (≤ 768px)
+   El sidebar pasa a ser un drawer overlay deslizante.
+   ========================================================================== */
+@media (max-width: 768px) {
+
+  /* El grid pasa a una sola columna — el sidebar sale del flujo */
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* En mobile, sidebar-collapsed no cambia el grid (ya es 1fr) */
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar: posición fija, fuera de pantalla por defecto */
+  .sidebar {
+    position: fixed;
+    top: 57px; /* altura del global-nav */
+    left: 0;
+    height: calc(100dvh - 57px);
+    width: var(--sidebar-width);
+    z-index: var(--z-fixed);
+    transform: translateX(-100%);
+    transition: transform var(--transition-slow);
+    /* La sombra ayuda a separar el drawer del contenido */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Drawer abierto */
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Backdrop semitransparente para cerrar al tocar fuera */
+  .mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    top: 57px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: calc(var(--z-fixed) - 1);
+    animation: backdrop-in 200ms ease;
+  }
+
+  @keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Mostrar botón hamburguesa */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Reducir padding del header en móvil */
+  .main-header {
+    padding: var(--space-4) var(--space-5);
+    justify-content: flex-start;
+  }
+
+  /* Reducir padding del contenido en móvil */
+  .main-content {
+    padding: var(--space-5) var(--space-4);
+  }
 }

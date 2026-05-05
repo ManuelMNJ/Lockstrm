@@ -26,7 +26,7 @@ public class Video {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     @JsonIgnore
-    private Usuario propietario;
+    private User propietario;
 
     @PrePersist
     protected void onCreate() {

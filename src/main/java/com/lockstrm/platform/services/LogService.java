@@ -1,10 +1,10 @@
 package com.lockstrm.platform.services;
 
 import com.lockstrm.platform.entities.Log;
-import com.lockstrm.platform.entities.Usuario;
+import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.repositories.LogRepository;
-import com.lockstrm.platform.repositories.MiembrosGrupoRepository;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
 import com.lockstrm.platform.repositories.UserRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class LogService {
     private final LogRepository            logRepository;
     private final UserRepository           userRepository;
     private final VideoRepository          videoRepository;
-    private final MiembrosGrupoRepository  miembrosGrupoRepository;
+    private final GroupMemberRepository  miembrosGroupRepository;
 
     /**
      * Segundos reales de reproducción que representa cada ping del cliente.
@@ -31,31 +31,40 @@ public class LogService {
     private static final int HEARTBEAT_INTERVAL_SECONDS = 5;
 
     /**
-     * Acumula segundos de reproducción sobre la fila de `logs` que identifica
-     * esta sesión del reproductor. La clave de sesión la genera el cliente al
-     * montar el <video-player> (UUID en `sessionId`), de modo que cada apertura
-     * del reproductor produce exactamente una fila independiente: la analítica
-     * por sesión es atómica, sin heurísticas de ventana temporal.
+     * Acumula segundos de reproducción sobre la fila de `logs` correspondiente
+     * a ESTA sesión concreta del reproductor.
      *
-     * Si el ping llega con un sessionId aún no visto (primer heartbeat de la
-     * sesión), se crea la fila y se suman los 5 s del propio pulso.
+     * Clave de UPSERT: (usuario, vídeo, grupoId, sessionId).
+     *  - sessionId lo genera el cliente al montar el <video-player>; cada
+     *    apertura del reproductor produce un UUID nuevo y, por tanto, una
+     *    fila independiente. Volver a abrir el mismo vídeo el mismo día
+     *    crea otra fila — esto preserva la granularidad por sesión que
+     *    necesita la analítica.
+     *  - grupoId segrega por contexto: ver el vídeo desde el Group A y
+     *    desde el Group B genera dos filas distintas aunque el sessionId
+     *    fuera (improbablemente) el mismo.
+     *
+     * Si el ping llega con una combinación aún no vista (primer heartbeat
+     * de la sesión), se crea la fila y se suman los 5 s del propio pulso.
      */
     @Transactional
     public void registrarHeartbeat(Long idVideo, String emailUsuario,
-                                   Double currentTime, String sessionId) {
+                                   Double currentTime, String sessionId,
+                                   Long grupoId) {
 
         Video   video   = videoRepository.getByIdOrThrow(idVideo);
-        Usuario usuario = userRepository.getByEmailOrThrow(emailUsuario);
+        User usuario = userRepository.getByEmailOrThrow(emailUsuario);
 
         verificarAcceso(video, emailUsuario);
 
         Log log = logRepository
-                .findByUsuarioAndVideoAndSessionId(usuario, video, sessionId)
+                .findSesion(usuario, video, grupoId, sessionId)
                 .orElseGet(() -> {
                     Log nuevoLog = new Log();
                     nuevoLog.setUsuario(usuario);
                     nuevoLog.setVideo(video);
                     nuevoLog.setSessionId(sessionId);
+                    nuevoLog.setGrupoId(grupoId);
                     return nuevoLog;
                 });
 
@@ -70,8 +79,8 @@ public class LogService {
     }
 
     public void verificarAcceso(Video video, String emailUsuario) {
-        if (video.getPropietario().getEmail().equals(emailUsuario)) return;
-        if (!miembrosGrupoRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
+        if (video.getPropietario() != null && video.getPropietario().getEmail().equals(emailUsuario)) return;
+        if (!miembrosGroupRepository.existsMiembroConAccesoAlVideo(emailUsuario, video.getIdVideo())) {
             throw new AccessDeniedException("Acceso denegado al video");
         }
     }

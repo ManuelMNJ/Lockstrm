@@ -1,0 +1,18 @@
+# Normaliza todos los archivos de texto a LF en el repositorio.
+# Git convierte a CRLF en checkout solo en Windows si core.autocrlf=true,
+# pero el repo siempre almacena LF — elimina los warnings de "CRLF will be replaced".
+* text=auto eol=lf
+
+# Binarios explícitos — nunca tocar sus bytes
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.mp4  binary
+*.webm binary
+*.pdf  binary
+*.zip  binary
+*.jar  binary
+*.class binary

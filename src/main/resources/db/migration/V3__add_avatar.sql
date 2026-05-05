@@ -1,0 +1,1 @@
+ALTER TABLE usuarios ADD COLUMN avatar_url VARCHAR(255) NULL;

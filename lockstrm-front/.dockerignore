@@ -1,0 +1,23 @@
+# ── Control de versiones ──────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Dependencias (se instalan en el build con npm ci) ────────────────────────
+node_modules/
+
+# ── Artefactos de build previos ───────────────────────────────────────────────
+dist/
+.angular/
+
+# ── IDEs y editores ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+
+# ── Documentación y ficheros auxiliares ───────────────────────────────────────
+README.md
+*.md
+
+# ── Logs y temporales ─────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak

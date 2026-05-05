@@ -1,8 +1,6 @@
 services:
 
-  # ─────────────────────────────────────────
   # BASE DE DATOS
-  # ─────────────────────────────────────────
   db:
     image: mysql:8.0
     container_name: lockstrm_db
@@ -12,10 +10,10 @@ services:
       MYSQL_DATABASE: lockstrm_db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -23,9 +21,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # ─────────────────────────────────────────
   # BACKEND (Spring Boot)
-  # ─────────────────────────────────────────
   backend:
     build:
       context: .
@@ -40,32 +36,33 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      DDL_AUTO: validate
       UPLOAD_DIR: /var/lockstrm/videos
-      CORS_ORIGIN: ${CORS_ORIGIN:http://localhost:4200}
+      THUMBNAILS_DIR: /var/lockstrm/thumbnails
+      AVATARS_DIR: /var/lockstrm/avatars
+      CORS_ORIGIN: ${CORS_ORIGIN}
     volumes:
-      - video_storage:/var/lockstrm/videos
+      - ./uploads/videos:/var/lockstrm/videos
+      - ./uploads/thumbnails:/var/lockstrm/thumbnails
+      - ./uploads/avatars:/var/lockstrm/avatars
     ports:
       - "8080:8080"
 
-  # ─────────────────────────────────────────
   # FRONTEND (Angular + Nginx)
-  # ─────────────────────────────────────────
   frontend:
     build:
       context: ./lockstrm-front
       dockerfile: Dockerfile
+      args:
+        API_URL: ${API_URL}
     container_name: lockstrm_frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
-      - "4200:80"
+      - "80:80"
 
-# ─────────────────────────────────────────
 # VOLUMENES
-# ─────────────────────────────────────────
 volumes:
   mysql_data:
-    driver: local
-  video_storage:
     driver: local

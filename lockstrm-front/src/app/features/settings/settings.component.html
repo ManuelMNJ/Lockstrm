@@ -1,0 +1,272 @@
+<div class="ajustes-page">
+
+  <!-- ================================================================
+    APARIENCIA
+    ================================================================ -->
+  <section class="settings-section" aria-labelledby="apariencia-heading">
+    <div class="section-header">
+      <div class="section-icon section-icon--green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1"  x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title" id="apariencia-heading">Apariencia</h2>
+        <p class="section-sub">Personaliza el aspecto visual de la interfaz.</p>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <span class="toggle-label">Modo oscuro</span>
+        <span class="toggle-desc">Interfaz con fondo oscuro, recomendada para uso prolongado.</span>
+      </div>
+      <button class="toggle-switch"
+        [class.toggle-switch--on]="modoOscuro"
+        (click)="toggleModo()"
+        role="switch"
+        [attr.aria-checked]="modoOscuro"
+        aria-label="Activar modo oscuro">
+        <span class="toggle-thumb"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================================================================
+    REPRODUCTOR
+    ================================================================ -->
+  <section class="settings-section" aria-labelledby="reproductor-heading">
+    <div class="section-header">
+      <div class="section-icon section-icon--purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polygon points="10 8 16 12 10 16 10 8"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title" id="reproductor-heading">Reproductor</h2>
+        <p class="section-sub">Preferencias guardadas en este dispositivo.</p>
+      </div>
+    </div>
+
+    <!-- Autoplay -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <span class="toggle-label">Reproducción automática</span>
+        <span class="toggle-desc">Inicia el vídeo al abrirlo sin pulsar Play.</span>
+      </div>
+      <button class="toggle-switch"
+        [class.toggle-switch--on]="autoplay"
+        (click)="toggleAutoplay()"
+        role="switch"
+        [attr.aria-checked]="autoplay"
+        aria-label="Activar reproducción automática">
+        <span class="toggle-thumb"></span>
+      </button>
+    </div>
+
+    <div class="setting-divider"></div>
+
+    <!-- Velocidad por defecto -->
+    <div class="setting-row">
+      <div class="toggle-info">
+        <span class="toggle-label">Velocidad por defecto</span>
+        <span class="toggle-desc">Velocidad de reproducción al abrir un vídeo.</span>
+      </div>
+      <div class="speed-pills" role="group" aria-label="Velocidad de reproducción">
+        @for (v of velocidades; track v) {
+          <button class="speed-pill"
+            [class.speed-pill--active]="velocidad === v"
+            (click)="setVelocidad(v)"
+            [attr.aria-pressed]="velocidad === v">
+            {{ v }}×
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="setting-divider"></div>
+
+    <!-- Recordar volumen -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <span class="toggle-label">Recordar volumen</span>
+        <span class="toggle-desc">Mantiene el volumen usado la última vez entre sesiones.</span>
+      </div>
+      <button class="toggle-switch"
+        [class.toggle-switch--on]="volumeMemory"
+        (click)="toggleVolumeMemory()"
+        role="switch"
+        [attr.aria-checked]="volumeMemory"
+        aria-label="Recordar volumen">
+        <span class="toggle-thumb"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================================================================
+    SESIÓN
+    ================================================================ -->
+  <section class="settings-section" aria-labelledby="sesion-heading">
+    <div class="section-header">
+      <div class="section-icon section-icon--blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title" id="sesion-heading">Sesión activa</h2>
+        <p class="section-sub">Información de tu cuenta en este dispositivo.</p>
+      </div>
+    </div>
+
+    @if (usuario) {
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">Usuario</span>
+          <span class="info-value handle-value">
+            {{ usuario.username }}<span class="handle-tag">#{{ usuario.tag }}</span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Nombre</span>
+          <span class="info-value">{{ usuario.nombre }} {{ usuario.apellidos }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Dispositivo</span>
+          <span class="info-value device-value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Este dispositivo
+          </span>
+        </div>
+      </div>
+    }
+
+    <div class="form-actions">
+      <button class="btn-logout" (click)="cerrarSesion()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </section>
+
+  <!-- ================================================================
+    ZONA DE PELIGRO
+    ================================================================ -->
+  <section class="settings-section settings-section--danger" aria-labelledby="peligro-heading">
+    <div class="section-header">
+      <div class="section-icon section-icon--red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="section-title section-title--danger" id="peligro-heading">Zona de peligro</h2>
+        <p class="section-sub">Acciones irreversibles sobre tu cuenta.</p>
+      </div>
+    </div>
+
+    <div class="danger-item">
+      <div class="danger-item-info">
+        <span class="danger-item-label">Eliminar cuenta</span>
+        <span class="danger-item-desc">
+          Borra permanentemente tu cuenta, vídeos y grupos. Esta acción no se puede deshacer.
+        </span>
+      </div>
+      <button class="btn-delete-account" (click)="abrirModalEliminar()">
+        Eliminar mi cuenta
+      </button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ================================================================
+  MODAL — Confirmar eliminación de cuenta
+  ================================================================ -->
+@if (modalEliminar) {
+  <div class="modal-overlay"
+       (click)="cerrarModalEliminar()"
+       role="alertdialog"
+       aria-modal="true"
+       aria-labelledby="modal-eliminar-title"
+       aria-describedby="modal-eliminar-desc">
+
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+
+      <div class="confirm-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </div>
+
+      <div class="confirm-body">
+        <h3 class="confirm-title" id="modal-eliminar-title">¿Eliminar tu cuenta?</h3>
+        <p class="confirm-desc" id="modal-eliminar-desc">
+          Se borrarán todos tus vídeos, grupos y datos. Los miembros de tus grupos perderán el acceso.
+          <strong>Esta acción es permanente e irreversible.</strong>
+        </p>
+
+        <div class="confirm-input-wrap">
+          <label class="confirm-input-label" for="confirm-delete-input">
+            Escribe <strong>ELIMINAR</strong> para confirmar
+          </label>
+          <input
+            id="confirm-delete-input"
+            class="form-input confirm-input"
+            type="text"
+            [(ngModel)]="confirmacionText"
+            placeholder="ELIMINAR"
+            autocomplete="off"
+            (keydown.enter)="confirmarEliminarCuenta()">
+        </div>
+
+        @if (estadoEliminar === 'error') {
+          <p class="feedback-msg feedback-msg--error" role="alert">{{ errorEliminar }}</p>
+        }
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" (click)="cerrarModalEliminar()"
+                [disabled]="estadoEliminar === 'loading'">
+          Cancelar
+        </button>
+        <button class="btn-confirm-delete"
+                (click)="confirmarEliminarCuenta()"
+                [disabled]="!puedeConfirmarEliminar || estadoEliminar === 'loading'">
+          {{ estadoEliminar === 'loading' ? 'Eliminando…' : 'Eliminar cuenta' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

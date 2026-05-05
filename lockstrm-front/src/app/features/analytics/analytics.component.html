@@ -1,0 +1,202 @@
+<!-- ==========================================================================
+  Lockstrm — Panel de Analíticas Globales
+  ========================================================================== -->
+<div class="analiticas-page">
+
+  <!-- ── Cabecera ── -->
+  <header class="page-header">
+    <div>
+      <h2 class="page-title">Panel de Rendimiento</h2>
+      <p class="page-sub">Métricas globales de todos tus vídeos</p>
+    </div>
+  </header>
+
+  <!-- ── Error ── -->
+  @if (error) {
+    <p class="dash-error" role="alert">{{ error }}</p>
+  }
+
+  <!-- ── KPI CARDS ── -->
+  <section class="kpi-grid" aria-label="Indicadores clave">
+
+    <!-- Vistas Totales -->
+    <div class="kpi-card kpi-card--purple">
+      <div class="kpi-icon kpi-icon--purple" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value">{{ datos?.totalVistas ?? 0 | number }}</span>
+          <span class="kpi-label">Vistas Totales</span>
+        }
+      </div>
+      <div class="kpi-glow kpi-glow--purple" aria-hidden="true"></div>
+    </div>
+
+    <!-- Vídeos Subidos -->
+    <div class="kpi-card kpi-card--blue">
+      <div class="kpi-icon kpi-icon--blue" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value">{{ datos?.videosSubidos ?? 0 }}</span>
+          <span class="kpi-label">Vídeos Subidos</span>
+        }
+      </div>
+      <div class="kpi-glow kpi-glow--blue" aria-hidden="true"></div>
+    </div>
+
+    <!-- Retención Media -->
+    <div class="kpi-card kpi-card--green">
+      <div class="kpi-icon kpi-icon--green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        @if (cargando) {
+          <span class="skeleton-line skeleton-line--value"></span>
+          <span class="skeleton-line skeleton-line--label"></span>
+        } @else {
+          <span class="kpi-value kpi-value--green">{{ retencionFormateada }}</span>
+          <span class="kpi-label">Retención Media</span>
+          @if (datos?.retencionMediaGlobal != null) {
+            <div class="retention-track" role="progressbar"
+                 [attr.aria-valuenow]="retencionBarra" aria-valuemin="0" aria-valuemax="100">
+              <div class="retention-fill" [style.width.%]="retencionBarra"></div>
+            </div>
+          }
+        }
+      </div>
+      <div class="kpi-glow kpi-glow--green" aria-hidden="true"></div>
+    </div>
+
+  </section>
+
+  <!-- ── TOP VÍDEOS ── -->
+  <section class="top-section">
+
+    <header class="section-header">
+      <h3 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="section-title-icon" aria-hidden="true">
+          <polyline points="18 20 18 10"/>
+          <polyline points="12 20 12 4"/>
+          <polyline points="6 20 6 14"/>
+        </svg>
+        Top Vídeos más vistos
+      </h3>
+      @if (!cargando && datos?.topVideos?.length) {
+        <span class="section-badge">Top {{ datos!.topVideos.length }}</span>
+      }
+    </header>
+
+    <!-- Skeleton -->
+    @if (cargando) {
+      <ul class="top-list" aria-busy="true">
+        @for (item of skeletonItems; track item) {
+          <li class="top-row top-row--skeleton">
+            <div class="skeleton-rank"></div>
+            <div class="skeleton-thumb"></div>
+            <div class="skeleton-body">
+              <span class="skeleton-line skeleton-line--title"></span>
+              <span class="skeleton-line skeleton-line--meta"></span>
+              <span class="skeleton-bar"></span>
+            </div>
+          </li>
+        }
+      </ul>
+
+    <!-- Sin datos -->
+    } @else if (!datos?.topVideos?.length) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Aún no hay vídeos con reproducciones.</p>
+      </div>
+
+    <!-- Lista -->
+    } @else {
+      <ol class="top-list">
+        @for (video of datos!.topVideos; track video.idVideo; let i = $index) {
+          <li class="top-row top-row--clickable"
+              [routerLink]="['/mi-espacio/analiticas', video.idVideo]"
+              role="link"
+              tabindex="0"
+              [attr.aria-label]="'Ver analíticas de ' + video.titulo">
+
+            <!-- Posición -->
+            <span class="rank-badge" [class.rank-badge--gold]="i === 0"
+                                     [class.rank-badge--silver]="i === 1"
+                                     [class.rank-badge--bronze]="i === 2">
+              {{ i + 1 }}
+            </span>
+
+            <!-- Miniatura -->
+            <div class="top-thumb">
+              @if (video.miniaturaUrl && !failedThumbs.has(video.idVideo)) {
+                <img [src]="video.miniaturaUrl | thumbnailSrc" [alt]="video.titulo" loading="lazy"
+                     (error)="onThumbError(video.idVideo)"/>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.5" aria-hidden="true">
+                  <polygon points="23 7 16 12 23 17 23 7"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              }
+            </div>
+
+            <!-- Info + barra -->
+            <div class="top-body">
+              <span class="top-title">{{ video.titulo }}</span>
+              <div class="top-meta">
+                <span class="badge badge--views">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  {{ video.vistas | number }} vistas
+                </span>
+                @if (video.duracion) {
+                  <span class="badge badge--date">{{ video.duracion | videoDuration }}</span>
+                }
+              </div>
+              <!-- Barra relativa de popularidad -->
+              <div class="bar-track" role="progressbar"
+                   [attr.aria-valuenow]="vistasPct(video)"
+                   aria-valuemin="0" aria-valuemax="100"
+                   [attr.aria-label]="video.titulo + ': ' + vistasPct(video) + '% del máximo'">
+                <div class="bar-fill" [style.width.%]="vistasPct(video)"></div>
+              </div>
+            </div>
+
+          </li>
+        }
+      </ol>
+    }
+
+  </section>
+
+</div>

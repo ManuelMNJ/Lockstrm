@@ -2,21 +2,22 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Elem
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
-import { GrupoService, Grupo } from '../../core/services/grupo.service';
+import { GroupService, Group } from '../../core/services/group.service';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
+import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 import { Paginator } from '../../shared/utils/paginator';
 import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, A11yModule, VideoPlayerComponent, VideoDurationPipe],
+  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe, ThumbnailSrcPipe],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,13 +25,37 @@ import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 export class VideosComponent implements OnInit {
 
   videos: Video[] = [];
-  misGrupos: Grupo[] = [];
+  misGrupos: Group[] = [];
   archivoSeleccionado: File | null = null;
   tituloVideo = '';
-  idGrupoSeleccionado: number | null = null;
-  miniaturaDataUrl: string | null = null;
+  /**
+   * Set de grupos seleccionados en el modal de subida. Un vídeo puede subirse
+   * directamente vinculado a varios grupos (N:M). Se materializa como Set
+   * para que el toggle de un checkbox sea O(1) y no haya duplicados.
+   */
+  idGruposSeleccionados = new Set<number>();
+  /** Blob JPEG para subir al backend como multipart. */
+  miniaturaBlob:    Blob   | null = null;
+  /**
+   * URL temporal (createObjectURL) usada solo para mostrar la preview en el
+   * formulario. Se revoca al cerrar / subir para liberar memoria.
+   */
+  miniaturaPreviewUrl: string | null = null;
   private duracionVideo = 0;
   private objectUrl: string | null = null;
+
+  /** Controla si el panel de subida está visible. */
+  uploadPanelOpen = false;
+
+  abrirPanelSubida(): void {
+    this.uploadPanelOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarPanelSubida(): void {
+    this.uploadPanelOpen = false;
+    this.cdr.markForCheck();
+  }
 
   estadoSubida: 'idle' | 'uploading' | 'success' | 'error' = 'idle';
   progreso = 0;
@@ -39,7 +64,15 @@ export class VideosComponent implements OnInit {
   cargando = true;
   listaError = '';
 
-  deletingIds = new Set<number>();
+  isDragging = false;
+
+  deletingIds   = new Set<number>();
+  failedThumbs  = new Set<number>();
+
+  onThumbError(idVideo: number): void {
+    this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
+    this.cdr.markForCheck();
+  }
 
   errorEliminacion = '';
   errorEliminacionVisible = false;
@@ -54,19 +87,41 @@ export class VideosComponent implements OnInit {
 
   videoEnEdicion: Video | null = null;
   editTitulo    = '';
-  editIdGrupo: number | null = null;
+  /** Set de grupos marcados en el modal de edición. Mismo motivo que el de subida. */
+  editIdGrupos  = new Set<number>();
   estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
   mensajeEdicion = '';
 
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // ── Espacio de almacenamiento (hardcoded hasta que el backend lo exponga) ──
-  readonly storageMB      = 1229;               // 1.2 GB
-  readonly storageLimitMB = 5120;               // 5 GB
-  readonly storagePercent = Math.round(this.storageMB / this.storageLimitMB * 100);
-  readonly storageUsedGB  = (this.storageMB / 1024).toFixed(1);
-  readonly storageLimitGB = (this.storageLimitMB / 1024).toFixed(0);
+  exitoSubidaVisible = false;
+  private exitoSubidaTimer: ReturnType<typeof setTimeout> | null = null;
+
+  storageUsedGB  = '0.0';
+  storageLimitGB = '5';
+  storagePercent = 0;
+
+  private aplicarEspacio(usedBytes: number, limitBytes: number): void {
+    const usedMB  = usedBytes  / (1024 * 1024);
+    const limitMB = limitBytes / (1024 * 1024);
+    this.storagePercent = limitMB ? Math.round(usedMB / limitMB * 100) : 0;
+    this.storageUsedGB  = (usedMB  / 1024).toFixed(1);
+    this.storageLimitGB = (limitMB / 1024).toFixed(0);
+  }
+
+  searchQuery = '';
+
+  get filteredVideos(): Video[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    return q ? this.videos.filter(v => v.titulo.toLowerCase().includes(q)) : this.videos;
+  }
+
+  onSearchChange(): void {
+    this.paginator.setItems(this.filteredVideos);
+    this.paginator.goToPage(1);
+    this.cdr.markForCheck();
+  }
 
   readonly paginator = new Paginator<Video>(15);
 
@@ -82,7 +137,7 @@ export class VideosComponent implements OnInit {
 
   constructor(
     protected videoService: VideoService,
-    private  grupoService:  GrupoService,
+    private  grupoService:  GroupService,
     private  route:         ActivatedRoute,
   ) {}
 
@@ -92,9 +147,10 @@ export class VideosComponent implements OnInit {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.videoEnEdicion)    { this.cancelarEdicion();    return; }
-    if (this.videoAEliminar)    { this.cancelarEliminacion(); return; }
-    if (this.videoReproduciendose) { this.cerrarReproductor(); }
+    if (this.videoEnEdicion)       { this.cancelarEdicion();    return; }
+    if (this.videoAEliminar)       { this.cancelarEliminacion(); return; }
+    if (this.videoReproduciendose) { this.cerrarReproductor();   return; }
+    if (this.uploadPanelOpen)      { this.cerrarPanelSubida();   return; }
   }
 
   ngOnInit(): void {
@@ -104,38 +160,66 @@ export class VideosComponent implements OnInit {
     }
 
     this.cargarVideos();
-    this.grupoService.obtenerGruposParaDesplegable()
+    this.videoService.obtenerEspacio()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); },
+        error: () => {},
+      });
+    this.grupoService.obtenerGruposCreados()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (grupos) => {
           this.misGrupos = grupos;
           this.cdr.markForCheck();
         },
-        error: (err) => console.error('[VideosComponent] Error al cargar grupos:', err)
+        error: () => {}
       });
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.isDragging) { this.isDragging = true; this.cdr.markForCheck(); }
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    this.cdr.markForCheck();
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    const file = event.dataTransfer?.files?.[0] ?? null;
+    if (file) this.procesarArchivo(file);
+    this.cdr.markForCheck();
   }
 
   seleccionarArchivo(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file  = input.files?.[0] ?? null;
+    if (file) this.procesarArchivo(file);
+  }
 
-    if (file && !file.type.startsWith('video/')) {
-      this.estadoSubida = 'error';
-      this.mensajeError = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
+  private procesarArchivo(file: File): void {
+    if (!file.type.startsWith('video/')) {
+      this.estadoSubida    = 'error';
+      this.mensajeError    = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
       this.archivoSeleccionado = null;
-      input.value = '';
+      this.cdr.markForCheck();
       return;
     }
-
     this.archivoSeleccionado = file;
-    this.miniaturaDataUrl    = null;
+    this.miniaturaBlob       = null;
+    if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
     this.duracionVideo       = 0;
-    if (this.estadoSubida === 'error') {
-      this.estadoSubida = 'idle';
-      this.mensajeError = '';
-    }
-
-    if (file) this.generarMiniatura(file);
+    if (this.estadoSubida === 'error') { this.estadoSubida = 'idle'; this.mensajeError = ''; }
+    this.cdr.markForCheck();
+    this.generarMiniatura(file);
   }
 
   private generarMiniatura(file: File): void {
@@ -160,11 +244,18 @@ export class VideosComponent implements OnInit {
       canvas.height   = 180;
       const ctx       = canvas.getContext('2d')!;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      this.miniaturaDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      // toBlob es asíncrono: producimos un Blob real en lugar del data URL
+      // para poder enviarlo como MultipartFile al backend.
+      canvas.toBlob(blob => {
+        this.miniaturaBlob = blob;
+        // URL temporal solo para la preview en formulario; se revoca al subir.
+        if (this.miniaturaPreviewUrl) URL.revokeObjectURL(this.miniaturaPreviewUrl);
+        this.miniaturaPreviewUrl = blob ? URL.createObjectURL(blob) : null;
+        this.cdr.markForCheck();
+      }, 'image/jpeg', 0.75);
       video.src = '';
       URL.revokeObjectURL(this.objectUrl!);
       this.objectUrl = null;
-      this.cdr.markForCheck();
     };
 
     video.onerror = () => {
@@ -199,7 +290,7 @@ export class VideosComponent implements OnInit {
     this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, this.idGrupoSeleccionado, this.miniaturaDataUrl, this.duracionVideo)
+    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, [...this.idGruposSeleccionados], this.miniaturaBlob, this.duracionVideo)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => {
@@ -219,45 +310,52 @@ export class VideosComponent implements OnInit {
           if (event.type !== HttpEventType.Response) return;
 
           const res = event.body!;
-          const grupo = this.idGrupoSeleccionado
-            ? (this.misGrupos.find(g => g.idGrupo === this.idGrupoSeleccionado) ?? null)
-            : null;
+          // Reconstruimos la lista de grupos a partir de los seleccionados en el
+          // formulario y el catálogo `misGrupos`. El backend ya validó cada
+          // pertenencia; aquí solo necesitamos el nombre para el render inmediato
+          // sin esperar a refetchear.
+          const grupos = [...this.idGruposSeleccionados]
+            .map(id => this.misGrupos.find(g => g.idGrupo === id))
+            .filter((g): g is Group => g != null)
+            .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
 
           const nuevoVideo: Video = {
             idVideo:      res.id_video,
             titulo:       res.titulo,
             duracion:     res.duracion ?? null,
             fechaSubida:  new Date().toISOString(),
-            grupo:        grupo ? { idGrupo: grupo.idGrupo, nombre: grupo.nombre } : undefined,
-            miniaturaUrl: res.miniaturaUrl ?? this.miniaturaDataUrl,
+            grupos,
+            // El backend devuelve la ruta pública resuelta o null si no hubo miniatura.
+            miniaturaUrl: res.miniaturaUrl || null,
             fileName:     res.fileName,
           };
 
           // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
           this.videoService.prependVideo(nuevoVideo);
+          this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
           this.estadoSubida        = 'success';
           this.progreso            = 0;
           this.tituloVideo         = '';
           this.archivoSeleccionado = null;
-          this.idGrupoSeleccionado = null;
-          this.miniaturaDataUrl    = null;
+          this.idGruposSeleccionados = new Set<number>();
+          this.miniaturaBlob       = null;
+          if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 
+          // Cierra el panel automáticamente tras 2 s y lanza el toast externo
           setTimeout(() => {
-            this.estadoSubida = 'idle';
+            this.estadoSubida    = 'idle';
+            this.uploadPanelOpen = false;
+            this.mostrarExitoSubida();
             this.cdr.markForCheck();
-          }, 3000);
+          }, 2000);
         },
         error: (err) => {
           this.estadoSubida = 'error';
           this.progreso     = 0;
-          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Comprueba la consola.');
-          console.error('[VideosComponent] Error en subida:', {
-            status:     err?.status,
-            statusText: err?.statusText,
-            body:       err?.error,
-          });
+          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Inténtalo de nuevo.');
           this.refresh();
         }
       });
@@ -292,15 +390,10 @@ export class VideosComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          // El tap de eliminarVideo() actualizó el BehaviorSubject;
-          // la suscripción en cargarVideos() ya aplicó el nuevo array.
+          this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
         },
         error: (err) => {
-          console.error('[VideosComponent] Error al eliminar vídeo:', {
-            status:     err?.status,
-            statusText: err?.statusText,
-            body:       err?.error,
-          });
           this.mostrarErrorEliminacion(
             extractHttpErrorMessage(err, `No se pudo eliminar el vídeo (${err?.status ?? 'sin conexión'}). Inténtalo de nuevo.`)
           );
@@ -317,6 +410,16 @@ export class VideosComponent implements OnInit {
       this.exitoEdicionVisible = false;
       this.refresh();
     }, 3500);
+  }
+
+  private mostrarExitoSubida(): void {
+    if (this.exitoSubidaTimer) clearTimeout(this.exitoSubidaTimer);
+    this.exitoSubidaVisible = true;
+    this.refresh();
+    this.exitoSubidaTimer = setTimeout(() => {
+      this.exitoSubidaVisible = false;
+      this.refresh();
+    }, 4000);
   }
 
   private mostrarErrorEliminacion(mensaje: string): void {
@@ -344,9 +447,28 @@ export class VideosComponent implements OnInit {
   iniciarEdicion(video: Video): void {
     this.videoEnEdicion = video;
     this.editTitulo     = video.titulo;
-    this.editIdGrupo    = video.grupo?.idGrupo ?? null;
+    this.editIdGrupos   = new Set(video.grupos.map(g => g.idGrupo));
     this.estadoEdicion  = 'idle';
     this.mensajeEdicion = '';
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Toggle helper para los checkboxes de grupos. Devuelve un nuevo Set para
+   * que el ChangeDetector OnPush detecte el cambio (Set mutado in-place no
+   * dispararía repintado).
+   */
+  toggleGrupoSubida(idGrupo: number): void {
+    const next = new Set(this.idGruposSeleccionados);
+    next.has(idGrupo) ? next.delete(idGrupo) : next.add(idGrupo);
+    this.idGruposSeleccionados = next;
+    this.cdr.markForCheck();
+  }
+
+  toggleGrupoEdicion(idGrupo: number): void {
+    const next = new Set(this.editIdGrupos);
+    next.has(idGrupo) ? next.delete(idGrupo) : next.add(idGrupo);
+    this.editIdGrupos = next;
     this.cdr.markForCheck();
   }
 
@@ -362,7 +484,7 @@ export class VideosComponent implements OnInit {
 
     this.estadoEdicion = 'saving';
 
-    this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), this.editIdGrupo)
+    this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), [...this.editIdGrupos])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -389,14 +511,13 @@ export class VideosComponent implements OnInit {
       .subscribe({
         next: (datos) => {
           this.videos   = datos;
-          this.paginator.setItems(datos);
+          this.paginator.setItems(this.filteredVideos);
           this.cargando = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
           this.listaError = `No se pudo cargar la biblioteca (${err?.status ?? 'sin conexion'}). Recarga la pagina.`;
           this.cargando   = false;
-          console.error('[VideosComponent] Error al cargar videos:', err);
           this.refresh();
         }
       });
@@ -412,13 +533,18 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  onHeartbeat(payload: { currentTime: number; sessionId: string }): void {
+  /**
+   * En "Mis vídeos" no existe un contexto de grupo único: un vídeo puede
+   * pertenecer a varios y el propietario lo está abriendo desde su biblioteca,
+   * no desde la página de un grupo concreto. Por eso forzamos `grupoId: null`
+   * en el heartbeat — esa fila de `logs` representa la visualización del
+   * propietario fuera de cualquier grupo, que se contabiliza aparte.
+   */
+  onHeartbeat(payload: { currentTime: number; sessionId: string; grupoId: number | null }): void {
     const idVideo = this.videoReproduciendose?.idVideo;
     if (!idVideo) return;
-    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId)
+    this.videoService.registrarHeartbeat(idVideo, payload.currentTime, payload.sessionId, null)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        error: (err) => console.warn('[Heartbeat] Error al registrar:', err?.status, err?.message),
-      });
+      .subscribe({ error: () => {} });
   }
 }

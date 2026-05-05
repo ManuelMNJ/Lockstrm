@@ -1,0 +1,34 @@
+# ── Control de versiones ──────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Variables de entorno (nunca dentro de la imagen) ─────────────────────────
+.env
+.env.*
+
+# ── Artefactos de build previos ───────────────────────────────────────────────
+target/
+
+# ── Frontend (el backend no lo necesita) ─────────────────────────────────────
+lockstrm-front/
+
+# ── Vídeos y miniaturas subidos por usuarios ──────────────────────────────────
+uploads/
+
+# ── IDEs y editores ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# ── Documentación y ficheros auxiliares ───────────────────────────────────────
+README.md
+HELP.md
+*.md
+
+# ── Logs y temporales ────────────────────────────────────────────────────────
+*.log
+logs/
+*.tmp
+*.bak

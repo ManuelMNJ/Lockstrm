@@ -50,8 +50,8 @@ export class VideoStreamService {
       const token = this.authService.getToken();
       this.postMessage({ type: 'LOCKSTRM_INIT', token, apiBase: environment.apiUrl });
 
-    } catch (err) {
-      console.warn('[VideoStream] Service Worker no registrado; usando fallback con token en URL.', err);
+    } catch {
+      // Registro fallido (HTTP local, contexto sin SW): buildUrl() usará el fallback con token en URL.
     }
   }
 
