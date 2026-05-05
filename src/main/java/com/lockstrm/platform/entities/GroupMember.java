@@ -30,7 +30,7 @@ public class GroupMember implements Serializable {
     private Group grupo;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "rol", nullable = false, length = 20)
+    @Column(name = "rol", nullable = false, columnDefinition = "varchar(20)")
     private GroupRole rol = GroupRole.MIEMBRO;
 
     @Column(name = "fecha_union")
