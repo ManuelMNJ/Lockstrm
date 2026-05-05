@@ -8,8 +8,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status === 401) {
-        // Token expirado o inválido: limpiar sesión y redirigir al login
+      if (err.status === 401 && authService.isLoggedIn()) {
+        // Token expirado o inválido: limpiar sesión y redirigir al login.
+        // El guard isLoggedIn() evita llamadas redundantes si varios requests
+        // fallan con 401 simultáneamente.
         authService.logout();
       }
       return throwError(() => err);

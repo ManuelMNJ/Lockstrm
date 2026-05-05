@@ -358,7 +358,8 @@ export class ProfileComponent implements OnInit {
     if (this.avatarPreview) {
       URL.revokeObjectURL(this.avatarPreview);
     }
-    this.avatarPreview  = URL.createObjectURL(file);
+    const previewUrl    = URL.createObjectURL(file);
+    this.avatarPreview  = previewUrl;
     this.subiendoAvatar = true;
     this.avatarError    = '';
     this.cdr.markForCheck();
@@ -375,13 +376,13 @@ export class ProfileComponent implements OnInit {
           this.authService.updateUserData({ avatarUrl: res.avatarUrl });
 
           // Descartar el preview temporal (ahora se carga desde el servidor)
-          URL.revokeObjectURL(this.avatarPreview!);
+          URL.revokeObjectURL(previewUrl);
           this.avatarPreview  = null;
           this.subiendoAvatar = false;
           this.cdr.markForCheck();
         },
         error: (err) => {
-          URL.revokeObjectURL(this.avatarPreview!);
+          URL.revokeObjectURL(previewUrl);
           this.avatarPreview  = null;
           this.subiendoAvatar = false;
           this.avatarError    = err?.error?.message || 'No se pudo subir la imagen. Máximo 5 MB (JPEG, PNG, GIF, WebP).';

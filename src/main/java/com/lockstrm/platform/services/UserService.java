@@ -127,7 +127,7 @@ public class UserService implements UserDetailsService {
      */
     public boolean usernameTieneTagLibre(String username) {
         if (username == null || username.isBlank()) return false;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < TAG_MAX_INTENTOS; i++) {
             String candidato = String.format("%04d", TAG_RNG.nextInt(10000));
             if (!userRepository.existsByUsernameIgnoreCaseAndTag(username, candidato)) {
                 return true;
