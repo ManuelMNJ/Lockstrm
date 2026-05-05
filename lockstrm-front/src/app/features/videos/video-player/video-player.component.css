@@ -467,3 +467,19 @@
   border: none;
   box-shadow: 0 1px 3px var(--overlay-black-50);
 }
+
+/* ==========================================================================
+   RESPONSIVE — MÓVIL
+   En pantallas estrechas el slider de volumen se oculta (el volumen se
+   controla con los botones físicos del dispositivo).
+   ========================================================================== */
+@media (max-width: 480px) {
+  .volume-slider {
+    display: none;
+  }
+
+  .ctrl-btn {
+    width: 34px;
+    height: 34px;
+  }
+}

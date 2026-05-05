@@ -84,7 +84,9 @@
               </svg>
             }
           </p>
-          @if (modoEdicion) {
+          @if (modoEdicion && subiendoAvatar) {
+            <p class="banner-hint">Subiendo imagen…</p>
+          } @else if (modoEdicion) {
             <p class="banner-hint">Clic en la foto para cambiarla · JPG, PNG, GIF, WebP · máx. 5 MB</p>
           }
           @if (avatarError) {
@@ -206,7 +208,7 @@
 
             <div class="form-actions form-actions--gap">
               <button type="button" class="btn-primary"
-                [disabled]="formPerfil.invalid || formPerfil.pending || estadoPerfil === 'loading'"
+                [disabled]="formPerfil.invalid || formPerfil.pending || estadoPerfil === 'loading' || subiendoAvatar"
                 (click)="guardarPerfil()">
                 {{ estadoPerfil === 'loading' ? 'Guardando…' : 'Guardar cambios' }}
               </button>

@@ -30,6 +30,24 @@
   padding: var(--space-6);
   background: linear-gradient(110deg, rgba(124, 58, 237, 0.05) 0%, transparent 60%);
   border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .profile-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .banner-action {
+    align-self: stretch;
+  }
+
+  .banner-action .btn-edit {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .banner-identity {

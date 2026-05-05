@@ -910,7 +910,7 @@
    ========================================================================== */
 @media (max-width: 580px) {
 
-  .home-page { gap: var(--space-8); }
+  .home-page { gap: var(--space-8); padding: 0 var(--space-4); }
 
   .hero { padding: var(--space-8) 0 var(--space-6); gap: var(--space-6); }
 

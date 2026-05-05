@@ -95,6 +95,9 @@ export class VideosComponent implements OnInit {
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
+  exitoSubidaVisible = false;
+  private exitoSubidaTimer: ReturnType<typeof setTimeout> | null = null;
+
   storageUsedGB  = '0.0';
   storageLimitGB = '5';
   storagePercent = 0;
@@ -341,10 +344,11 @@ export class VideosComponent implements OnInit {
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 
-          // Cierra el panel automáticamente tras 2 s (el usuario ya ve el toast de éxito)
+          // Cierra el panel automáticamente tras 2 s y lanza el toast externo
           setTimeout(() => {
             this.estadoSubida    = 'idle';
             this.uploadPanelOpen = false;
+            this.mostrarExitoSubida();
             this.cdr.markForCheck();
           }, 2000);
         },
@@ -406,6 +410,16 @@ export class VideosComponent implements OnInit {
       this.exitoEdicionVisible = false;
       this.refresh();
     }, 3500);
+  }
+
+  private mostrarExitoSubida(): void {
+    if (this.exitoSubidaTimer) clearTimeout(this.exitoSubidaTimer);
+    this.exitoSubidaVisible = true;
+    this.refresh();
+    this.exitoSubidaTimer = setTimeout(() => {
+      this.exitoSubidaVisible = false;
+      this.refresh();
+    }, 4000);
   }
 
   private mostrarErrorEliminacion(mensaje: string): void {
