@@ -305,6 +305,37 @@
   padding: 0;
 }
 
+/* ── Botón hamburguesa (solo visible en móvil) ── */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color            var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color     var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.mobile-menu-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* ── Version tag ── */
 .sidebar-version {
   padding: var(--space-3) var(--space-4);
@@ -358,4 +389,71 @@
   min-height: 0;
   overflow-y: auto;
   padding: var(--space-8);
+}
+
+/* ==========================================================================
+   RESPONSIVE — MÓVIL (≤ 768px)
+   El sidebar pasa a ser un drawer overlay deslizante.
+   ========================================================================== */
+@media (max-width: 768px) {
+
+  /* El grid pasa a una sola columna — el sidebar sale del flujo */
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* En mobile, sidebar-collapsed no cambia el grid (ya es 1fr) */
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar: posición fija, fuera de pantalla por defecto */
+  .sidebar {
+    position: fixed;
+    top: 57px; /* altura del global-nav */
+    left: 0;
+    height: calc(100dvh - 57px);
+    width: var(--sidebar-width);
+    z-index: var(--z-fixed);
+    transform: translateX(-100%);
+    transition: transform var(--transition-slow);
+    /* La sombra ayuda a separar el drawer del contenido */
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Drawer abierto */
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Backdrop semitransparente para cerrar al tocar fuera */
+  .mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    top: 57px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: calc(var(--z-fixed) - 1);
+    animation: backdrop-in 200ms ease;
+  }
+
+  @keyframes backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Mostrar botón hamburguesa */
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Reducir padding del header en móvil */
+  .main-header {
+    padding: var(--space-4) var(--space-5);
+    justify-content: flex-start;
+  }
+
+  /* Reducir padding del contenido en móvil */
+  .main-content {
+    padding: var(--space-5) var(--space-4);
+  }
 }

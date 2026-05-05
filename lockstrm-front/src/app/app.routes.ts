@@ -16,8 +16,9 @@ import { ProfileComponent }            from './features/profile/profile.componen
 import { AnalyticsComponent }        from './features/analytics/analytics.component';
 import { VideoAnalyticsComponent }   from './features/analytics/video-analytics/video-analytics.component';
 
-import { authGuard }   from './core/guards/auth.guard';
-import { noAuthGuard } from './core/guards/no-auth.guard';
+import { authGuard }          from './core/guards/auth.guard';
+import { noAuthGuard }        from './core/guards/no-auth.guard';
+import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
 
@@ -67,7 +68,7 @@ export const routes: Routes = [
             ],
           },
 
-          { path: 'perfil',  component: ProfileComponent },
+          { path: 'perfil',  component: ProfileComponent, canDeactivate: [pendingChangesGuard] },
           { path: 'ajustes', component: SettingsComponent },
 
           // Compatibilidad con rutas anteriores
