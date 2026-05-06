@@ -15,6 +15,7 @@ import { AnalyticsService, GlobalAnalytics, GroupVideoStats, VideoTop } from '..
 import { GroupService, Group } from '../../core/services/group.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
+import { Paginator } from '../../shared/utils/paginator';
 
 interface GrupoResumen {
   idGrupo:        number;
@@ -43,6 +44,9 @@ export class AnalyticsComponent implements OnInit {
   cargandoGrupos = true;
   errorGrupos    = '';
 
+  pTopVideos = new Paginator<VideoTop>(10);
+  pGrupos    = new Paginator<GrupoResumen>(10);
+
   onThumbError(idVideo: number): void {
     this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
     this.cdr.markForCheck();
@@ -60,6 +64,7 @@ export class AnalyticsComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.datos    = data;
+          this.pTopVideos.setItems(data.topVideos ?? []);
           this.cargando = false;
           this.cdr.markForCheck();
         },
@@ -88,6 +93,7 @@ export class AnalyticsComponent implements OnInit {
         this.gruposResumen = (resultados as (GrupoResumen | null)[])
           .filter((r): r is GrupoResumen => r != null)
           .sort((a, b) => b.visitasTotales - a.visitasTotales);
+        this.pGrupos.setItems(this.gruposResumen);
         this.cargandoGrupos = false;
         this.cdr.markForCheck();
       },
@@ -131,4 +137,11 @@ export class AnalyticsComponent implements OnInit {
   }
 
   readonly skeletonItems = [1, 2, 3];
+
+  globalIdx(localIdx: number, paginator: Paginator<any>): number {
+    return (paginator.page - 1) * paginator.pageSize + localIdx;
+  }
+
+  irPaginaTopVideos(p: number): void { this.pTopVideos.goToPage(p); this.cdr.markForCheck(); }
+  irPaginaGrupos(p: number):    void { this.pGrupos.goToPage(p);    this.cdr.markForCheck(); }
 }

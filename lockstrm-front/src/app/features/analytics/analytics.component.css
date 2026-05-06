@@ -549,3 +549,48 @@
   outline: 2px solid var(--color-primary-light);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   PAGINATOR
+   ========================================================================== */
+.paginator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-top: var(--space-4);
+}
+
+.paginator-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-active);
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.paginator-btn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-main);
+  border-color: var(--border-soft);
+}
+
+.paginator-btn--active {
+  background: linear-gradient(135deg, var(--color-primary-a35), var(--color-primary-a18));
+  border-color: var(--color-primary-a35);
+  color: var(--color-primary-lighter);
+}
+
+.paginator-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

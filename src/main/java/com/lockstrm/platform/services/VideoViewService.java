@@ -4,6 +4,7 @@ import com.lockstrm.platform.dto.VideoViewStatsDto;
 import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.entities.Video;
 import com.lockstrm.platform.entities.VideoView;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
 import com.lockstrm.platform.repositories.LogRepository;
 import com.lockstrm.platform.repositories.GroupPermissionRepository;
 import com.lockstrm.platform.repositories.UserRepository;
@@ -22,12 +23,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VideoViewService {
 
-    private final VideoViewRepository    videoVistaRepository;
-    private final VideoRepository         videoRepository;
-    private final UserRepository          userRepository;
-    private final GroupPermissionRepository permisosGroupRepository;
-    private final LogRepository           logRepository;
-    private final LogService              logService;
+    private final VideoViewRepository        videoVistaRepository;
+    private final VideoRepository            videoRepository;
+    private final UserRepository             userRepository;
+    private final GroupPermissionRepository  permisosGroupRepository;
+    private final GroupMemberRepository      groupMemberRepository;
+    private final LogRepository              logRepository;
+    private final LogService                 logService;
 
     @Transactional
     public void incrementarVista(Long idVideo, String email) {
@@ -58,8 +60,15 @@ public class VideoViewService {
             throw new RuntimeException("Vídeo no encontrado");
         }
 
-        if (!permisosGroupRepository.existsByVideoIdAndGrupoCreadorEmail(idVideo, emailSolicitante)) {
-            throw new AccessDeniedException("Solo el creador del grupo puede ver las estadísticas");
+        boolean autorVideo    = videoRepository.existsByVideoIdAndPropietarioEmail(idVideo, emailSolicitante);
+        boolean creadorGrupo  = permisosGroupRepository.existsByVideoIdAndGrupoCreadorEmail(idVideo, emailSolicitante);
+        boolean adminGrupo    = groupMemberRepository.existsAdminEnGrupoConVideo(
+                emailSolicitante, idVideo,
+                java.util.List.of(com.lockstrm.platform.enums.GroupRole.ADMIN,
+                                  com.lockstrm.platform.enums.GroupRole.SUPER_ADMIN));
+
+        if (!autorVideo && !creadorGrupo && !adminGrupo) {
+            throw new AccessDeniedException("No tienes permiso para ver las estadísticas de este vídeo");
         }
 
         // Mapa email → MAX(segundosVistos) desde la tabla logs (alimentada por heartbeat).

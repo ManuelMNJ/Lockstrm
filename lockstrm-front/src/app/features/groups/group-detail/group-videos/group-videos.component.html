@@ -59,7 +59,8 @@
 
   <div class="videos-grid" role="list">
     @for (v of videosGrupoOrdenadosPaginados; track v.idVideo) {
-      <div class="video-card" role="listitem" (click)="verVideo(v)">
+      <div class="video-card" role="listitem" (click)="verVideo(v)"
+           [class.video-card--mine]="esMiVideo(v)">
         <div class="video-card-thumb">
           @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
             <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img"
@@ -86,7 +87,7 @@
               </svg>
             </button>
           }
-          @if (puedeGestionarVideos) {
+          @if (puedeVerStats(v)) {
             <button class="btn-stats video-card-stats"
                     (click)="$event.stopPropagation(); abrirStats(v)"
                     [attr.aria-label]="'Estadísticas de ' + v.titulo">
@@ -97,6 +98,9 @@
                 <line x1="6"  y1="20" x2="6"  y2="14"/>
               </svg>
             </button>
+          }
+          @if (esMiVideo(v)) {
+            <span class="video-card-mine-badge" aria-label="Subido por ti">Tuyo</span>
           }
 
           <div class="video-card-play-overlay" aria-hidden="true">

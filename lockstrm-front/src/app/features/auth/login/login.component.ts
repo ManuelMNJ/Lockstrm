@@ -64,7 +64,7 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.identificador.value, this.password.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next:  () => this.router.navigate(['/mi-espacio/videos']),
+        next:  () => { this.cargando = false; this.router.navigate(['/mi-espacio/videos']); },
         error: (err) => {
           this.cargando   = false;
           this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';

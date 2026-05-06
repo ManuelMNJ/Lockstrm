@@ -7,8 +7,8 @@ import {
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { debounceTime, switchMap, map, catchError, first } from 'rxjs/operators';
+import { Observable, of, timer } from 'rxjs';
+import { switchMap, map, catchError, first } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { passwordFortalezaValidator, confirmarPasswordValidator, calcPwReqs } from '../../../core/validators/password.validator';
 
@@ -55,11 +55,10 @@ export class RegisterComponent {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
       const value = (control.value ?? '').trim();
       if (!value || !/^[A-Za-z0-9_-]{3,20}$/.test(value)) return of(null);
-      return of(value).pipe(
-        debounceTime(500),
-        switchMap(username =>
+      return timer(500).pipe(
+        switchMap(() =>
           this.http.get<{ disponible: boolean }>(
-            `${this.apiUrl}/check-username?username=${encodeURIComponent(username)}`
+            `${this.apiUrl}/check-username?username=${encodeURIComponent(value)}`
           )
         ),
         map(res => res.disponible ? null : { usernameSaturado: true }),
@@ -76,11 +75,10 @@ export class RegisterComponent {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
       const value = (control.value ?? '').trim();
       if (!value || !/.+@.+\..+/.test(value)) return of(null);
-      return of(value).pipe(
-        debounceTime(500),
-        switchMap(email =>
+      return timer(500).pipe(
+        switchMap(() =>
           this.http.get<{ disponible: boolean }>(
-            `${this.apiUrl}/check-email?email=${encodeURIComponent(email)}`
+            `${this.apiUrl}/check-email?email=${encodeURIComponent(value)}`
           )
         ),
         map(res => res.disponible ? null : { emailTomado: true }),
@@ -105,6 +103,7 @@ export class RegisterComponent {
   }
 
   registrar(): void {
+    if (this.form.pending) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

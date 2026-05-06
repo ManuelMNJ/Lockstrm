@@ -35,38 +35,41 @@ export interface GrupoRef {
 }
 
 export interface Video {
-  idVideo:      number;
-  titulo:       string;
-  duracion:     number | null;
-  fechaSubida:  string | null;
-  grupos:       GrupoRef[];
-  miniaturaUrl: string | null;
-  fileName:     string | null;
-  fileSize:     number | null;
+  idVideo:       number;
+  titulo:        string;
+  duracion:      number | null;
+  fechaSubida:   string | null;
+  grupos:        GrupoRef[];
+  miniaturaUrl:  string | null;
+  fileName:      string | null;
+  fileSize:      number | null;
+  propietarioId: number | null;
 }
 
 /** Forma exacta que devuelve VideoDTO del backend. */
 interface VideoRaw {
-  idVideo:      number;
-  titulo:       string;
-  duracion:     number | null;
-  fechaSubida:  string | null;
-  grupos:       GrupoRef[] | null;
-  miniaturaUrl: string | null;
-  fileName:     string | null;
-  fileSize:     number | null;
+  idVideo:       number;
+  titulo:        string;
+  duracion:      number | null;
+  fechaSubida:   string | null;
+  grupos:        GrupoRef[] | null;
+  miniaturaUrl:  string | null;
+  fileName:      string | null;
+  fileSize:      number | null;
+  propietarioId: number | null;
 }
 
 function mapVideo(raw: VideoRaw): Video {
   return {
-    idVideo:      raw.idVideo,
-    titulo:       raw.titulo,
-    duracion:     raw.duracion,
-    fechaSubida:  raw.fechaSubida,
-    grupos:       raw.grupos ?? [],
-    miniaturaUrl: raw.miniaturaUrl,
-    fileName:     raw.fileName,
-    fileSize:     raw.fileSize ?? null,
+    idVideo:       raw.idVideo,
+    titulo:        raw.titulo,
+    duracion:      raw.duracion,
+    fechaSubida:   raw.fechaSubida,
+    grupos:        raw.grupos ?? [],
+    miniaturaUrl:  raw.miniaturaUrl,
+    fileName:      raw.fileName,
+    fileSize:      raw.fileSize ?? null,
+    propietarioId: raw.propietarioId ?? null,
   };
 }
 
