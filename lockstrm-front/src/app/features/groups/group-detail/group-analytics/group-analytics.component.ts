@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnalyticsService, GroupVideoStats } from '../../../../core/services/analytics.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -20,7 +20,7 @@ import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe'
 @Component({
   selector: 'app-group-analytics',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, RouterLink, ThumbnailSrcPipe, VideoDurationPipe],
+  imports: [DatePipe, RouterLink, ThumbnailSrcPipe, VideoDurationPipe],
   templateUrl: './group-analytics.component.html',
   styleUrls: ['../group-detail.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +33,8 @@ export class GroupAnalyticsComponent implements OnInit {
   private route        = inject(ActivatedRoute);
   private authService  = inject(AuthService);
   private grupoService = inject(GroupService);
+
+  grupoNombre: string | null = null;
 
   analiticasGrupo: GroupVideoStats[] = [];
   cargandoAnaliticas = false;
@@ -57,6 +59,13 @@ export class GroupAnalyticsComponent implements OnInit {
     const paramId = this.route.snapshot.paramMap.get('idGrupo');
     if (paramId && !this.idGrupo) {
       this.idGrupo = Number(paramId);
+      this.grupoService.obtenerGrupoPorId(this.idGrupo)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(grupo => {
+          this.grupoNombre = grupo.nombre;
+          this.cdr.markForCheck();
+        });
+
       this.grupoService.obtenerMiembros(this.idGrupo)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(miembros => {

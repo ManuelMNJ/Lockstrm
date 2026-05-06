@@ -1,3 +1,17 @@
+@if (grupoNombre) {
+  <header class="ga-page-header">
+    <a class="ga-back-link" [routerLink]="['/mi-espacio/analiticas']">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Panel de rendimiento
+    </a>
+    <h2 class="ga-page-title">{{ grupoNombre }}</h2>
+    <p class="ga-page-sub">Analíticas del grupo</p>
+  </header>
+}
+
 <section class="analiticas-panel" aria-labelledby="analiticas-title">
 
   <header class="section-header section-header--with-action">
@@ -56,23 +70,23 @@
 
     <div class="kpi-grid">
       <div class="kpi-card kpi-card--purple">
-        <span class="kpi-label">Visitas totales</span>
         <span class="kpi-value">{{ kpiVisitasTotales }}</span>
+        <span class="kpi-label">Visitas totales</span>
         <span class="kpi-hint">Aperturas del reproductor</span>
       </div>
       <div class="kpi-card kpi-card--blue">
-        <span class="kpi-label">Vídeos con vistas</span>
         <span class="kpi-value">{{ kpiVideosConVistas }} / {{ analiticasGrupo.length }}</span>
+        <span class="kpi-label">Vídeos con vistas</span>
         <span class="kpi-hint">Catálogo activo</span>
       </div>
       <div class="kpi-card kpi-card--green">
-        <span class="kpi-label">Tiempo total consumido</span>
         <span class="kpi-value">{{ kpiTiempoTotalSegundos | videoDuration:true }}</span>
+        <span class="kpi-label">Tiempo total consumido</span>
         <span class="kpi-hint">Suma de todas las sesiones</span>
       </div>
       <div class="kpi-card kpi-card--amber">
-        <span class="kpi-label">Retención media</span>
         <span class="kpi-value">{{ kpiRetencionMedia }}%</span>
+        <span class="kpi-label">Retención media</span>
         <span class="kpi-hint">Promedio ponderado por visitas</span>
       </div>
     </div>
@@ -162,7 +176,7 @@
 
               <td class="num-col">
                 @if (s.visitasTotales > 0) {
-                  <span class="stats-num">{{ (s.duracionMediaSegundos | number:'1.0-0') }}s</span>
+                  <span class="stats-num">{{ s.duracionMediaSegundos | videoDuration:true }}</span>
                 } @else {
                   <span class="stats-empty">—</span>
                 }
