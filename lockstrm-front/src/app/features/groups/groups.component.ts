@@ -21,6 +21,7 @@ import { GroupService, Group } from '../../core/services/group.service';
 import { VideoService } from '../../core/services/video.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 import { InitialPipe } from '../../shared/pipes/initial.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-groups',
@@ -31,6 +32,8 @@ import { InitialPipe } from '../../shared/pipes/initial.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupsComponent implements OnInit {
+
+  readonly apiUrl = environment.apiUrl;
 
   misGrupos: Group[]          = [];
   compartidosConmigo: Group[] = [];

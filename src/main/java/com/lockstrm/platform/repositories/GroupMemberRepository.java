@@ -3,6 +3,7 @@ package com.lockstrm.platform.repositories;
 import com.lockstrm.platform.entities.Group;
 import com.lockstrm.platform.entities.GroupMember;
 import com.lockstrm.platform.entities.GroupMemberId;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -57,4 +58,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     /** Lista registros de membresía completos (usuario + rol) para un grupo. */
     @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.usuario WHERE mg.id.idGrupoId = :idGrupo")
     List<GroupMember> findMiembrosByGrupoId(@Param("idGrupo") Long idGrupo);
+
+    @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.grupo WHERE mg.usuario.email = :email ORDER BY mg.fechaUnion DESC")
+    List<GroupMember> findRecentJoinsByUser(@Param("email") String email, Pageable pageable);
 }

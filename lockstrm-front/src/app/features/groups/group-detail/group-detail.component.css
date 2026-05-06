@@ -111,6 +111,7 @@
 }
 
 .grupo-hero-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,6 +128,46 @@
   font-weight: 700;
   flex-shrink: 0;
   letter-spacing: -0.01em;
+  overflow: hidden;
+}
+
+.grupo-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.grupo-hero-img-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.18s;
+}
+.grupo-hero-img-overlay svg { width: 22px; height: 22px; color: #fff; }
+.grupo-hero-icon:hover .grupo-hero-img-overlay { opacity: 1; }
+
+.img-overlay-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
 }
 
 .grupo-hero-body {

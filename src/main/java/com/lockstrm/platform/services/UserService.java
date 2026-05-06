@@ -207,7 +207,7 @@ public class UserService implements UserDetailsService {
         return userRepository.save(usuario);
     }
 
-    private void validateImageFile(MultipartFile file) {
+    void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new InvalidFileException("El archivo está vacío");
         }
@@ -244,7 +244,7 @@ public class UserService implements UserDetailsService {
         return false;
     }
 
-    private String getImageExtension(String contentType) {
+    String getImageExtension(String contentType) {
         if (contentType == null) return "jpg";
         return switch (contentType.toLowerCase()) {
             case "image/png"  -> "png";

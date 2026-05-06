@@ -20,6 +20,12 @@ export interface DashboardStats {
   topRecientes: VideoResumen[];
 }
 
+export interface ActivityItem {
+  icon:       string;
+  text:       string;
+  occurredAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
 
@@ -29,5 +35,9 @@ export class DashboardService {
 
   getStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${this.apiUrl}/stats`);
+  }
+
+  getActivity(): Observable<ActivityItem[]> {
+    return this.http.get<ActivityItem[]>(`${this.apiUrl}/activity`);
   }
 }

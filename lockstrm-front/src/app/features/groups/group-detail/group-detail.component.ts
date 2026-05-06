@@ -15,6 +15,7 @@ import { take } from 'rxjs/operators';
 import { GroupService, Group, Member } from '../../../core/services/group.service';
 import { VideoService, Video } from '../../../core/services/video.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 import { InitialPipe } from '../../../shared/pipes/initial.pipe';
 import { DateLocalePipe } from '../../../shared/pipes/date-locale.pipe';
 import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
@@ -51,6 +52,9 @@ export class GroupDetailComponent implements OnInit {
   errorEliminarGrupo = '';
 
   idGrupo!: number;
+  readonly apiUrl = environment.apiUrl;
+  subiendoImagen = false;
+
   private destroyRef = inject(DestroyRef);
 
   constructor(
@@ -228,5 +232,24 @@ export class GroupDetailComponent implements OnInit {
 
   volver(): void {
     this.router.navigate(['/mi-espacio/grupos']);
+  }
+
+  onImagenSeleccionada(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.grupo) return;
+    this.subiendoImagen = true;
+    this.grupoService.subirImagenGrupo(this.idGrupo, file)
+      .pipe(take(1))
+      .subscribe({
+        next: ({ imagenUrl }) => {
+          this.grupo = { ...this.grupo!, imagenUrl };
+          this.subiendoImagen = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.subiendoImagen = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 }
