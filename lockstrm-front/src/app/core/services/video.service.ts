@@ -116,6 +116,12 @@ export class VideoService {
     });
   }
 
+  /** Resetea la caché en memoria. Llamar desde AuthService.logout(). */
+  resetCache(): void {
+    this._misVideos$.next(null);
+    this._misVideosLoaded = false;
+  }
+
   /** Inserta un vídeo al principio del sujeto (llamar tras subida exitosa). */
   prependVideo(video: Video): void {
     this._misVideos$.next([video, ...(this._misVideos$.value ?? [])]);
