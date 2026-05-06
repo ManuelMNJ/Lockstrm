@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, merge, throwError } from 'rxjs';
 import { filter, map, mergeMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
+import { AuthService } from './auth.service';
 
 export interface VideoVistaEstadistica {
   username:       string;
@@ -79,10 +80,20 @@ export class VideoService {
   private readonly _misVideosErr$ = new Subject<unknown>();
   private _misVideosLoaded        = false;
 
+  private readonly authService = inject(AuthService);
+
   constructor(
     private http:          HttpClient,
     private streamService: VideoStreamService,
-  ) {}
+  ) {
+    // Cuando el usuario cierra sesión (signal → null) limpiamos la caché
+    // para que no persistan datos de una sesión a la siguiente.
+    effect(() => {
+      if (this.authService.currentUser() === null) {
+        this.resetCache();
+      }
+    });
+  }
 
   buildStreamUrl(fileName: string): string {
     return this.streamService.buildUrl(fileName);
@@ -114,6 +125,12 @@ export class VideoService {
         this._misVideosErr$.next(err);
       },
     });
+  }
+
+  /** Resetea la caché en memoria. Llamar desde AuthService.logout(). */
+  resetCache(): void {
+    this._misVideos$.next(null);
+    this._misVideosLoaded = false;
   }
 
   /** Inserta un vídeo al principio del sujeto (llamar tras subida exitosa). */

@@ -110,6 +110,13 @@ export class GroupService {
     );
   }
 
+  /** Limpia todas las cachés en memoria. Llamar desde AuthService.logout(). */
+  clearCaches(): void {
+    this.misGruposCache$     = null;
+    this.gruposCreadosCache$ = null;
+    this.gruposMiembroCache$ = null;
+  }
+
   quitarVideoDelGrupo(idGrupo: number, idVideo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}/videos/${idVideo}`);
   }

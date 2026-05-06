@@ -123,6 +123,9 @@ export class VideoPlayerComponent implements OnInit {
   /** true while the browser is stalling waiting for data (HTTP 206 buffering). */
   readonly isBuffering = signal(false);
 
+  /** true cuando el elemento <video> dispara un evento 'error' (stream no disponible). */
+  readonly videoError = signal(false);
+
   /**
    * Drives a brief icon-flash animation in the center of the screen
    * whenever the user toggles play/pause, giving instant tactile feedback.
@@ -324,6 +327,13 @@ export class VideoPlayerComponent implements OnInit {
   /** Fired by the <video> 'canplay' event — enough data to resume. */
   onCanPlay(): void {
     this.isBuffering.set(false);
+  }
+
+  /** Fired by the <video> 'error' event — stream 404, token expirado, red caída. */
+  onVideoError(): void {
+    this.isBuffering.set(false);
+    this.isPlaying.set(false);
+    this.videoError.set(true);
   }
 
   // ── Playback controls ───────────────────────────────────────────────────────

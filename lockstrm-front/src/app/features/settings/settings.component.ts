@@ -1,9 +1,19 @@
-import { Component, inject, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
 import { STORAGE_KEYS as KEYS } from '../../core/constants/storage-keys';
+import { UI_TIMINGS } from '../../shared/utils/ui-constants';
+
+/** Lee localStorage sin lanzar en modo privado / quota exceeded. */
+function lsGet(key: string, fallback: string | null = null): string | null {
+  try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+}
+/** Escribe localStorage sin lanzar; la preferencia simplemente no persiste. */
+function lsSet(key: string, value: string): void {
+  try { localStorage.setItem(key, value); } catch { /* sin-persistencia silenciosa */ }
+}
 
 @Component({
   selector: 'app-settings',
@@ -21,34 +31,35 @@ export class SettingsComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   // ── Apariencia ────────────────────────────────────────────────────
-  modoOscuro = localStorage.getItem(KEYS.theme) !== 'light';
+  modoOscuro = lsGet(KEYS.theme) !== 'light';
 
   toggleModo(): void {
     this.modoOscuro = !this.modoOscuro;
     document.body.classList.toggle('light-mode', !this.modoOscuro);
-    localStorage.setItem(KEYS.theme, this.modoOscuro ? 'dark' : 'light');
+    lsSet(KEYS.theme, this.modoOscuro ? 'dark' : 'light');
   }
 
   // ── Reproductor ───────────────────────────────────────────────────
   readonly velocidades = ['0.5', '0.75', '1', '1.25', '1.5', '2'];
 
-  autoplay      = localStorage.getItem(KEYS.autoplay)     !== 'false';
-  velocidad     = localStorage.getItem(KEYS.speed)        ?? '1';
-  volumeMemory  = localStorage.getItem(KEYS.volumeMemory) !== 'false';
+  autoplay      = lsGet(KEYS.autoplay)     !== 'false';
+  velocidad     = lsGet(KEYS.speed)        ?? '1';
+  volumeMemory  = lsGet(KEYS.volumeMemory) !== 'false';
 
   toggleAutoplay(): void {
     this.autoplay = !this.autoplay;
-    localStorage.setItem(KEYS.autoplay, String(this.autoplay));
+    lsSet(KEYS.autoplay, String(this.autoplay));
   }
 
   setVelocidad(v: string): void {
+    if (!this.velocidades.includes(v)) return;
     this.velocidad = v;
-    localStorage.setItem(KEYS.speed, v);
+    lsSet(KEYS.speed, v);
   }
 
   toggleVolumeMemory(): void {
     this.volumeMemory = !this.volumeMemory;
-    localStorage.setItem(KEYS.volumeMemory, String(this.volumeMemory));
+    lsSet(KEYS.volumeMemory, String(this.volumeMemory));
   }
 
   // ── Sesión ────────────────────────────────────────────────────────
@@ -57,6 +68,8 @@ export class SettingsComponent {
   cerrarSesion(): void {
     this.auth.logout();
   }
+
+  @ViewChild('confirmInput') private confirmInput?: ElementRef<HTMLInputElement>;
 
   // ── Zona de peligro — eliminar cuenta ─────────────────────────────
   modalEliminar    = false;
@@ -70,6 +83,7 @@ export class SettingsComponent {
     this.estadoEliminar   = 'idle';
     this.errorEliminar    = '';
     this.cdr.markForCheck();
+    setTimeout(() => this.confirmInput?.nativeElement.focus(), UI_TIMINGS.DOM_FOCUS_DELAY_MS);
   }
 
   cerrarModalEliminar(): void {
