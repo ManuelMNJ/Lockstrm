@@ -46,20 +46,54 @@
 
     <!-- ── Mis Grupos ── -->
     <section class="grupos-section">
-      <h3 class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true" class="section-icon">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        Mis Grupos
-      </h3>
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="section-icon">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Mis Grupos
+          @if (misGrupos.length) {
+            <span class="section-count">{{ misGrupos.length }}</span>
+          }
+        </h3>
+
+        @if (misGrupos.length) {
+          <div class="sort-controls" role="group" aria-label="Ordenar mis grupos">
+            <span class="sort-label">Ordenar:</span>
+            @for (opcion of [
+              { campo: 'nombre',        label: 'Nombre' },
+              { campo: 'fechaCreacion', label: 'Fecha' },
+              { campo: 'miembros',      label: 'Miembros' },
+              { campo: 'videos',        label: 'Vídeos' }
+            ]; track opcion.campo) {
+              <button class="sort-btn"
+                      [class.sort-btn--active]="sortMisGrupos.campo === opcion.campo"
+                      (click)="cambiarOrden('mis', $any(opcion.campo))"
+                      [attr.aria-pressed]="sortMisGrupos.campo === opcion.campo">
+                {{ opcion.label }}
+                @if (sortMisGrupos.campo === opcion.campo) {
+                  <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    @if (sortMisGrupos.dir === 'asc') {
+                      <polyline points="18 15 12 9 6 15"/>
+                    } @else {
+                      <polyline points="6 9 12 15 18 9"/>
+                    }
+                  </svg>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
 
       <div class="grupos-grid">
-        @for (g of misGrupos; track g.idGrupo) {
+        @for (g of misGruposPaginados; track g.idGrupo) {
           <div class="grupo-card"
                role="button"
                tabindex="0"
@@ -147,25 +181,84 @@
           </div>
         }
       </div>
+
+      @if (totalPaginasMis > 1) {
+        <nav class="paginacion" aria-label="Páginas de mis grupos">
+          <button class="pag-btn" [disabled]="paginaMisGrupos === 1"
+                  (click)="irPagina('mis', paginaMisGrupos - 1)" aria-label="Página anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          @for (p of rangosPaginas(totalPaginasMis); track p) {
+            <button class="pag-btn pag-btn--num"
+                    [class.pag-btn--active]="paginaMisGrupos === p"
+                    [attr.aria-current]="paginaMisGrupos === p ? 'page' : null"
+                    (click)="irPagina('mis', p)">{{ p }}</button>
+          }
+          <button class="pag-btn" [disabled]="paginaMisGrupos === totalPaginasMis"
+                  (click)="irPagina('mis', paginaMisGrupos + 1)" aria-label="Página siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </nav>
+      }
     </section>
 
     <!-- ── Compartidos Conmigo ── -->
     <section class="grupos-section">
-      <h3 class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true" class="section-icon">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-        Compartidos Conmigo
-      </h3>
+      <div class="section-header-row">
+        <h3 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="section-icon">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Compartidos Conmigo
+          @if (compartidosConmigo.length) {
+            <span class="section-count">{{ compartidosConmigo.length }}</span>
+          }
+        </h3>
+
+        @if (compartidosConmigo.length) {
+          <div class="sort-controls" role="group" aria-label="Ordenar grupos compartidos">
+            <span class="sort-label">Ordenar:</span>
+            @for (opcion of [
+              { campo: 'nombre',        label: 'Nombre' },
+              { campo: 'fechaCreacion', label: 'Fecha' },
+              { campo: 'miembros',      label: 'Miembros' },
+              { campo: 'videos',        label: 'Vídeos' }
+            ]; track opcion.campo) {
+              <button class="sort-btn"
+                      [class.sort-btn--active]="sortCompartidos.campo === opcion.campo"
+                      (click)="cambiarOrden('compartidos', $any(opcion.campo))"
+                      [attr.aria-pressed]="sortCompartidos.campo === opcion.campo">
+                {{ opcion.label }}
+                @if (sortCompartidos.campo === opcion.campo) {
+                  <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    @if (sortCompartidos.dir === 'asc') {
+                      <polyline points="18 15 12 9 6 15"/>
+                    } @else {
+                      <polyline points="6 9 12 15 18 9"/>
+                    }
+                  </svg>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
 
       <div class="grupos-grid">
-        @for (g of compartidosConmigo; track g.idGrupo) {
+        @for (g of compartidosPaginados; track g.idGrupo) {
           <div class="grupo-card grupo-card--shared"
                role="button"
                tabindex="0"
@@ -243,6 +336,31 @@
           </div>
         }
       </div>
+
+      @if (totalPaginasComp > 1) {
+        <nav class="paginacion" aria-label="Páginas de grupos compartidos">
+          <button class="pag-btn" [disabled]="paginaCompartidos === 1"
+                  (click)="irPagina('compartidos', paginaCompartidos - 1)" aria-label="Página anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          @for (p of rangosPaginas(totalPaginasComp); track p) {
+            <button class="pag-btn pag-btn--num"
+                    [class.pag-btn--active]="paginaCompartidos === p"
+                    [attr.aria-current]="paginaCompartidos === p ? 'page' : null"
+                    (click)="irPagina('compartidos', p)">{{ p }}</button>
+          }
+          <button class="pag-btn" [disabled]="paginaCompartidos === totalPaginasComp"
+                  (click)="irPagina('compartidos', paginaCompartidos + 1)" aria-label="Página siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </nav>
+      }
     </section>
 
   }
