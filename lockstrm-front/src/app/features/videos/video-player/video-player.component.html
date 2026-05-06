@@ -31,8 +31,20 @@
     (pause)="isPlaying.set(false)"
     (ended)="onEnded()"
     (waiting)="onWaiting()"
-    (canplay)="onCanPlay()">
+    (canplay)="onCanPlay()"
+    (error)="onVideoError()">
   </video>
+
+  @if (videoError()) {
+    <div class="buffering-spinner" role="alert" aria-live="assertive"
+         style="background:rgba(0,0,0,.75);border-radius:8px;padding:1rem;flex-direction:column;gap:.5rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           style="width:2rem;height:2rem;color:#f87171" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span style="font-size:.85rem;color:#f8fafc">No se pudo cargar el vídeo</span>
+    </div>
+  }
 
   <!-- ── Pause overlay ─────────────────────────────────────────────────── -->
   <!--

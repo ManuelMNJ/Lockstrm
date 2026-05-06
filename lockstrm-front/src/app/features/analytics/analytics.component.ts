@@ -41,6 +41,7 @@ export class AnalyticsComponent implements OnInit {
 
   gruposResumen:  GrupoResumen[] = [];
   cargandoGrupos = true;
+  errorGrupos    = '';
 
   onThumbError(idVideo: number): void {
     this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
@@ -82,12 +83,19 @@ export class AnalyticsComponent implements OnInit {
         );
       }),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(resultados => {
-      this.gruposResumen = (resultados as (GrupoResumen | null)[])
-        .filter((r): r is GrupoResumen => r != null)
-        .sort((a, b) => b.visitasTotales - a.visitasTotales);
-      this.cargandoGrupos = false;
-      this.cdr.markForCheck();
+    ).subscribe({
+      next: resultados => {
+        this.gruposResumen = (resultados as (GrupoResumen | null)[])
+          .filter((r): r is GrupoResumen => r != null)
+          .sort((a, b) => b.visitasTotales - a.visitasTotales);
+        this.cargandoGrupos = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.errorGrupos    = 'No se pudieron cargar las analíticas de grupos.';
+        this.cargandoGrupos = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
