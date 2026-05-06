@@ -10,8 +10,10 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AnalyticsService, GroupVideoStats } from '../../../../core/services/analytics.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { GroupService } from '../../../../core/services/group.service';
 import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe';
 
@@ -25,8 +27,12 @@ import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe'
 })
 export class GroupAnalyticsComponent implements OnInit {
 
-  @Input() idGrupo!: number;
+  @Input() idGrupo?: number;
   @Input() esAdmin = false;
+
+  private route        = inject(ActivatedRoute);
+  private authService  = inject(AuthService);
+  private grupoService = inject(GroupService);
 
   analiticasGrupo: GroupVideoStats[] = [];
   cargandoAnaliticas = false;
@@ -48,6 +54,17 @@ export class GroupAnalyticsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const paramId = this.route.snapshot.paramMap.get('idGrupo');
+    if (paramId && !this.idGrupo) {
+      this.idGrupo = Number(paramId);
+      this.grupoService.obtenerMiembros(this.idGrupo)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(miembros => {
+          const yo = miembros.find(m => m.idUsuario === this.authService.getUser()?.id);
+          this.esAdmin = yo?.rol === 'ADMIN' || yo?.rol === 'SUPER_ADMIN';
+          this.cdr.markForCheck();
+        });
+    }
     this.cargarAnaliticas();
   }
 
@@ -137,7 +154,7 @@ export class GroupAnalyticsComponent implements OnInit {
     this.cdr.markForCheck();
 
     const desde = this.rangoDesde();
-    this.analiticasService.getAnaliticasDelGrupo(this.idGrupo, { desde })
+    this.analiticasService.getAnaliticasDelGrupo(this.idGrupo!, { desde })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (stats) => {
