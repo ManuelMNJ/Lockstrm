@@ -1,0 +1,121 @@
+@if (esAdmin) {
+  <section class="section-card" aria-labelledby="add-member-title">
+    <h3 class="section-title" id="add-member-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="8.5" cy="7" r="4"/>
+        <line x1="20" y1="8" x2="20" y2="14"/>
+        <line x1="23" y1="11" x2="17" y2="11"/>
+      </svg>
+      Añadir miembro
+    </h3>
+
+    <div class="add-row">
+      <input
+        class="form-input add-input"
+        type="text"
+        [(ngModel)]="identificadorNuevoMiembro"
+        placeholder="correo@ejemplo.com o Usuario#1234"
+        autocomplete="off"
+        (keydown.enter)="aniadirMiembro()">
+      <button class="btn-primary"
+              (click)="aniadirMiembro()"
+              [disabled]="estadoAnadir === 'loading' || !identificadorNuevoMiembro.trim()">
+        {{ estadoAnadir === 'loading' ? 'Añadiendo…' : 'Añadir' }}
+      </button>
+    </div>
+
+    @if (estadoAnadir === 'success') {
+      <p class="feedback-msg" role="status">Miembro añadido correctamente.</p>
+    }
+    @if (estadoAnadir === 'error') {
+      <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnadir }}</p>
+    }
+  </section>
+}
+
+<section class="section-card" aria-labelledby="members-title">
+  <h3 class="section-title" id="members-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    Miembros
+    <span class="count-badge">{{ miembros.length }}</span>
+  </h3>
+
+  @if (errorEliminarMiembro) {
+    <p class="feedback-msg feedback-msg--error" role="alert">{{ errorEliminarMiembro }}</p>
+  }
+  @if (errorCambioRol) {
+    <p class="feedback-msg feedback-msg--error" role="alert">{{ errorCambioRol }}</p>
+  }
+
+  <ul class="members-list" role="list">
+    @for (m of miembros; track m.idUsuario) {
+      <li class="member-item" role="listitem">
+        <div class="member-avatar" aria-hidden="true">
+          @if (m.avatarUrl) {
+            <img [src]="m.avatarUrl | thumbnailSrc" alt="" class="avatar-circle-img">
+          } @else {
+            {{ m.username.charAt(0).toUpperCase() }}
+          }
+        </div>
+        <div class="member-info">
+          <span class="member-name">{{ m.username }}<span class="member-tag">#{{ m.tag }}</span></span>
+        </div>
+
+        @if (puedeGestionarRoles && puedeActuarSobreRol(m.rol) && m.idUsuario !== currentUserId) {
+          <app-custom-select
+            variant="pill"
+            [options]="rolOptionsParaAsignar"
+            [ngModel]="m.rol"
+            (ngModelChange)="cambiarRolMiembro(m, $event)"
+            [disabled]="cambiandoRoles.has(m.idUsuario)"
+            [ariaLabel]="'Rol de ' + m.username">
+          </app-custom-select>
+        } @else {
+          <span class="rol-badge"
+                [class.rol-badge--super]="m.rol === 'SUPER_ADMIN'"
+                [class.rol-badge--admin]="m.rol === 'ADMIN'"
+                [class.rol-badge--editor]="m.rol === 'EDITOR'"
+                [attr.title]="m.rol === 'SUPER_ADMIN' ? 'Creador del grupo · rol inmutable' : null">
+            @if (m.rol === 'SUPER_ADMIN') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2l3 6 6 1-4.5 4.4 1 6.1L12 17l-5.5 2.5 1-6.1L3 9l6-1z"/>
+              </svg>
+            }
+            {{ m.rol === 'SUPER_ADMIN' ? 'PROPIETARIO' : m.rol }}
+          </span>
+        }
+
+        @if (esAdmin && puedeActuarSobreRol(m.rol)) {
+          <button class="btn-remove"
+                  (click)="eliminarMiembro(m)"
+                  [disabled]="eliminandoMiembros.has(m.idUsuario)"
+                  [attr.aria-label]="'Eliminar ' + m.username + ' del grupo'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        }
+      </li>
+    } @empty {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+        <p>Este grupo aún no tiene miembros.</p>
+      </div>
+    }
+  </ul>
+</section>

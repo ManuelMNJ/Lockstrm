@@ -1,0 +1,250 @@
+<section class="section-card" aria-labelledby="videos-title">
+  <div class="section-title-row">
+    <h3 class="section-title" id="videos-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polygon points="23 7 16 12 23 17 23 7"/>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+      </svg>
+      Vídeos del grupo
+      <span class="count-badge">{{ videosGrupo.length }}</span>
+    </h3>
+
+    @if (videosGrupo.length > 1) {
+      <div class="sort-bar">
+        <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="6" y1="12" x2="18" y2="12"/>
+          <line x1="9" y1="18" x2="15" y2="18"/>
+        </svg>
+        <app-custom-select
+          size="sm"
+          [options]="sortOptions"
+          [ngModel]="criterioOrden"
+          (ngModelChange)="onCambioOrden($event)"
+          ariaLabel="Ordenar vídeos">
+        </app-custom-select>
+      </div>
+    }
+  </div>
+
+  @if (puedeGestionarVideos) {
+    <div class="add-row">
+      <app-custom-select
+        [fullWidth]="true"
+        [options]="videoOptions"
+        [(ngModel)]="idVideoAAnadir"
+        placeholder="Selecciona un vídeo…"
+        [disabled]="estadoAnadirVideo === 'loading'">
+      </app-custom-select>
+      <button class="btn-primary"
+              (click)="aniadirVideoExistente()"
+              [disabled]="idVideoAAnadir == null || estadoAnadirVideo === 'loading'">
+        {{ estadoAnadirVideo === 'loading' ? 'Añadiendo…' : 'Añadir' }}
+      </button>
+    </div>
+
+    @if (estadoAnadirVideo === 'success') {
+      <p class="feedback-msg" role="status">Vídeo añadido al grupo correctamente.</p>
+    }
+    @if (estadoAnadirVideo === 'error') {
+      <p class="feedback-msg feedback-msg--error" role="alert">{{ errorAnadirVideo }}</p>
+    }
+  }
+
+  @if (errorVideos) {
+    <p class="feedback-msg feedback-msg--error" role="alert">{{ errorVideos }}</p>
+  }
+
+  <div class="videos-grid" role="list">
+    @for (v of videosGrupoOrdenados; track v.idVideo) {
+      <div class="video-card" role="listitem" (click)="verVideo(v)">
+        <div class="video-card-thumb">
+          @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
+            <img [src]="v.miniaturaUrl | thumbnailSrc" [alt]="'Miniatura de ' + v.titulo" class="video-card-img"
+                 (error)="onThumbError(v.idVideo)">
+          } @else {
+            <div class="video-card-placeholder" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+            </div>
+          }
+
+          @if (puedeQuitarVideo(v)) {
+            <button class="btn-remove video-card-remove"
+                    (click)="$event.stopPropagation(); quitarVideoDelGrupo(v)"
+                    [disabled]="quitandoVideos.has(v.idVideo)"
+                    [attr.aria-label]="'Quitar ' + v.titulo + ' del grupo'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          }
+          @if (puedeGestionarVideos) {
+            <button class="btn-stats video-card-stats"
+                    (click)="$event.stopPropagation(); abrirStats(v)"
+                    [attr.aria-label]="'Estadísticas de ' + v.titulo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+              </svg>
+            </button>
+          }
+
+          <div class="video-card-play-overlay" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.55)"/>
+              <polygon points="10 8 18 12 10 16 10 8" fill="white"/>
+            </svg>
+          </div>
+        </div>
+        <div class="video-card-footer">
+          <span class="video-card-title">{{ v.titulo }}</span>
+          <span class="video-card-duration">{{ v.duracion | videoDuration }}</span>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="23 7 16 12 23 17 23 7"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+        <p>Este grupo aún no tiene vídeos.</p>
+      </div>
+    }
+  </div>
+</section>
+
+@if (videoReproduciendose) {
+  <div class="modal-overlay"
+       (click)="cerrarReproductor()"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="'Reproductor: ' + videoReproduciendose.titulo">
+
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <span class="modal-title">{{ videoReproduciendose.titulo }}</span>
+        <button class="modal-close" (click)="cerrarReproductor()" aria-label="Cerrar reproductor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-player">
+        @if (videoReproduciendose.fileName) {
+          <app-video-player
+            [fileName]="videoReproduciendose.fileName"
+            [idVideo]="videoReproduciendose.idVideo"
+            [grupoId]="idGrupo"
+            (heartbeat)="onHeartbeat($event)">
+          </app-video-player>
+        } @else {
+          <p class="video-no-disponible">Vídeo no disponible. El archivo no está en el servidor.</p>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (videoStats) {
+  <div class="modal-overlay"
+       (click)="cerrarStats()"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-label]="'Estadísticas: ' + videoStats.titulo">
+
+    <div class="stats-dialog" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true" class="stats-header-icon">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          {{ videoStats.titulo }}
+        </span>
+        <button class="modal-close" (click)="cerrarStats()" aria-label="Cerrar estadísticas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6"  y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="stats-body">
+
+        @if (cargandoStats) {
+          <div class="empty-state"><p>Cargando estadísticas…</p></div>
+        }
+
+        @if (errorStats) {
+          <p class="feedback-msg feedback-msg--error" role="alert">{{ errorStats }}</p>
+        }
+
+        @if (!cargandoStats && !errorStats) {
+          @if (estadisticas.length === 0) {
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6"  y1="20" x2="6"  y2="14"/>
+              </svg>
+              <p>Ningún miembro ha visto este vídeo todavía.</p>
+            </div>
+          } @else {
+            <table class="stats-table" aria-label="Estadísticas de vistas">
+              <thead>
+                <tr>
+                  <th>Miembro</th>
+                  <th class="stats-col-views">Vistas</th>
+                  <th class="stats-col-views">Tiempo visto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of estadisticas; track s.username + '#' + s.tag) {
+                  <tr>
+                    <td>
+                      <div class="stats-member">
+                        <div class="member-avatar stats-avatar" aria-hidden="true">{{ s.username.charAt(0).toUpperCase() }}</div>
+                        <div class="member-info">
+                          <span class="member-name">{{ s.username }}#{{ s.tag }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="stats-col-views">
+                      <span class="stats-badge">{{ s.contador }}</span>
+                    </td>
+                    <td class="stats-col-views">
+                      <span class="stats-badge">{{ s.segundosVistos | videoDuration:true }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+      </div>
+    </div>
+  </div>
+}
