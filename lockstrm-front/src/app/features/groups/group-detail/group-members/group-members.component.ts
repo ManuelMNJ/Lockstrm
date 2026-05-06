@@ -57,7 +57,7 @@ export class GroupMembersComponent implements OnChanges {
   ngOnChanges(): void {
     // Recalculamos los roles disponibles cuando cambia rolActual
     if (this.esSuperAdmin) {
-      this.rolesDisponiblesParaAsignar = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'MIEMBRO'];
+      this.rolesDisponiblesParaAsignar = ['ADMIN', 'EDITOR', 'MIEMBRO'];
     } else if (this.rolActual === 'ADMIN') {
       this.rolesDisponiblesParaAsignar = ['EDITOR', 'MIEMBRO'];
     } else {

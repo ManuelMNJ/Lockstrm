@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../../core/services/video.service';
+import { GroupService } from '../../../../core/services/group.service';
 import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../../videos/video-player/video-player.component';
@@ -54,6 +55,8 @@ export class GroupVideosComponent {
   errorStats    = '';
 
   criterioOrden: string = 'fechaDesc';
+  paginaVideos = 1;
+  readonly tamanioPaginaVideos = 9;
 
   readonly sortOptions: SelectOption[] = [
     { value: 'fechaDesc',    label: 'Más recientes'  },
@@ -67,6 +70,7 @@ export class GroupVideosComponent {
 
   constructor(
     protected videoService: VideoService,
+    private grupoService: GroupService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -100,8 +104,27 @@ export class GroupVideosComponent {
     return this.rolActual === 'EDITOR';
   }
 
+  get videosGrupoOrdenadosPaginados(): Video[] {
+    const inicio = (this.paginaVideos - 1) * this.tamanioPaginaVideos;
+    return this.videosGrupoOrdenados.slice(inicio, inicio + this.tamanioPaginaVideos);
+  }
+
+  get totalPaginasVideos(): number {
+    return Math.ceil(this.videosGrupo.length / this.tamanioPaginaVideos) || 1;
+  }
+
+  get rangosPaginasVideos(): number[] {
+    return Array.from({ length: this.totalPaginasVideos }, (_, i) => i + 1);
+  }
+
+  irPaginaVideos(p: number): void {
+    this.paginaVideos = p;
+    this.cdr.markForCheck();
+  }
+
   onCambioOrden(valor: string): void {
     this.criterioOrden = valor;
+    this.paginaVideos  = 1;
     this.cdr.markForCheck();
   }
 
@@ -142,9 +165,7 @@ export class GroupVideosComponent {
   quitarVideoDelGrupo(video: Video): void {
     this.quitandoVideos = new Set(this.quitandoVideos).add(video.idVideo);
 
-    const nuevosGrupos = video.grupos.filter(g => g.idGrupo !== this.idGrupo);
-
-    this.videoService.editarVideo(video.idVideo, video.titulo, nuevosGrupos.map(g => g.idGrupo))
+    this.grupoService.quitarVideoDelGrupo(this.idGrupo, video.idVideo)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -152,6 +173,7 @@ export class GroupVideosComponent {
           next.delete(video.idVideo);
           this.quitandoVideos = next;
           const videosGrupo = this.videosGrupo.filter(v => v.idVideo !== video.idVideo);
+          const nuevosGrupos = video.grupos.filter(g => g.idGrupo !== this.idGrupo);
           const misVideosDisponibles = [...this.misVideosDisponibles, { ...video, grupos: nuevosGrupos }];
           this.videosChanged.emit({ videosGrupo, misVideosDisponibles });
           this.cdr.markForCheck();

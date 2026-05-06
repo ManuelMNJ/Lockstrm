@@ -58,7 +58,7 @@
   }
 
   <div class="videos-grid" role="list">
-    @for (v of videosGrupoOrdenados; track v.idVideo) {
+    @for (v of videosGrupoOrdenadosPaginados; track v.idVideo) {
       <div class="video-card" role="listitem" (click)="verVideo(v)">
         <div class="video-card-thumb">
           @if (v.miniaturaUrl && !failedThumbs.has(v.idVideo)) {
@@ -122,6 +122,31 @@
       </div>
     }
   </div>
+
+  @if (totalPaginasVideos > 1) {
+    <nav class="paginacion" aria-label="Páginas de vídeos">
+      <button class="pag-btn" [disabled]="paginaVideos === 1"
+              (click)="irPaginaVideos(paginaVideos - 1)" aria-label="Página anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      @for (p of rangosPaginasVideos; track p) {
+        <button class="pag-btn pag-btn--num"
+                [class.pag-btn--active]="paginaVideos === p"
+                [attr.aria-current]="paginaVideos === p ? 'page' : null"
+                (click)="irPaginaVideos(p)">{{ p }}</button>
+      }
+      <button class="pag-btn" [disabled]="paginaVideos === totalPaginasVideos"
+              (click)="irPaginaVideos(paginaVideos + 1)" aria-label="Página siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    </nav>
+  }
 </section>
 
 @if (videoReproduciendose) {

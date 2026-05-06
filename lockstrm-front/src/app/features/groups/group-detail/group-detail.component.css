@@ -5,7 +5,7 @@
 .detalle-page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 /* ==========================================================================
@@ -81,13 +81,13 @@
 .grupo-hero {
   position: relative;
   background: linear-gradient(135deg,
-    rgba(124, 58, 237, 0.12) 0%,
-    rgba(124, 58, 237, 0.05) 50%,
+    rgba(124, 58, 237, 0.10) 0%,
+    rgba(124, 58, 237, 0.04) 50%,
     rgba(255, 255, 255, 0.01) 100%
   );
-  border: 1px solid rgba(124, 58, 237, 0.18);
-  border-radius: 16px;
-  padding: var(--space-6) var(--space-6);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  padding: var(--space-4) var(--space-5);
   overflow: hidden;
 }
 
@@ -106,7 +106,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
@@ -115,16 +115,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.35) 0%, rgba(124, 58, 237, 0.15) 100%);
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.30) 0%, rgba(124, 58, 237, 0.12) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 4px 20px rgba(124, 58, 237, 0.30),
-    0 0 0 1px rgba(124, 58, 237, 0.20);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 3px 12px rgba(124, 58, 237, 0.22),
+    0 0 0 1px rgba(124, 58, 237, 0.16);
   color: var(--color-primary-lighter);
-  font-size: 2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   flex-shrink: 0;
   letter-spacing: -0.01em;
@@ -174,7 +174,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -186,10 +186,10 @@
 }
 
 .grupo-hero-title {
-  font-size: var(--font-3xl);
+  font-size: var(--font-xl);
   font-weight: 700;
   color: var(--text-main);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin: 0;
   min-width: 0;
   overflow: hidden;
@@ -205,7 +205,7 @@
 }
 
 .grupo-hero-actions {
-  margin-top: var(--space-4);
+  margin-top: 0;
 }
 
 .hero-meta-pill {
@@ -254,17 +254,17 @@
 .grupo-hero-skeleton {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-6);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: 12px;
 }
 
 .hero-skeleton-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
   flex-shrink: 0;
   background: linear-gradient(90deg,
     var(--bg-surface-hover) 25%,
@@ -294,7 +294,7 @@
   animation: shimmer 1.4s infinite;
 }
 
-.hero-skeleton-line--title { width: 40%; height: 24px; }
+.hero-skeleton-line--title { width: 40%; height: 18px; }
 .hero-skeleton-line--sub   { width: 60%; }
 
 @keyframes shimmer {
@@ -495,14 +495,14 @@
 .detalle-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .detalle-columns,
 .detalle-columns--guest {
   display: grid;
   grid-template-columns: 1fr 3fr;
-  gap: var(--space-5);
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -724,17 +724,17 @@
 .section-card {
   background: linear-gradient(160deg, var(--bg-surface) 65%, rgba(124, 58, 237, 0.03) 100%);
   border: 1px solid var(--border-subtle);
-  border-top: 2px solid rgba(124, 58, 237, 0.20);
-  border-radius: 14px;
-  padding: var(--space-5);
+  border-top: 2px solid rgba(124, 58, 237, 0.18);
+  border-radius: 12px;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+  gap: var(--space-3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .section-card + .section-card {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
 }
 
 .section-title {
@@ -827,8 +827,8 @@
 .member-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   background-color: var(--bg-main);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -844,12 +844,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary-active));
   color: var(--color-white);
-  font-size: var(--font-md);
+  font-size: var(--font-sm);
   font-weight: 700;
   flex-shrink: 0;
   box-shadow: var(--shadow-avatar-sm);
@@ -873,7 +873,7 @@
 }
 
 .member-name {
-  font-size: var(--font-base);
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--text-main);
   white-space: nowrap;
@@ -1632,4 +1632,58 @@
   font-size: var(--font-base);
   color: var(--text-muted);
   margin: 0;
+}
+
+/* ==========================================================================
+   PAGINACIÓN
+   ========================================================================== */
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding-top: var(--space-3);
+}
+
+.pag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.pag-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pag-btn--num {
+  min-width: 30px;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-main);
+}
+
+.pag-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.pag-btn--active {
+  background: rgba(124, 58, 237, 0.18);
+  color: #a78bfa;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.35);
 }
