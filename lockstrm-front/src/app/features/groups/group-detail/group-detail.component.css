@@ -656,6 +656,10 @@
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
 }
 
+.section-card + .section-card {
+  margin-top: var(--space-6);
+}
+
 .section-title {
   font-size: var(--font-sm);
   font-weight: 600;
@@ -1451,35 +1455,6 @@
   flex-wrap: wrap;
 }
 
-.rango-presets {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
-}
-
-.rango-preset {
-  background: transparent;
-  border: 0;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--font-sm);
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.rango-preset:hover { color: var(--text-main); }
-
-.rango-preset--active {
-  background: rgba(124, 58, 237, 0.18);
-  color: var(--color-primary-lighter);
-  font-weight: 600;
-}
 
 /* ── Sparkline ── */
 .spark-col {
@@ -1528,4 +1503,45 @@
 .log-date {
   font-size: var(--font-sm);
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   GROUP ANALYTICS — cabecera de página (modo ruta standalone)
+   ========================================================================== */
+.ga-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+}
+
+.ga-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+  transition: color var(--transition-fast);
+}
+.ga-back-link:hover { color: var(--text-main); }
+.ga-back-link svg { width: 14px; height: 14px; }
+
+.ga-page-title {
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ga-page-sub {
+  font-size: var(--font-base);
+  color: var(--text-muted);
+  margin: 0;
 }
