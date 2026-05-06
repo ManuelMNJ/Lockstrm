@@ -16,6 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent, merge, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { STORAGE_KEYS } from '../../../core/constants/storage-keys';
 import { AuthService } from '../../../core/services/auth.service';
 import { VideoService } from '../../../core/services/video.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
@@ -268,7 +269,26 @@ export class VideoPlayerComponent implements OnInit {
   // ── Video event handlers ────────────────────────────────────────────────────
 
   onLoadedMetadata(): void {
-    this.duration.set(this.videoRef.nativeElement.duration);
+    const video = this.videoRef.nativeElement;
+    this.duration.set(video.duration);
+
+    const savedSpeed = parseFloat(localStorage.getItem(STORAGE_KEYS.speed) ?? '1');
+    if (!isNaN(savedSpeed)) video.playbackRate = savedSpeed;
+
+    const memoryEnabled = localStorage.getItem(STORAGE_KEYS.volumeMemory) !== 'false';
+    if (memoryEnabled) {
+      const savedVolume = parseFloat(localStorage.getItem(STORAGE_KEYS.volume) ?? '1');
+      if (!isNaN(savedVolume)) {
+        video.volume = savedVolume;
+        video.muted  = savedVolume === 0;
+        this.volume.set(savedVolume);
+        this.isMuted.set(savedVolume === 0);
+      }
+    }
+
+    if (localStorage.getItem(STORAGE_KEYS.autoplay) !== 'false') {
+      video.play().then(() => this.isPlaying.set(true)).catch(() => {});
+    }
   }
 
   /**
@@ -346,6 +366,10 @@ export class VideoPlayerComponent implements OnInit {
     video.muted  = value === 0;
     this.volume.set(value);
     this.isMuted.set(value === 0);
+
+    if (localStorage.getItem(STORAGE_KEYS.volumeMemory) !== 'false') {
+      localStorage.setItem(STORAGE_KEYS.volume, String(value));
+    }
   }
 
   // ── Scrubbing (progress bar) ────────────────────────────────────────────────
