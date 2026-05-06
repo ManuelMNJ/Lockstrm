@@ -125,48 +125,28 @@
             </span>
           </div>
 
+          @if (puedeGestionarVideos) {
+            <div class="grupo-hero-actions">
+              <a class="btn-analytics"
+                 [routerLink]="['/mi-espacio/analiticas/grupo', idGrupo]"
+                 aria-label="Ver analíticas del grupo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6"  y1="20" x2="6"  y2="14"/>
+                </svg>
+                Ver analíticas
+              </a>
+            </div>
+          }
+
         </div>
       </div>
     </div>
   }
 
-  <!-- ── Tabs ── -->
   @if (!cargando && grupo) {
-    <nav class="detalle-tabs" role="tablist" aria-label="Secciones del grupo">
-      <button class="detalle-tab"
-              role="tab"
-              [class.detalle-tab--active]="pestanaActiva === 'resumen'"
-              [attr.aria-selected]="pestanaActiva === 'resumen'"
-              (click)="cambiarPestana('resumen')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="14" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-        </svg>
-        Resumen
-      </button>
-      @if (puedeGestionarVideos) {
-        <button class="detalle-tab"
-                role="tab"
-                [class.detalle-tab--active]="pestanaActiva === 'analiticas'"
-                [attr.aria-selected]="pestanaActiva === 'analiticas'"
-                (click)="cambiarPestana('analiticas')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10"/>
-            <line x1="12" y1="20" x2="12" y2="4"/>
-            <line x1="6"  y1="20" x2="6"  y2="14"/>
-          </svg>
-          Analíticas
-        </button>
-      }
-    </nav>
-  }
-
-  @if (!cargando && grupo && pestanaActiva === 'resumen') {
     <div class="detalle-body">
       <div class="detalle-columns">
         <div class="detalle-col" [class.detalle-col--sidebar]="!esAdmin">
@@ -191,10 +171,6 @@
     </div>
   }
 
-  @if (!cargando && grupo && pestanaActiva === 'analiticas' && puedeGestionarVideos) {
-    <app-group-analytics [idGrupo]="idGrupo" [esAdmin]="esAdmin">
-    </app-group-analytics>
-  }
 
 </div>
 

@@ -39,34 +39,12 @@ export class VideoAnalyticsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  /**
-   * Filtro activo de grupo:
-   *  - 'all'   → todas las visualizaciones
-   *  - 'none'  → solo las reproducciones sin contexto de grupo
-   *  - número  → un grupo concreto
-   *
-   * En modo "from=grupo" el filtro arranca y se queda fijo en el grupo de
-   * origen porque el backend solo nos devuelve esas filas. En modo global
-   * (propietario), el desplegable se puede cambiar a piacere.
-   */
   filtroGrupo: 'all' | 'none' | number = 'all';
 
-  /**
-   * Origen de la navegación. "grupo" significa que llegamos desde la pestaña
-   * Analíticas del detalle de un grupo y debemos:
-   *  - Cargar el vídeo desde `obtenerVideosPorGrupo` (el solicitante puede no
-   *    ser propietario; sí miembro del grupo).
-   *  - Pedir los logs ya filtrados por ese grupo al backend.
-   *  - Volver al detalle del grupo, no al panel global.
-   */
-  fromGrupo:  boolean = false;
   grupoIdCtx: number | null = null;
 
-  /**
-   * Preset de fecha activo. Cambia → refetch al backend (no filtramos en
-   * cliente porque queremos que las KPIs sean exactas para el rango y el
-   * dataset puede ser grande).
-   */
+  get fromGrupo(): boolean { return this.grupoIdCtx != null; }
+
   rangoActivo: '7d' | '30d' | '90d' | 'all' = 'all';
 
   private idVideo: number | null = null;
@@ -87,17 +65,13 @@ export class VideoAnalyticsComponent implements OnInit {
     }
     this.idVideo = idVideo;
 
-    const qp = this.route.snapshot.queryParamMap;
-    this.fromGrupo  = qp.get('from') === 'grupo';
-    const grupoStr  = qp.get('grupoId');
-    this.grupoIdCtx = grupoStr != null ? Number(grupoStr) : null;
-
-    if (this.fromGrupo && this.grupoIdCtx != null) {
+    const grupoStr = this.route.snapshot.paramMap.get('idGrupo');
+    if (grupoStr) {
+      this.grupoIdCtx  = Number(grupoStr);
       this.filtroGrupo = this.grupoIdCtx;
     }
 
-    // Heredamos el rango si la URL trae `?rango=`. Si no, "all" por defecto.
-    const rangoParam = qp.get('rango');
+    const rangoParam = this.route.snapshot.queryParamMap.get('rango');
     if (rangoParam === '7d' || rangoParam === '30d' || rangoParam === '90d') {
       this.rangoActivo = rangoParam;
     }
@@ -169,28 +143,25 @@ export class VideoAnalyticsComponent implements OnInit {
   }
 
   private redirigirNoAutorizado(): void {
-    // Volvemos al origen razonable: al grupo si veníamos de él, al panel
-    // global si no.
-    if (this.fromGrupo && this.grupoIdCtx != null) {
-      this.router.navigate(['/mi-espacio/grupos', this.grupoIdCtx], {
+    if (this.grupoIdCtx != null) {
+      this.router.navigate(['/mi-espacio/analiticas/grupo', this.grupoIdCtx], {
         queryParams: { aviso: 'sin-acceso-analiticas' },
       });
     } else {
-      this.router.navigate(['/mi-espacio/videos'], {
+      this.router.navigate(['/mi-espacio/analiticas'], {
         queryParams: { aviso: 'sin-acceso-analiticas' },
       });
     }
   }
 
-  /** Ruta del back-link: al grupo si vienes de él, al panel global si no. */
   get backLink(): (string | number)[] {
-    return this.fromGrupo && this.grupoIdCtx != null
-      ? ['/mi-espacio/grupos', this.grupoIdCtx]
+    return this.grupoIdCtx != null
+      ? ['/mi-espacio/analiticas/grupo', this.grupoIdCtx]
       : ['/mi-espacio/analiticas'];
   }
 
   get backLabel(): string {
-    return this.fromGrupo ? 'Volver al grupo' : 'Volver';
+    return this.fromGrupo ? 'Volver a analíticas del grupo' : 'Volver';
   }
 
   /** % de retención individual: segundos vistos en esta sesión / duración. */
