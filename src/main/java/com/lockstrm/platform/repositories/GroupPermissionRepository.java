@@ -34,4 +34,8 @@ public interface GroupPermissionRepository extends JpaRepository<GroupPermission
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM GroupPermission pg WHERE pg.id.idGrupoId = :idGrupo")
     void deleteByGrupoId(@Param("idGrupo") Long idGrupo);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM GroupPermission pg WHERE pg.id.idVideoId = :idVideo AND pg.id.idGrupoId = :idGrupo")
+    void deleteByVideoIdAndGrupoId(@Param("idVideo") Long idVideo, @Param("idGrupo") Long idGrupo);
 }

@@ -83,8 +83,19 @@ export class GroupDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.idGrupo = Number(this.route.snapshot.paramMap.get('id'));
-    this.cargarDatos();
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.idGrupo = Number(params.get('id'));
+        this.grupo   = null;
+        this.miembros = [];
+        this.videosGrupo = [];
+        this.misVideosDisponibles = [];
+        this.rolActual = null;
+        this.editandoNombre = false;
+        this.confirmandoEliminarGrupo = false;
+        this.cargarDatos();
+      });
   }
 
   private cargarDatos(): void {

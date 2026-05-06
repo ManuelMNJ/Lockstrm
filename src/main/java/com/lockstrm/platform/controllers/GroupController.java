@@ -101,6 +101,15 @@ public class GroupController {
         return ResponseEntity.ok(videoService.obtenerVideosPorGrupo(idGrupo, userDetails.getUsername()));
     }
 
+    @DeleteMapping("/{idGrupo}/videos/{idVideo}")
+    public ResponseEntity<Map<String, String>> quitarVideoDelGrupo(
+            @PathVariable Long idGrupo,
+            @PathVariable Long idVideo,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        grupoService.quitarVideoDelGrupo(idGrupo, idVideo, userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("mensaje", "Vídeo eliminado del grupo correctamente"));
+    }
+
     /**
      * Analíticas B2B segregadas: una fila por vídeo del grupo con agregados
      * acotados a este contexto y, opcionalmente, a un rango de fechas.

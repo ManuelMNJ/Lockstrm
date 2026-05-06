@@ -298,6 +298,12 @@ public class GroupService {
         return grupoRepository.save(grupo);
     }
 
+    @Transactional
+    public void quitarVideoDelGrupo(Long idGrupo, Long idVideo, String emailSolicitante) {
+        verifyRolMinimo(idGrupo, emailSolicitante, GroupRole.EDITOR, "quitar vídeos del grupo");
+        permisosGroupRepository.deleteByVideoIdAndGrupoId(idVideo, idGrupo);
+    }
+
     private void verificarEsCreador(Group grupo, String email) {
         if (!grupo.getCreador().getEmail().equals(email)) {
             throw new AccessDeniedException("Solo el creador puede modificar la imagen del grupo");
