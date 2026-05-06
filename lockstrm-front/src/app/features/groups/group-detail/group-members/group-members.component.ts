@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { GroupService, Member } from '../../../../core/services/group.service';
 import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { extractHttpErrorMessage } from '../../../../shared/utils/error-utils';
+import { UI_TIMINGS } from '../../../../shared/utils/ui-constants';
 import { CustomSelectComponent, SelectOption } from '../../../../shared/components/custom-select/custom-select.component';
 
 @Component({
@@ -104,7 +105,7 @@ export class GroupMembersComponent implements OnChanges {
           this.estadoAnadir = 'success';
           this.cdr.markForCheck();
           this.recargarMiembros();
-          setTimeout(() => { this.estadoAnadir = 'idle'; this.cdr.markForCheck(); }, 3000);
+          setTimeout(() => { this.estadoAnadir = 'idle'; this.cdr.markForCheck(); }, UI_TIMINGS.FEEDBACK_SUCCESS_MS);
         },
         error: (err) => {
           this.estadoAnadir = 'error';
