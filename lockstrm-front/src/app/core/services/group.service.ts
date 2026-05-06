@@ -110,6 +110,10 @@ export class GroupService {
     );
   }
 
+  quitarVideoDelGrupo(idGrupo: number, idVideo: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${idGrupo}/videos/${idVideo}`);
+  }
+
   renombrarGrupo(idGrupo: number, nombre: string): Observable<Group> {
     return this.http.put<Group>(`${this.apiUrl}/${idGrupo}`, { nombre }).pipe(
       tap(() => {

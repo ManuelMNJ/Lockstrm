@@ -32,7 +32,16 @@ public class StatsService {
         long totalGrupos = grupoRepository.countByCreador_Email(email);
 
         List<VideoSummaryDto> topVistos = videoVistaRepository
-                .findTopVistedByOwner(email, PageRequest.of(0, 3));
+                .findTopVistedByOwner(email, PageRequest.of(0, 3))
+                .stream()
+                .map(v -> new VideoSummaryDto(
+                        v.idVideo(),
+                        v.titulo(),
+                        v.duracion(),
+                        VideoService.resolveThumbnailUrl(v.miniaturaUrl()),
+                        v.vistas(),
+                        v.fechaSubida()))
+                .toList();
 
         List<VideoSummaryDto> topRecientes = videoRepository
                 .findTop3ByPropietario_EmailOrderByFechaSubidaDesc(email)
@@ -41,7 +50,7 @@ public class StatsService {
                         v.getIdVideo(),
                         v.getTitulo(),
                         v.getDuracion(),
-                        v.getMiniaturaUrl(),
+                        VideoService.resolveThumbnailUrl(v.getMiniaturaUrl()),
                         0L,
                         v.getFechaSubida()))
                 .toList();

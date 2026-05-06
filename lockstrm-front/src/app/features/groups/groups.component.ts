@@ -48,6 +48,13 @@ export class GroupsComponent implements OnInit {
   miembrosPerGrupo = new Map<number, number>();
   videosPerGrupo   = new Map<number, number>();
 
+  readonly tamanioPagina = 8;
+
+  sortMisGrupos:    { campo: 'nombre' | 'fechaCreacion' | 'miembros' | 'videos'; dir: 'asc' | 'desc' } = { campo: 'fechaCreacion', dir: 'desc' };
+  sortCompartidos:  { campo: 'nombre' | 'fechaCreacion' | 'miembros' | 'videos'; dir: 'asc' | 'desc' } = { campo: 'fechaCreacion', dir: 'desc' };
+  paginaMisGrupos   = 1;
+  paginaCompartidos = 1;
+
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
   private destroyRef = inject(DestroyRef);
@@ -183,5 +190,60 @@ export class GroupsComponent implements OnInit {
 
   getVideos(idGrupo: number): number | null {
     return this.videosPerGrupo.get(idGrupo) ?? null;
+  }
+
+  // ── Ordenación ──────────────────────────────────────────────────────
+  private ordenar(lista: Group[], sort: typeof this.sortMisGrupos): Group[] {
+    return [...lista].sort((a, b) => {
+      let cmp = 0;
+      if (sort.campo === 'nombre') {
+        cmp = a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
+      } else if (sort.campo === 'fechaCreacion') {
+        cmp = new Date(a.fechaCreacion ?? 0).getTime() - new Date(b.fechaCreacion ?? 0).getTime();
+      } else if (sort.campo === 'miembros') {
+        cmp = (this.miembrosPerGrupo.get(a.idGrupo) ?? 0) - (this.miembrosPerGrupo.get(b.idGrupo) ?? 0);
+      } else {
+        cmp = (this.videosPerGrupo.get(a.idGrupo) ?? 0) - (this.videosPerGrupo.get(b.idGrupo) ?? 0);
+      }
+      return sort.dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  cambiarOrden(seccion: 'mis' | 'compartidos', campo: typeof this.sortMisGrupos['campo']): void {
+    const sort = seccion === 'mis' ? this.sortMisGrupos : this.sortCompartidos;
+    if (sort.campo === campo) {
+      sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sort.campo = campo;
+      sort.dir   = campo === 'nombre' ? 'asc' : 'desc';
+    }
+    if (seccion === 'mis') { this.paginaMisGrupos = 1; }
+    else                   { this.paginaCompartidos = 1; }
+    this.cdr.markForCheck();
+  }
+
+  // ── Paginación ───────────────────────────────────────────────────────
+  private paginar(lista: Group[], pagina: number): Group[] {
+    const inicio = (pagina - 1) * this.tamanioPagina;
+    return lista.slice(inicio, inicio + this.tamanioPagina);
+  }
+
+  get misGruposOrdenados(): Group[] { return this.ordenar(this.misGrupos, this.sortMisGrupos); }
+  get compartidosOrdenados(): Group[] { return this.ordenar(this.compartidosConmigo, this.sortCompartidos); }
+
+  get misGruposPaginados(): Group[]   { return this.paginar(this.misGruposOrdenados, this.paginaMisGrupos); }
+  get compartidosPaginados(): Group[] { return this.paginar(this.compartidosOrdenados, this.paginaCompartidos); }
+
+  get totalPaginasMis(): number   { return Math.ceil(this.misGrupos.length / this.tamanioPagina) || 1; }
+  get totalPaginasComp(): number  { return Math.ceil(this.compartidosConmigo.length / this.tamanioPagina) || 1; }
+
+  irPagina(seccion: 'mis' | 'compartidos', pagina: number): void {
+    if (seccion === 'mis')  { this.paginaMisGrupos   = pagina; }
+    else                    { this.paginaCompartidos  = pagina; }
+    this.cdr.markForCheck();
+  }
+
+  rangosPaginas(total: number): number[] {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
 }
