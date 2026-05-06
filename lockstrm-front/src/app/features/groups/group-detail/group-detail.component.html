@@ -10,20 +10,6 @@
       Volver a grupos
     </button>
 
-    @if (puedeGestionarVideos && grupo && !cargando) {
-      <a class="btn-secondary"
-         [routerLink]="['/mi-espacio/analiticas/grupo', idGrupo]"
-         aria-label="Ver analíticas del grupo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6"  y1="20" x2="6"  y2="14"/>
-        </svg>
-        Analíticas
-      </a>
-    }
-
     @if (esSuperAdmin && grupo && !cargando) {
       <button class="btn-danger"
               (click)="solicitarEliminarGrupo()"
@@ -138,6 +124,22 @@
               Creado el {{ grupo.fechaCreacion | dateLocale }}
             </span>
           </div>
+
+          @if (puedeGestionarVideos) {
+            <div class="grupo-hero-actions">
+              <a class="btn-analytics"
+                 [routerLink]="['/mi-espacio/analiticas/grupo', idGrupo]"
+                 aria-label="Ver analíticas del grupo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="20" x2="18" y2="10"/>
+                  <line x1="12" y1="20" x2="12" y2="4"/>
+                  <line x1="6"  y1="20" x2="6"  y2="14"/>
+                </svg>
+                Ver analíticas
+              </a>
+            </div>
+          }
 
         </div>
       </div>

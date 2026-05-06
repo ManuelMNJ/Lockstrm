@@ -111,13 +111,13 @@
         </thead>
         <tbody>
           @for (s of analiticasGrupo; track s.idVideo) {
-            <tr class="row--clickable"
+            <tr [class.row--clickable]="s.visitasTotales > 0"
                 [class.row--inactive]="s.visitasTotales === 0"
-                [routerLink]="['/mi-espacio/analiticas/grupo', idGrupo, s.idVideo]"
-                [queryParams]="{ rango: rangoActivo }"
-                role="link"
-                tabindex="0"
-                [attr.aria-label]="'Ver sesiones individuales de ' + s.titulo">
+                [routerLink]="s.visitasTotales > 0 ? ['/mi-espacio/analiticas/grupo', idGrupo, s.idVideo] : null"
+                [queryParams]="s.visitasTotales > 0 ? { rango: rangoActivo } : null"
+                [attr.role]="s.visitasTotales > 0 ? 'link' : null"
+                [attr.tabindex]="s.visitasTotales > 0 ? 0 : null"
+                [attr.aria-label]="s.visitasTotales > 0 ? 'Ver sesiones individuales de ' + s.titulo : null">
               <td>
                 <div class="analiticas-video-cell">
                   @if (s.miniaturaUrl) {
