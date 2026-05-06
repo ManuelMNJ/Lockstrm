@@ -139,7 +139,7 @@
     <!-- Lista -->
     } @else {
       <ol class="top-list">
-        @for (video of datos!.topVideos; track video.idVideo; let i = $index) {
+        @for (video of pTopVideos.paginatedItems; track video.idVideo; let i = $index) {
           <li class="top-row top-row--clickable"
               [routerLink]="['/mi-espacio/analiticas', video.idVideo]"
               role="link"
@@ -147,10 +147,10 @@
               [attr.aria-label]="'Ver analíticas de ' + video.titulo">
 
             <!-- Posición -->
-            <span class="rank-badge" [class.rank-badge--gold]="i === 0"
-                                     [class.rank-badge--silver]="i === 1"
-                                     [class.rank-badge--bronze]="i === 2">
-              {{ i + 1 }}
+            <span class="rank-badge" [class.rank-badge--gold]="globalIdx(i, pTopVideos) === 0"
+                                     [class.rank-badge--silver]="globalIdx(i, pTopVideos) === 1"
+                                     [class.rank-badge--bronze]="globalIdx(i, pTopVideos) === 2">
+              {{ globalIdx(i, pTopVideos) + 1 }}
             </span>
 
             <!-- Miniatura -->
@@ -195,6 +195,18 @@
           </li>
         }
       </ol>
+      @if (pTopVideos.totalPages > 1) {
+        <nav class="paginator" aria-label="Paginación de vídeos">
+          <button class="paginator-btn" [disabled]="pTopVideos.page === 1"
+                  (click)="irPaginaTopVideos(pTopVideos.page - 1)" aria-label="Página anterior">‹</button>
+          @for (p of pTopVideos.pages; track p) {
+            <button class="paginator-btn" [class.paginator-btn--active]="pTopVideos.page === p"
+                    (click)="irPaginaTopVideos(p)" [attr.aria-current]="pTopVideos.page === p ? 'page' : null">{{ p }}</button>
+          }
+          <button class="paginator-btn" [disabled]="pTopVideos.page === pTopVideos.totalPages"
+                  (click)="irPaginaTopVideos(pTopVideos.page + 1)" aria-label="Página siguiente">›</button>
+        </nav>
+      }
     }
 
   </section>
@@ -246,7 +258,7 @@
 
     } @else {
       <ul class="top-list">
-        @for (g of gruposResumen; track g.idGrupo) {
+        @for (g of pGrupos.paginatedItems; track g.idGrupo) {
           <li class="grupo-row top-row--clickable"
               [routerLink]="['/mi-espacio/analiticas/grupo', g.idGrupo]"
               role="link"
@@ -279,6 +291,18 @@
           </li>
         }
       </ul>
+      @if (pGrupos.totalPages > 1) {
+        <nav class="paginator" aria-label="Paginación de grupos">
+          <button class="paginator-btn" [disabled]="pGrupos.page === 1"
+                  (click)="irPaginaGrupos(pGrupos.page - 1)" aria-label="Página anterior">‹</button>
+          @for (p of pGrupos.pages; track p) {
+            <button class="paginator-btn" [class.paginator-btn--active]="pGrupos.page === p"
+                    (click)="irPaginaGrupos(p)" [attr.aria-current]="pGrupos.page === p ? 'page' : null">{{ p }}</button>
+          }
+          <button class="paginator-btn" [disabled]="pGrupos.page === pGrupos.totalPages"
+                  (click)="irPaginaGrupos(pGrupos.page + 1)" aria-label="Página siguiente">›</button>
+        </nav>
+      }
     }
 
   </section>

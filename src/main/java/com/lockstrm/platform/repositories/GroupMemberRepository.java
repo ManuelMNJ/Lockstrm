@@ -40,6 +40,18 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     boolean existsMiembroConAccesoAlVideo(@Param("email") String email,
                                           @Param("idVideo") Long idVideo);
 
+    @Query("""
+            SELECT COUNT(mg) > 0 FROM GroupMember mg
+            WHERE mg.usuario.email = :email
+            AND mg.rol IN :roles
+            AND mg.id.idGrupoId IN (
+                SELECT p.id.idGrupoId FROM GroupPermission p WHERE p.id.idVideoId = :idVideo
+            )
+            """)
+    boolean existsAdminEnGrupoConVideo(@Param("email") String email,
+                                       @Param("idVideo") Long idVideo,
+                                       @Param("roles") java.util.Collection<com.lockstrm.platform.enums.GroupRole> roles);
+
     /** Elimina todos los miembros de un grupo (usado al borrar el grupo). */
     @Modifying
     @Query("DELETE FROM GroupMember mg WHERE mg.id.idGrupoId = :idGrupo")

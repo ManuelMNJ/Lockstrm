@@ -263,7 +263,8 @@ public class VideoService {
                 refs,
                 resolveThumbnailUrl(video.getMiniaturaUrl()),
                 video.getFileName(),
-                fileSize
+                fileSize,
+                video.getPropietario() != null ? video.getPropietario().getIdUsuario() : null
         );
     }
 

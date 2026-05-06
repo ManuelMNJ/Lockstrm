@@ -10,12 +10,14 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { VideoService, Video, VideoVistaEstadistica } from '../../../../core/services/video.service';
 import { GroupService } from '../../../../core/services/group.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../../videos/video-player/video-player.component';
@@ -71,11 +73,21 @@ export class GroupVideosComponent {
   constructor(
     protected videoService: VideoService,
     private grupoService: GroupService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   get esAdmin(): boolean {
     return this.rolActual === 'ADMIN' || this.rolActual === 'SUPER_ADMIN';
+  }
+
+  esMiVideo(v: Video): boolean {
+    const uid = this.authService.getUser()?.id;
+    return uid != null && v.propietarioId === uid;
+  }
+
+  puedeVerStats(v: Video): boolean {
+    return this.esAdmin || this.esMiVideo(v);
   }
 
   get puedeGestionarVideos(): boolean {
@@ -220,8 +232,10 @@ export class GroupVideosComponent {
           this.cargandoStats = false;
           this.cdr.markForCheck();
         },
-        error: () => {
-          this.errorStats    = 'No se pudieron cargar las estadísticas.';
+        error: (err: HttpErrorResponse) => {
+          this.errorStats    = err.status === 403
+            ? 'Solo el autor del vídeo puede ver estas estadísticas.'
+            : 'No se pudieron cargar las estadísticas.';
           this.cargandoStats = false;
           this.cdr.markForCheck();
         },

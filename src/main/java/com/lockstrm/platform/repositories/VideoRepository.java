@@ -22,6 +22,9 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
                 .orElseThrow(() -> new NoSuchElementException("Vídeo no encontrado: " + id));
     }
 
+    @Query("SELECT COUNT(v) > 0 FROM Video v WHERE v.idVideo = :idVideo AND v.propietario.email = :email")
+    boolean existsByVideoIdAndPropietarioEmail(@Param("idVideo") Long idVideo, @Param("email") String email);
+
     List<Video> findByPropietario_Email(String email);
 
     long countByPropietario_Email(String email);

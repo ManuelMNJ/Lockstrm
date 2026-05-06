@@ -16,6 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { GroupService } from '../../../../core/services/group.service';
 import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe';
+import { Paginator } from '../../../../shared/utils/paginator';
 
 @Component({
   selector: 'app-group-analytics',
@@ -40,6 +41,8 @@ export class GroupAnalyticsComponent implements OnInit {
   cargandoAnaliticas = false;
   errorAnaliticas    = '';
   private analiticasCargadas = false;
+
+  pAnaliticas = new Paginator<GroupVideoStats>(10);
 
   rangoActivo: '7d' | '30d' | '90d' | 'all' = 'all';
 
@@ -116,6 +119,8 @@ export class GroupAnalyticsComponent implements OnInit {
       : `${total} visitas en los últimos 30 días · pico ${max} en un día`;
   }
 
+  irPagina(p: number): void { this.pAnaliticas.goToPage(p); this.cdr.markForCheck(); }
+
   retencionPctVideo(stat: GroupVideoStats): number {
     return Math.round(stat.porcentajeCompletadoMedio ?? 0);
   }
@@ -168,6 +173,7 @@ export class GroupAnalyticsComponent implements OnInit {
       .subscribe({
         next: (stats) => {
           this.analiticasGrupo    = stats;
+          this.pAnaliticas.setItems(stats);
           this.analiticasCargadas = true;
           this.cargandoAnaliticas = false;
           this.cdr.markForCheck();

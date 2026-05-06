@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, timer } from 'rxjs';
-import { debounceTime, switchMap, map, catchError, first, finalize } from 'rxjs/operators';
+import { switchMap, map, catchError, first, finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { UserService, PerfilUsuario } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -125,7 +125,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (actualizado) => {
-          const usernameChanged = actualizado.username.toLowerCase() !== originalUsername.toLowerCase();
+          const usernameChanged = (actualizado.username?.toLowerCase() ?? '') !== originalUsername.toLowerCase();
           this.perfil      = { ...this.perfil!, ...actualizado };
           this.modoEdicion = false;
           this.cdr.markForCheck();
@@ -161,11 +161,10 @@ export class ProfileComponent implements OnInit, PendingChanges {
       const value = (control.value ?? '').trim();
       if (!value || !/^[A-Za-z0-9_-]{3,20}$/.test(value)) return of(null);
       if (this.perfil && value.toLowerCase() === this.perfil.username.toLowerCase()) return of(null);
-      return of(value).pipe(
-        debounceTime(500),
-        switchMap(username =>
+      return timer(500).pipe(
+        switchMap(() =>
           this.http.get<{ disponible: boolean }>(
-            `${this.authApiUrl}/check-username?username=${encodeURIComponent(username)}`
+            `${this.authApiUrl}/check-username?username=${encodeURIComponent(value)}`
           )
         ),
         map(res => res.disponible ? null : { usernameSaturado: true }),
@@ -184,7 +183,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
       this.cdr.markForCheck();
       timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => { this.handleCopiado = false; this.cdr.markForCheck(); });
-    });
+    }).catch(() => { /* permisos denegados o contexto no seguro — no acción */ });
   }
 
   get fNombre()    { return this.formPerfil.get('nombre')!; }
@@ -329,11 +328,10 @@ export class ProfileComponent implements OnInit, PendingChanges {
       const value = (control.value ?? '').trim().toLowerCase();
       if (!value || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return of(null);
       if (this.perfil && value === this.perfil.email.toLowerCase()) return of(null);
-      return of(value).pipe(
-        debounceTime(500),
-        switchMap(email =>
+      return timer(500).pipe(
+        switchMap(() =>
           this.http.get<{ disponible: boolean }>(
-            `${this.authApiUrl}/check-email?email=${encodeURIComponent(email)}`
+            `${this.authApiUrl}/check-email?email=${encodeURIComponent(value)}`
           )
         ),
         map(res => res.disponible ? null : { emailTomado: true }),
