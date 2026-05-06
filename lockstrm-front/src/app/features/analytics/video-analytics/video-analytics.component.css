@@ -9,6 +9,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .header-left { flex: 1; min-width: 0; }
@@ -113,6 +114,8 @@
   border: 1px solid var(--overlay-white-06);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
+  overflow-x: auto; /* tabla no desborda en móvil */
+  -webkit-overflow-scrolling: touch;
 }
 
 .section-header { margin-bottom: var(--space-4); }
@@ -310,4 +313,31 @@
 .rango-preset--active {
   background: rgba(124, 58, 237, 0.18);
   color: var(--color-primary-lighter, #c4b5fd);
+}
+
+/* ==========================================================================
+   RESPONSIVE — MÓVIL
+   ========================================================================== */
+@media (max-width: 640px) {
+
+  /* Ocultar miniatura del vídeo — gana espacio para título */
+  .header-thumb {
+    display: none;
+  }
+
+  /* Select de grupo: ancho libre en lugar de mínimo fijo */
+  .grupo-filter__select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .grupo-filter {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  /* Presets de rango: permiten salto de línea */
+  .rango-presets {
+    flex-wrap: wrap;
+  }
 }
