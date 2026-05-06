@@ -5,7 +5,6 @@ import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { STORAGE_KEYS } from '../constants/storage-keys';
 import { GroupService } from './group.service';
-import { VideoService } from './video.service';
 
 export interface AuthResponse {
   token: string;
@@ -28,9 +27,7 @@ export class AuthService {
   readonly currentUser     = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => !!this._currentUser());
 
-  // Inyectados con inject() para evitar dependencia circular en el constructor
   private readonly groupService = inject(GroupService);
-  private readonly videoService = inject(VideoService);
 
   constructor(private readonly http: HttpClient, private readonly router: Router) {}
 
@@ -49,7 +46,7 @@ export class AuthService {
     this._currentUser.set(null);
     // Limpiar cachés de servicios para que no persistan datos entre sesiones
     this.groupService.clearCaches();
-    this.videoService.resetCache();
+    // VideoService se auto-resetea vía effect() en su propio constructor
     this.router.navigate(commands, { queryParams });
   }
 
