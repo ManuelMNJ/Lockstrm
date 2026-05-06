@@ -363,12 +363,13 @@
 
               <div class="activity-content">
                 <p class="activity-text" [innerHTML]="item.text"></p>
-                <span class="activity-time">{{ item.time }}</span>
+                <span class="activity-time">{{ relativeTime(item.occurredAt) }}</span>
               </div>
 
             </li>
           }
         </ul>
+
       </aside>
 
     </div><!-- end dashboard-body -->

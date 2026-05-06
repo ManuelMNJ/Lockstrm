@@ -281,7 +281,14 @@
   font-weight: 700;
   flex-shrink: 0;
   text-transform: uppercase;
+  overflow: hidden;
   letter-spacing: 0;
+}
+
+.recent-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .recent-name {

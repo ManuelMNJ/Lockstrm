@@ -255,6 +255,13 @@
   font-weight: 700;
   flex-shrink: 0;
   transition: box-shadow var(--transition-fast);
+  overflow: hidden;
+}
+
+.grupo-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .grupo-card:hover .grupo-card-icon {

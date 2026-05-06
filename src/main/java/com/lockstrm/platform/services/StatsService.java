@@ -1,7 +1,9 @@
 package com.lockstrm.platform.services;
 
+import com.lockstrm.platform.dto.ActivityItemDto;
 import com.lockstrm.platform.dto.DashboardStatsDto;
 import com.lockstrm.platform.dto.VideoSummaryDto;
+import com.lockstrm.platform.repositories.GroupMemberRepository;
 import com.lockstrm.platform.repositories.GroupRepository;
 import com.lockstrm.platform.repositories.VideoRepository;
 import com.lockstrm.platform.repositories.VideoViewRepository;
@@ -10,6 +12,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -19,6 +23,7 @@ public class StatsService {
     private final VideoRepository      videoRepository;
     private final VideoViewRepository videoVistaRepository;
     private final GroupRepository      grupoRepository;
+    private final GroupMemberRepository groupMemberRepository;
 
     @Transactional(readOnly = true)
     public DashboardStatsDto getDashboardStats(String email) {
@@ -42,5 +47,29 @@ public class StatsService {
                 .toList();
 
         return new DashboardStatsDto(totalVideos, totalVistas, totalGrupos, topVistos, topRecientes);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ActivityItemDto> getActivityFeed(String email) {
+        var limit = PageRequest.of(0, 5);
+        var items = new ArrayList<ActivityItemDto>();
+
+        videoRepository.findRecentByOwner(email, limit).forEach(v ->
+                items.add(new ActivityItemDto("upload",
+                        "Subiste <strong>" + v.getTitulo() + "</strong> correctamente",
+                        v.getFechaSubida())));
+
+        grupoRepository.findRecentByCreator(email, limit).forEach(g ->
+                items.add(new ActivityItemDto("group",
+                        "Creaste el grupo <strong>" + g.getNombre() + "</strong>",
+                        g.getFechaCreacion())));
+
+        groupMemberRepository.findRecentJoinsByUser(email, limit).forEach(mg ->
+                items.add(new ActivityItemDto("group",
+                        "Se te añadió al grupo <strong>" + mg.getGrupo().getNombre() + "</strong>",
+                        mg.getFechaUnion())));
+
+        items.sort(Comparator.comparing(ActivityItemDto::occurredAt).reversed());
+        return items.stream().limit(5).toList();
     }
 }

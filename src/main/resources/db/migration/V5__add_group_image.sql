@@ -1,0 +1,1 @@
+ALTER TABLE grupos ADD COLUMN imagen_url VARCHAR(255);

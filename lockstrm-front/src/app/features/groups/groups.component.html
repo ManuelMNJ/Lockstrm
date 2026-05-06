@@ -67,7 +67,11 @@
                (keydown.space)="abrirDetalle(g)">
 
             <div class="grupo-card-icon" aria-hidden="true">
-              {{ g.nombre | initial }}
+              @if (g.imagenUrl) {
+                <img [src]="apiUrl + g.imagenUrl" [alt]="g.nombre" class="grupo-card-img">
+              } @else {
+                {{ g.nombre | initial }}
+              }
             </div>
 
             <div class="grupo-card-body">
@@ -167,7 +171,11 @@
                (keydown.space)="abrirDetalle(g)">
 
             <div class="grupo-card-icon grupo-card-icon--shared" aria-hidden="true">
-              {{ g.nombre | initial }}
+              @if (g.imagenUrl) {
+                <img [src]="apiUrl + g.imagenUrl" [alt]="g.nombre" class="grupo-card-img">
+              } @else {
+                {{ g.nombre | initial }}
+              }
             </div>
 
             <div class="grupo-card-body">

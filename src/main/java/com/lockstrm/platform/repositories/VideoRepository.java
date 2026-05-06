@@ -28,6 +28,9 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 
     List<Video> findTop3ByPropietario_EmailOrderByFechaSubidaDesc(String email);
 
+    @Query("SELECT v FROM Video v WHERE v.propietario.email = :email ORDER BY v.fechaSubida DESC")
+    List<Video> findRecentByOwner(@Param("email") String email, Pageable pageable);
+
     @Query("SELECT DISTINCT v FROM Video v " +
            "JOIN GroupPermission pg ON pg.video = v " +
            "WHERE pg.grupo.idGrupo = :idGrupo")
