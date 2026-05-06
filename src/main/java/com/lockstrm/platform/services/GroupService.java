@@ -18,6 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.PageRequest;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,18 +32,22 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class GroupService {
 
-    private final GroupRepository         grupoRepository;
-    private final UserRepository          userRepository;
-    private final GroupMemberRepository miembrosGroupRepository;
+    private final GroupRepository           grupoRepository;
+    private final UserRepository            userRepository;
+    private final GroupMemberRepository     miembrosGroupRepository;
     private final GroupPermissionRepository permisosGroupRepository;
-    private final LogRepository           logRepository;
-    private final UserService             userService;
+    private final LogRepository             logRepository;
+    private final UserService               userService;
+
+    @Value("${lockstrm.upload.grupos.dir}")
+    private String gruposImgDir;
 
     @Transactional(readOnly = true)
     public List<Group> obtenerGruposDelUsuario(String email) {
@@ -262,5 +273,34 @@ public class GroupService {
 
         objetivo.setRol(nuevoRol);
         miembrosGroupRepository.save(objetivo);
+    }
+
+    @Transactional
+    public Group actualizarImagenGrupo(Long idGrupo, String email, MultipartFile file) throws IOException {
+        Group grupo = grupoRepository.getByIdOrThrow(idGrupo);
+        verificarEsCreador(grupo, email);
+        userService.validateImageFile(file);
+
+        Path baseDir = Paths.get(gruposImgDir).toAbsolutePath().normalize();
+        Files.createDirectories(baseDir);
+
+        String ext      = userService.getImageExtension(file.getContentType());
+        String fileName = UUID.randomUUID() + "." + ext;
+
+        String old = grupo.getImagenUrl();
+        if (old != null && !old.isBlank()) {
+            String oldFileName = old.substring(old.lastIndexOf('/') + 1);
+            try { Files.deleteIfExists(baseDir.resolve(oldFileName).normalize()); } catch (IOException ignored) {}
+        }
+
+        file.transferTo(baseDir.resolve(fileName));
+        grupo.setImagenUrl("/api/grupos/imagenes/" + fileName);
+        return grupoRepository.save(grupo);
+    }
+
+    private void verificarEsCreador(Group grupo, String email) {
+        if (!grupo.getCreador().getEmail().equals(email)) {
+            throw new AccessDeniedException("Solo el creador puede modificar la imagen del grupo");
+        }
     }
 }

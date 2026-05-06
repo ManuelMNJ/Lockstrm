@@ -130,7 +130,13 @@
              routerLinkActive="active"
              class="nav-item recent-item"
              [title]="g.nombre">
-            <span class="recent-avatar" aria-hidden="true">{{ grupoInicial(g.nombre) }}</span>
+            <span class="recent-avatar" aria-hidden="true">
+              @if (g.imagenUrl) {
+                <img [src]="apiUrl + g.imagenUrl" [alt]="g.nombre" class="recent-avatar-img">
+              } @else {
+                {{ grupoInicial(g.nombre) }}
+              }
+            </span>
             <span class="nav-label recent-name">{{ g.nombre }}</span>
           </a>
         }

@@ -1,6 +1,7 @@
 interface HttpErrorBody {
   error?:   string;
   mensaje?: string;
+  message?: string;   // Spring usa 'message'; algunos endpoints nuestros también
 }
 
 interface HttpErrorResponse {
@@ -14,5 +15,5 @@ function isHttpErrorResponse(err: unknown): err is HttpErrorResponse {
 export function extractHttpErrorMessage(err: unknown, defaultMsg: string): string {
   if (!isHttpErrorResponse(err)) return defaultMsg;
   const body = err.error;
-  return body?.error ?? body?.mensaje ?? defaultMsg;
+  return body?.error ?? body?.mensaje ?? body?.message ?? defaultMsg;
 }

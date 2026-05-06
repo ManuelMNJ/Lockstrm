@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnIn
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { DashboardService, DashboardStats } from '../../core/services/dashboard.service';
+import { DashboardService, DashboardStats, ActivityItem } from '../../core/services/dashboard.service';
 import { AuthService } from '../../core/services/auth.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
@@ -18,6 +18,7 @@ import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 export class DashboardComponent implements OnInit {
 
   stats:        DashboardStats | null = null;
+  activityFeed: ActivityItem[]        = [];
   cargando      = true;
   error         = '';
   failedThumbs  = new Set<number>();
@@ -50,16 +51,27 @@ export class DashboardComponent implements OnInit {
           this.cdr.markForCheck();
         },
       });
+
+    this.dashboardService.getActivity()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.activityFeed = data;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   readonly skeletonItems = [1, 2, 3];
 
-  readonly activityFeed: { icon: 'group' | 'video' | 'views' | 'upload' | 'share'; text: string; time: string }[] = [
-    { icon: 'group',  text: 'Se te añadió al grupo <strong>Marketing Q4</strong>',          time: 'hace 2 h'  },
-    { icon: 'views',  text: '<strong>Presentación anual</strong> alcanzó 100 vistas',        time: 'hace 5 h'  },
-    { icon: 'upload', text: 'Subiste <strong>Demo producto v2.mp4</strong> correctamente',   time: 'ayer'       },
-    { icon: 'group',  text: 'Nuevo miembro en el grupo <strong>Ventas EMEA</strong>',        time: 'hace 2 d'  },
-    { icon: 'share',  text: '<strong>Tutorial onboarding</strong> compartido con 3 grupos',  time: 'hace 3 d'  },
-    { icon: 'video',  text: 'Group <strong>Técnico Dev</strong> creado con éxito',           time: 'hace 5 d'  },
-  ];
+  relativeTime(isoDate: string): string {
+    const diff = Date.now() - new Date(isoDate).getTime();
+    const min  = Math.floor(diff / 60000);
+    if (min < 60)   return `hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24)     return `hace ${h} h`;
+    const d = Math.floor(h / 24);
+    if (d === 1)    return 'ayer';
+    return `hace ${d} d`;
+  }
 }

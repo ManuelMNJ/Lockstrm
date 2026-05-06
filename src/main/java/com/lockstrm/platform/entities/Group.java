@@ -25,6 +25,9 @@ public class Group {
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @Column(name = "imagen_url")
+    private String imagenUrl;
+
     @PrePersist
     protected void onCreate() {
         if (this.fechaCreacion == null) {

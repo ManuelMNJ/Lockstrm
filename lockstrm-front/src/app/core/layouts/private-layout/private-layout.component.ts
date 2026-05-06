@@ -4,6 +4,7 @@ import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GroupService, Group } from '../../services/group.service';
 import { switchMap, of } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-private-layout',
@@ -36,6 +37,7 @@ export class PrivateLayoutComponent {
   }
 
   /** Últimos grupos accedidos por el usuario (máx. 3). */
+  readonly apiUrl = environment.apiUrl;
   gruposRecientes: Group[] = [];
 
   private readonly router       = inject(Router);

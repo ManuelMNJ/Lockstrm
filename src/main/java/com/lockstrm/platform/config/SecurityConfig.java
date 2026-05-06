@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/videos/thumbnails/**").permitAll()
                 // Los avatares se sirven sin auth para que <img> los cargue sin headers
                 .requestMatchers("/api/usuarios/avatars/**").permitAll()
+                .requestMatchers("/api/grupos/imagenes/**").permitAll()
                 .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).authenticated()
                 .requestMatchers("/", "/index.html", "/css/**", "/js/**",

@@ -8,6 +8,7 @@ export interface Group {
   idGrupo: number;
   nombre: string;
   fechaCreacion?: string;
+  imagenUrl?: string | null;
 }
 
 export interface Member {
@@ -89,6 +90,18 @@ export class GroupService {
 
   eliminarGrupo(idGrupo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idGrupo}`).pipe(
+      tap(() => {
+        this.misGruposCache$ = null;
+        this.gruposCreadosCache$ = null;
+        this.gruposMiembroCache$ = null;
+      }),
+    );
+  }
+
+  subirImagenGrupo(idGrupo: number, file: File): Observable<{ imagenUrl: string }> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.http.post<{ imagenUrl: string }>(`${this.apiUrl}/${idGrupo}/imagen`, fd).pipe(
       tap(() => {
         this.misGruposCache$ = null;
         this.gruposCreadosCache$ = null;
