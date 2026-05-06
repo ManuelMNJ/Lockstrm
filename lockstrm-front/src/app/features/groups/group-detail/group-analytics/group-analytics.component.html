@@ -110,7 +110,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of analiticasGrupo; track s.idVideo) {
+          @for (s of pAnaliticas.paginatedItems; track s.idVideo) {
             <tr [class.row--clickable]="s.visitasTotales > 0"
                 [class.row--inactive]="s.visitasTotales === 0"
                 [routerLink]="s.visitasTotales > 0 ? ['/mi-espacio/analiticas/grupo', idGrupo, s.idVideo] : null"
@@ -229,6 +229,18 @@
         </tbody>
       </table>
     </div>
+    @if (pAnaliticas.totalPages > 1) {
+      <nav class="paginator" aria-label="Paginación de analíticas">
+        <button class="pag-btn" [disabled]="pAnaliticas.page === 1"
+                (click)="irPagina(pAnaliticas.page - 1)" aria-label="Página anterior">‹</button>
+        @for (p of pAnaliticas.pages; track p) {
+          <button class="pag-btn pag-btn--num" [class.pag-btn--active]="pAnaliticas.page === p"
+                  (click)="irPagina(p)" [attr.aria-current]="pAnaliticas.page === p ? 'page' : null">{{ p }}</button>
+        }
+        <button class="pag-btn" [disabled]="pAnaliticas.page === pAnaliticas.totalPages"
+                (click)="irPagina(pAnaliticas.page + 1)" aria-label="Página siguiente">›</button>
+      </nav>
+    }
   }
 
 </section>

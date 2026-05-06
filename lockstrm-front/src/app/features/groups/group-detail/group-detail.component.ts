@@ -157,6 +157,7 @@ export class GroupDetailComponent implements OnInit {
           this.cdr.markForCheck();
         },
         error: () => {
+          this.errorCarga = 'No se pudieron cargar los vídeos del grupo.';
           this.cdr.markForCheck();
         },
       });

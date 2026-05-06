@@ -392,14 +392,15 @@ export class VideosComponent implements OnInit {
               .filter((g): g is Group => g != null)
               .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
             this.videoService.prependVideo({
-              idVideo:      res.id_video,
-              titulo:       res.titulo,
-              duracion:     res.duracion ?? null,
-              fechaSubida:  new Date().toISOString(),
+              idVideo:       res.id_video,
+              titulo:        res.titulo,
+              duracion:      res.duracion ?? null,
+              fechaSubida:   new Date().toISOString(),
               grupos,
-              miniaturaUrl: res.miniaturaUrl || null,
-              fileName:     res.fileName,
-              fileSize:     null,
+              miniaturaUrl:  res.miniaturaUrl || null,
+              fileName:      res.fileName,
+              fileSize:      null,
+              propietarioId: null,
             });
             item.estado = 'success';
             this.cdr.markForCheck();

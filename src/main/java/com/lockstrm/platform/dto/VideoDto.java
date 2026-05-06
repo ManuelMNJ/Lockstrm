@@ -24,7 +24,8 @@ public record VideoDto(
         List<GroupRef> grupos,
         String miniaturaUrl,
         String fileName,
-        Long fileSize
+        Long fileSize,
+        Long propietarioId
 ) {
     public record GroupRef(Long idGrupo, String nombre) {}
 }
