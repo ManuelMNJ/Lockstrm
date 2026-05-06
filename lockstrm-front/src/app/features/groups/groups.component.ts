@@ -15,11 +15,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { UI_TIMINGS } from '../../shared/utils/ui-constants';
 import { A11yModule } from '@angular/cdk/a11y';
 import { GroupService, Group } from '../../core/services/group.service';
 import { VideoService } from '../../core/services/video.service';
 import { DateLocalePipe } from '../../shared/pipes/date-locale.pipe';
 import { InitialPipe } from '../../shared/pipes/initial.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-groups',
@@ -30,6 +32,8 @@ import { InitialPipe } from '../../shared/pipes/initial.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupsComponent implements OnInit {
+
+  readonly apiUrl = environment.apiUrl;
 
   misGrupos: Group[]          = [];
   compartidosConmigo: Group[] = [];
@@ -141,7 +145,7 @@ export class GroupsComponent implements OnInit {
     this.estadoCreacion   = 'idle';
     this.errorCreacion    = '';
     this.cdr.markForCheck();
-    setTimeout(() => this.nombreGrupoInput?.nativeElement.focus(), 50);
+    setTimeout(() => this.nombreGrupoInput?.nativeElement.focus(), UI_TIMINGS.DOM_FOCUS_DELAY_MS);
   }
 
   cerrarModal(): void {

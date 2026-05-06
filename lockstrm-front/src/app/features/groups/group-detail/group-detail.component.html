@@ -46,7 +46,29 @@
       <div class="grupo-hero-glow" aria-hidden="true"></div>
 
       <div class="grupo-hero-content">
-        <div class="grupo-hero-icon" aria-hidden="true">{{ grupo.nombre | initial }}</div>
+        <div class="grupo-hero-icon" [class.grupo-hero-icon--img]="grupo.imagenUrl">
+          @if (grupo.imagenUrl) {
+            <img [src]="apiUrl + grupo.imagenUrl" [alt]="grupo.nombre" class="grupo-hero-img">
+          } @else {
+            {{ grupo.nombre | initial }}
+          }
+          @if (esSuperAdmin) {
+            <label class="grupo-hero-img-overlay" title="Cambiar imagen">
+              @if (subiendoImagen) {
+                <span class="img-overlay-spinner"></span>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              }
+              <input type="file" accept="image/*" class="sr-only"
+                     (change)="onImagenSeleccionada($event)" [disabled]="subiendoImagen">
+            </label>
+          }
+        </div>
 
         <div class="grupo-hero-body">
 

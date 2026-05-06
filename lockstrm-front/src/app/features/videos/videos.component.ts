@@ -13,6 +13,7 @@ import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 import { Paginator } from '../../shared/utils/paginator';
 import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
+import { UI_TIMINGS, FILE_LIMITS, PAGINATION } from '../../shared/utils/ui-constants';
 
 @Component({
   selector: 'app-videos',
@@ -123,7 +124,7 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  readonly paginator = new Paginator<Video>(15);
+  readonly paginator = new Paginator<Video>(PAGINATION.VIDEOS_PAGE_SIZE);
 
   goToPage(page: number): void {
     this.paginator.goToPage(page);
@@ -275,14 +276,11 @@ export class VideosComponent implements OnInit {
       return;
     }
 
-    // Debe coincidir con spring.servlet.multipart.max-file-size en application.properties
-    // (el back admite 10 MB extra en max-request-size para el overhead multipart).
-    const LIMITE_MB    = 200;
-    const LIMITE_BYTES = LIMITE_MB * 1024 * 1024;
-
-    if (this.archivoSeleccionado.size > LIMITE_BYTES) {
+    // FILE_LIMITS.VIDEO_BYTES debe coincidir con spring.servlet.multipart.max-file-size
+    // en application.properties (el back admite 10 MB extra en max-request-size).
+    if (this.archivoSeleccionado.size > FILE_LIMITS.VIDEO_BYTES) {
       this.estadoSubida = 'error';
-      this.mensajeError = `El video supera el limite de ${LIMITE_MB} MB.`;
+      this.mensajeError = `El video supera el limite de ${FILE_LIMITS.VIDEO_MB} MB.`;
       return;
     }
 
@@ -344,13 +342,13 @@ export class VideosComponent implements OnInit {
           this.archivoInput.nativeElement.value = '';
           this.cdr.markForCheck();
 
-          // Cierra el panel automáticamente tras 2 s y lanza el toast externo
+          // Cierra el panel automáticamente y lanza el toast externo
           setTimeout(() => {
             this.estadoSubida    = 'idle';
             this.uploadPanelOpen = false;
             this.mostrarExitoSubida();
             this.cdr.markForCheck();
-          }, 2000);
+          }, UI_TIMINGS.FEEDBACK_SHORT_MS);
         },
         error: (err) => {
           this.estadoSubida = 'error';
@@ -409,7 +407,7 @@ export class VideosComponent implements OnInit {
     this.exitoEdicionTimer = setTimeout(() => {
       this.exitoEdicionVisible = false;
       this.refresh();
-    }, 3500);
+    }, UI_TIMINGS.TOAST_EDIT_MS);
   }
 
   private mostrarExitoSubida(): void {
@@ -419,7 +417,7 @@ export class VideosComponent implements OnInit {
     this.exitoSubidaTimer = setTimeout(() => {
       this.exitoSubidaVisible = false;
       this.refresh();
-    }, 4000);
+    }, UI_TIMINGS.TOAST_UPLOAD_MS);
   }
 
   private mostrarErrorEliminacion(mensaje: string): void {
@@ -430,7 +428,7 @@ export class VideosComponent implements OnInit {
     this.errorEliminacionTimer = setTimeout(() => {
       this.errorEliminacionVisible = false;
       this.refresh();
-    }, 6000);
+    }, UI_TIMINGS.TOAST_ERROR_MS);
   }
 
   private mostrarAvisoAcceso(mensaje: string): void {
@@ -441,7 +439,7 @@ export class VideosComponent implements OnInit {
     this.avisoAccesoTimer = setTimeout(() => {
       this.avisoAccesoVisible = false;
       this.refresh();
-    }, 6000);
+    }, UI_TIMINGS.TOAST_ERROR_MS);
   }
 
   iniciarEdicion(video: Video): void {

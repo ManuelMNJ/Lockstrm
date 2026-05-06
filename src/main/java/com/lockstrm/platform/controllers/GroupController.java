@@ -9,15 +9,26 @@ import com.lockstrm.platform.services.AnalyticsService;
 import com.lockstrm.platform.services.GroupService;
 import com.lockstrm.platform.services.VideoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.UrlResource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/grupos")
@@ -27,6 +38,9 @@ public class GroupController {
     private final GroupService      grupoService;
     private final VideoService      videoService;
     private final AnalyticsService analiticasService;
+
+    @Value("${lockstrm.upload.grupos.dir}")
+    private String gruposImgDir;
 
     /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
     @GetMapping
@@ -179,5 +193,36 @@ public class GroupController {
             @AuthenticationPrincipal UserDetails userDetails) {
         grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
         return ResponseEntity.ok(Map.of("mensaje", "Group eliminado correctamente"));
+    }
+
+    @PostMapping("/{idGrupo}/imagen")
+    public ResponseEntity<Map<String, String>> subirImagenGrupo(
+            @PathVariable Long idGrupo,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+        Group grupo = grupoService.actualizarImagenGrupo(idGrupo, userDetails.getUsername(), file);
+        return ResponseEntity.ok(Map.of("imagenUrl", grupo.getImagenUrl()));
+    }
+
+    @GetMapping("/imagenes/{fileName:.+}")
+    public ResponseEntity<org.springframework.core.io.Resource> serveImagenGrupo(
+            @PathVariable String fileName) throws IOException {
+        Path baseDir  = Paths.get(gruposImgDir).toAbsolutePath().normalize();
+        Path filePath = baseDir.resolve(fileName).normalize();
+        if (!filePath.startsWith(baseDir)) return ResponseEntity.badRequest().build();
+        UrlResource resource = new UrlResource(filePath.toUri());
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new NoSuchElementException("Imagen no encontrada: " + fileName);
+        }
+        MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.IMAGE_JPEG);
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                .body(resource);
+    }
+
+    private static String resolveImagenUrl(String fileName) {
+        if (fileName == null || fileName.isBlank()) return null;
+        return "/api/grupos/imagenes/" + fileName;
     }
 }
