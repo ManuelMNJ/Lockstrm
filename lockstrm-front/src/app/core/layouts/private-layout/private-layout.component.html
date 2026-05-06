@@ -105,13 +105,13 @@
     </nav>
 
     <!-- ── Grupos recientes ── -->
-    @if (gruposRecientes.length > 0) {
+    @if (gruposRecientes().length > 0) {
       <div class="recent-groups">
         <span class="nav-section-label recent-label">
           <span class="nav-label">Recientes</span>
         </span>
 
-        @for (g of gruposRecientes; track g.idGrupo) {
+        @for (g of gruposRecientes(); track g.idGrupo) {
           <a [routerLink]="['/mi-espacio/grupos', g.idGrupo]"
              routerLinkActive="active"
              class="nav-item recent-item"
