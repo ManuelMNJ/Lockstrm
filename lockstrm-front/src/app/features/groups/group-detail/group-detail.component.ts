@@ -54,6 +54,7 @@ export class GroupDetailComponent implements OnInit {
   idGrupo!: number;
   readonly apiUrl = environment.apiUrl;
   subiendoImagen = false;
+  errorImagen    = '';
 
   private destroyRef = inject(DestroyRef);
 
@@ -257,8 +258,9 @@ export class GroupDetailComponent implements OnInit {
           this.subiendoImagen = false;
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err) => {
           this.subiendoImagen = false;
+          this.errorImagen    = extractHttpErrorMessage(err, 'No se pudo subir la imagen. Máx. 5 MB (JPEG, PNG, WebP).');
           this.cdr.markForCheck();
         },
       });

@@ -231,6 +231,9 @@
         }
       </ul>
 
+    } @else if (errorGrupos) {
+      <p class="feedback-msg feedback-msg--error" role="alert">{{ errorGrupos }}</p>
+
     } @else if (!gruposResumen.length) {
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"

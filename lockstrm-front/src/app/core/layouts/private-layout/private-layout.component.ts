@@ -41,7 +41,7 @@ export class PrivateLayoutComponent {
 
   /** Últimos grupos accedidos por el usuario (máx. 3). */
   readonly apiUrl = environment.apiUrl;
-  gruposRecientes: Group[] = [];
+  readonly gruposRecientes = signal<Group[]>([]);
 
   private readonly router       = inject(Router);
   private readonly groupService = inject(GroupService);
@@ -73,11 +73,12 @@ export class PrivateLayoutComponent {
       )
       .subscribe({
         next: (grupos) => {
-          // Fallback: ordena por fechaCreacion DESC y toma los 3 más nuevos
-          this.gruposRecientes = grupos
-            .slice()
-            .sort((a, b) => (b.fechaCreacion ?? '').localeCompare(a.fechaCreacion ?? ''))
-            .slice(0, 3);
+          this.gruposRecientes.set(
+            grupos
+              .slice()
+              .sort((a, b) => (b.fechaCreacion ?? '').localeCompare(a.fechaCreacion ?? ''))
+              .slice(0, 3)
+          );
         },
         error: () => { /* silencioso — sección opcional */ },
       });
