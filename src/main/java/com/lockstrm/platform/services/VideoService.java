@@ -247,6 +247,14 @@ public class VideoService {
 
     private VideoDto toDTO(Video video, Map<Long, List<GroupRef>> grupoMap) {
         List<GroupRef> refs = grupoMap.getOrDefault(video.getIdVideo(), List.of());
+        Long fileSize = null;
+        if (video.getFileName() != null) {
+            try {
+                Path p = Paths.get(uploadDir).toAbsolutePath().normalize()
+                               .resolve(video.getFileName()).normalize();
+                if (Files.exists(p)) fileSize = Files.size(p);
+            } catch (IOException ignored) {}
+        }
         return new VideoDto(
                 video.getIdVideo(),
                 video.getTitulo(),
@@ -254,7 +262,8 @@ public class VideoService {
                 video.getFechaSubida(),
                 refs,
                 resolveThumbnailUrl(video.getMiniaturaUrl()),
-                video.getFileName()   // nombre de fichero UUID, no URL directa
+                video.getFileName(),
+                fileSize
         );
     }
 
@@ -353,6 +362,19 @@ public class VideoService {
         }
         long limitBytes = 5L * 1024 * 1024 * 1024; // 5 GB
         return Map.of("usedBytes", usedBytes, "limitBytes", limitBytes);
+    }
+
+    @Transactional
+    public String actualizarMiniatura(Long idVideo, String emailUsuario, MultipartFile miniatura) throws IOException {
+        Video video = videoRepository.getByIdOrThrow(idVideo);
+        if (video.getPropietario() == null || !video.getPropietario().getEmail().equals(emailUsuario)) {
+            throw new AccessDeniedException("No tienes permiso para editar este vídeo");
+        }
+        String thumbName = saveThumbnail(miniatura);
+        if (thumbName == null) throw new com.lockstrm.platform.exceptions.InvalidFileException("Miniatura inválida");
+        video.setMiniaturaUrl(thumbName);
+        videoRepository.save(video);
+        return resolveThumbnailUrl(thumbName);
     }
 
     @Transactional

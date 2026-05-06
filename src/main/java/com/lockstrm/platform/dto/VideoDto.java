@@ -23,7 +23,8 @@ public record VideoDto(
         LocalDateTime fechaSubida,
         List<GroupRef> grupos,
         String miniaturaUrl,
-        String fileName
+        String fileName,
+        Long fileSize
 ) {
     public record GroupRef(Long idGrupo, String nombre) {}
 }
