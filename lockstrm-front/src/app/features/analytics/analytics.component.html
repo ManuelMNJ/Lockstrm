@@ -199,4 +199,85 @@
 
   </section>
 
+  <!-- ── POR GRUPOS ── -->
+  <section class="top-section grupos-section">
+
+    <header class="section-header">
+      <h3 class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="section-title-icon" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Por Grupos
+      </h3>
+      @if (!cargandoGrupos && gruposResumen.length) {
+        <span class="section-badge">{{ gruposResumen.length }} {{ gruposResumen.length === 1 ? 'grupo' : 'grupos' }}</span>
+      }
+    </header>
+
+    @if (cargandoGrupos) {
+      <ul class="top-list" aria-busy="true">
+        @for (item of skeletonItems; track item) {
+          <li class="grupo-row grupo-row--skeleton">
+            <div class="skeleton-body">
+              <span class="skeleton-line skeleton-line--title"></span>
+              <span class="skeleton-line skeleton-line--meta"></span>
+            </div>
+          </li>
+        }
+      </ul>
+
+    } @else if (!gruposResumen.length) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+        </svg>
+        <p>No tienes grupos con acceso a analíticas.</p>
+      </div>
+
+    } @else {
+      <ul class="top-list">
+        @for (g of gruposResumen; track g.idGrupo) {
+          <li class="grupo-row top-row--clickable"
+              [routerLink]="['/mi-espacio/analiticas/grupo', g.idGrupo]"
+              role="link"
+              tabindex="0"
+              [attr.aria-label]="'Ver analíticas de ' + g.nombre">
+            <div class="grupo-info">
+              <span class="grupo-nombre">{{ g.nombre }}</span>
+              <div class="top-meta">
+                <span class="badge badge--views">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  {{ g.visitasTotales | number }} vistas
+                </span>
+                <span class="badge badge--date">{{ g.videosActivos }} vídeos activos</span>
+              </div>
+            </div>
+            <div class="grupo-retencion">
+              <span class="grupo-retencion-val">{{ g.retencionMedia }}%</span>
+              <span class="grupo-retencion-label">retención</span>
+              <div class="retention-track">
+                <div class="retention-fill" [style.width.%]="g.retencionMedia"></div>
+              </div>
+            </div>
+            <svg class="grupo-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </li>
+        }
+      </ul>
+    }
+
+  </section>
+
 </div>

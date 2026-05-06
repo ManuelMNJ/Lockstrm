@@ -15,6 +15,7 @@ import { SettingsComponent }           from './features/settings/settings.compon
 import { ProfileComponent }            from './features/profile/profile.component';
 import { AnalyticsComponent }        from './features/analytics/analytics.component';
 import { VideoAnalyticsComponent }   from './features/analytics/video-analytics/video-analytics.component';
+import { GroupAnalyticsComponent }   from './features/groups/group-detail/group-analytics/group-analytics.component';
 
 import { authGuard }          from './core/guards/auth.guard';
 import { noAuthGuard }        from './core/guards/no-auth.guard';
@@ -63,8 +64,10 @@ export const routes: Routes = [
               { path: 'videos',     component: VideosComponent },
               { path: 'grupos',     component: GroupsComponent },
               { path: 'grupos/:id', component: GroupDetailComponent },
-              { path: 'analiticas',          component: AnalyticsComponent },
-              { path: 'analiticas/:idVideo', component: VideoAnalyticsComponent },
+              { path: 'analiticas',                              component: AnalyticsComponent },
+              { path: 'analiticas/grupo/:idGrupo',              component: GroupAnalyticsComponent },
+              { path: 'analiticas/grupo/:idGrupo/:idVideo',     component: VideoAnalyticsComponent },
+              { path: 'analiticas/:idVideo',                    component: VideoAnalyticsComponent },
             ],
           },
 

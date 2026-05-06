@@ -9,7 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, finalize, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { GroupService, Group, Member } from '../../../core/services/group.service';
@@ -20,12 +20,11 @@ import { DateLocalePipe } from '../../../shared/pipes/date-locale.pipe';
 import { extractHttpErrorMessage } from '../../../shared/utils/error-utils';
 import { GroupMembersComponent } from './group-members/group-members.component';
 import { GroupVideosComponent } from './group-videos/group-videos.component';
-import { GroupAnalyticsComponent } from './group-analytics/group-analytics.component';
 
 @Component({
   selector: 'app-group-detail',
   standalone: true,
-  imports: [FormsModule, InitialPipe, DateLocalePipe, GroupMembersComponent, GroupVideosComponent, GroupAnalyticsComponent],
+  imports: [FormsModule, RouterLink, InitialPipe, DateLocalePipe, GroupMembersComponent, GroupVideosComponent],
   templateUrl: './group-detail.component.html',
   styleUrl: './group-detail.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,8 +49,6 @@ export class GroupDetailComponent implements OnInit {
   confirmandoEliminarGrupo = false;
   estadoEliminarGrupo: 'idle' | 'loading' | 'error' = 'idle';
   errorEliminarGrupo = '';
-
-  pestanaActiva: 'resumen' | 'analiticas' = 'resumen';
 
   idGrupo!: number;
   private destroyRef = inject(DestroyRef);
@@ -227,11 +224,6 @@ export class GroupDetailComponent implements OnInit {
           this.cdr.markForCheck();
         },
       });
-  }
-
-  cambiarPestana(p: 'resumen' | 'analiticas'): void {
-    this.pestanaActiva = p;
-    this.cdr.markForCheck();
   }
 
   volver(): void {

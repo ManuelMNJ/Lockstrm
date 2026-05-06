@@ -99,8 +99,8 @@
           @for (s of analiticasGrupo; track s.idVideo) {
             <tr class="row--clickable"
                 [class.row--inactive]="s.visitasTotales === 0"
-                [routerLink]="['/mi-espacio/analiticas', s.idVideo]"
-                [queryParams]="{ grupoId: idGrupo, from: 'grupo', rango: rangoActivo }"
+                [routerLink]="['/mi-espacio/analiticas/grupo', idGrupo, s.idVideo]"
+                [queryParams]="{ rango: rangoActivo }"
                 role="link"
                 tabindex="0"
                 [attr.aria-label]="'Ver sesiones individuales de ' + s.titulo">
