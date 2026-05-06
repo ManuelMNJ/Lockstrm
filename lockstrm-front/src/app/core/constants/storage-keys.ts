@@ -12,6 +12,8 @@ export const STORAGE_KEYS = {
   speed:        'lockstrm-default-speed',
   /** Memoria de volumen del reproductor: 'true' | 'false' */
   volumeMemory: 'lockstrm-volume-memory',
+  /** Nivel de volumen guardado (0-1) cuando volumeMemory está activo */
+  volume:       'lockstrm-volume',
   /** Sesión autenticada serializada como JSON (AuthResponse) */
   user:         'usuarioLogueado',
 } as const;
