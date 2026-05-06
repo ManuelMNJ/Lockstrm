@@ -43,6 +43,38 @@
   height: 15px;
 }
 
+.btn-analytics {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-primary-lighter);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(124, 58, 237, 0.08));
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: var(--radius-md);
+  padding: 7px 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.btn-analytics:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.30), rgba(124, 58, 237, 0.15));
+  border-color: rgba(124, 58, 237, 0.60);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.20);
+  color: var(--color-primary-lightest);
+}
+
+.btn-analytics svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ==========================================================================
    HERO BANNER
    ========================================================================== */
@@ -129,6 +161,10 @@
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.grupo-hero-actions {
+  margin-top: var(--space-4);
 }
 
 .hero-meta-pill {
@@ -1368,8 +1404,9 @@
   font-size: var(--font-base);
 }
 
+.row--inactive { cursor: default; }
 .row--inactive td { opacity: 0.55; }
-.row--inactive:hover td { opacity: 0.85; }
+.row--inactive:hover td { opacity: 0.55; }
 
 .stats-badge--soft {
   background: rgba(255, 255, 255, 0.06);
@@ -1466,11 +1503,21 @@
   width: 90px;
   height: 24px;
   color: var(--color-primary-lighter);
+  opacity: 0.75;
   vertical-align: middle;
   display: inline-block;
+  transition: color 120ms ease, opacity 120ms ease;
 }
 
-.row--clickable:hover .sparkline { color: #fff; }
+.row--clickable:hover .sparkline {
+  color: var(--color-primary-lightest, #ede9fe);
+  opacity: 1;
+}
+
+.row--inactive .sparkline {
+  color: var(--text-subtle);
+  opacity: 0.35;
+}
 
 /* ── Retención ── */
 .retention-cell {
