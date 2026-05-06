@@ -30,10 +30,12 @@ export const UI_TIMINGS = {
 
 /** Límites de ficheros aceptados por el backend. */
 export const FILE_LIMITS = {
-  VIDEO_MB:    200,
-  VIDEO_BYTES: 200 * 1024 * 1024,
+  VIDEO_MB:        200,
+  VIDEO_BYTES:     200 * 1024 * 1024,
   /** Límite de avatar (referencia informativa; validación real en el backend). */
-  AVATAR_MB:   5,
+  AVATAR_MB:       5,
+  /** Máximo de vídeos por lote de subida múltiple. */
+  MAX_BATCH_UPLOAD: 10,
 } as const;
 
 /** Parámetros de paginación. */

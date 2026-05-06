@@ -103,6 +103,15 @@ public class VideoController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{idVideo}/miniatura")
+    public ResponseEntity<Map<String, String>> actualizarMiniatura(
+            @PathVariable Long idVideo,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("miniatura") MultipartFile miniatura) throws IOException {
+        String url = videoService.actualizarMiniatura(idVideo, userDetails.getUsername(), miniatura);
+        return ResponseEntity.ok(Map.of("miniaturaUrl", url));
+    }
+
     @PatchMapping("/{idVideo}")
     public ResponseEntity<VideoDto> editarVideo(
             @PathVariable Long idVideo,
