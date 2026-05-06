@@ -18,6 +18,8 @@ import {
   confirmarPasswordValidator,
   calcPwReqs,
 } from '../../core/validators/password.validator';
+import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
+import { UI_TIMINGS } from '../../shared/utils/ui-constants';
 
 @Component({
   selector: 'app-profile',
@@ -132,7 +134,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
             this.estadoPerfil  = 'success';
             this.mensajePerfil = 'Nombre de usuario actualizado. Cerrando sesión...';
             this.cdr.markForCheck();
-            timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+            timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe(() => this.authService.logout(
                 ['/login'],
                 { identificadorCambiado: '1', tag: `${actualizado.username}#${actualizado.tag}` }
@@ -142,13 +144,13 @@ export class ProfileComponent implements OnInit, PendingChanges {
             this.estadoPerfil  = 'success';
             this.mensajePerfil = 'Perfil actualizado correctamente.';
             this.cdr.markForCheck();
-            timer(3000).pipe(takeUntilDestroyed(this.destroyRef))
+            timer(UI_TIMINGS.FEEDBACK_SUCCESS_MS).pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe(() => { this.estadoPerfil = 'idle'; this.cdr.markForCheck(); });
           }
         },
         error: (err) => {
           this.estadoPerfil  = 'error';
-          this.mensajePerfil = err?.error?.message || 'No se pudo actualizar el perfil.';
+          this.mensajePerfil = extractHttpErrorMessage(err, 'No se pudo actualizar el perfil.');
           this.cdr.markForCheck();
         },
       });
@@ -180,7 +182,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
     navigator.clipboard.writeText(handle).then(() => {
       this.handleCopiado = true;
       this.cdr.markForCheck();
-      timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+      timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => { this.handleCopiado = false; this.cdr.markForCheck(); });
     });
   }
@@ -241,7 +243,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
           this.estadoPassword  = 'success';
           this.mensajePassword = 'Contraseña actualizada. Cerrando sesión...';
           this.formPassword.reset();
-          timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+          timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.authService.logout());
         },
         error: (err) => {
@@ -251,7 +253,8 @@ export class ProfileComponent implements OnInit, PendingChanges {
             this.ctrlActual.setErrors({ incorrecta: true });
           } else {
             this.estadoPassword  = 'error';
-            this.mensajePassword = body?.campos?.['nueva'] || body?.message || 'No se pudo actualizar la contraseña.';
+            // body.campos.nueva contiene el mensaje de validación de campo del backend (Spring)
+            this.mensajePassword = body?.campos?.['nueva'] ?? extractHttpErrorMessage(err, 'No se pudo actualizar la contraseña.');
           }
           this.cdr.markForCheck();
         },
@@ -301,7 +304,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
           this.estadoEmail  = 'success';
           this.mensajeEmail = 'Correo actualizado. Cerrando sesión...';
           this.cdr.markForCheck();
-          timer(2000).pipe(takeUntilDestroyed(this.destroyRef))
+          timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.authService.logout(
               ['/login'],
               { identificadorCambiado: '1', tag: `${this.perfil?.username}#${this.perfil?.tag}` }
@@ -314,7 +317,7 @@ export class ProfileComponent implements OnInit, PendingChanges {
             this.formEmail.get('passwordActual')?.setErrors({ incorrecta: true });
           } else {
             this.estadoEmail  = 'error';
-            this.mensajeEmail = body?.message || 'No se pudo actualizar el correo.';
+            this.mensajeEmail = extractHttpErrorMessage(err, 'No se pudo actualizar el correo.');
           }
           this.cdr.markForCheck();
         },

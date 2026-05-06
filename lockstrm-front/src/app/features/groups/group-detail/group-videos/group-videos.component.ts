@@ -19,6 +19,7 @@ import { ThumbnailSrcPipe } from '../../../../shared/pipes/thumbnail-src.pipe';
 import { VideoDurationPipe } from '../../../../shared/pipes/video-duration.pipe';
 import { VideoPlayerComponent } from '../../../videos/video-player/video-player.component';
 import { extractHttpErrorMessage } from '../../../../shared/utils/error-utils';
+import { UI_TIMINGS } from '../../../../shared/utils/ui-constants';
 import { CustomSelectComponent, SelectOption } from '../../../../shared/components/custom-select/custom-select.component';
 
 @Component({
@@ -128,7 +129,7 @@ export class GroupVideosComponent {
           this.estadoAnadirVideo = 'success';
           this.cdr.markForCheck();
           this.recargarVideos();
-          setTimeout(() => { this.estadoAnadirVideo = 'idle'; this.cdr.markForCheck(); }, 3000);
+          setTimeout(() => { this.estadoAnadirVideo = 'idle'; this.cdr.markForCheck(); }, UI_TIMINGS.FEEDBACK_SUCCESS_MS);
         },
         error: (err) => {
           this.estadoAnadirVideo = 'error';
