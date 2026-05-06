@@ -160,6 +160,10 @@ export class VideosComponent implements OnInit {
       this.mostrarAvisoAcceso('No tienes permiso para ver las analíticas de ese vídeo.');
     }
 
+    if (this.route.snapshot.queryParamMap.get('upload') === '1') {
+      this.uploadPanelOpen = true;
+    }
+
     this.cargarVideos();
     this.videoService.obtenerEspacio()
       .pipe(takeUntilDestroyed(this.destroyRef))

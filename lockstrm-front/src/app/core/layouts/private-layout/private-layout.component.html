@@ -41,20 +41,6 @@
     <nav class="sidebar-nav" aria-label="Secciones">
 
       <!-- Inicio (volver a la homepage pública) -->
-      <a routerLink="/"
-         class="nav-item"
-         title="Ir al inicio">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <span class="nav-label">Inicio</span>
-      </a>
-
-      <div class="nav-divider" aria-hidden="true"></div>
-
       <!-- Dashboard -->
       <a routerLink="/dashboard"
          routerLinkActive="active"
@@ -116,6 +102,19 @@
         <span class="nav-label">Analíticas</span>
       </a>
 
+      <a routerLink="/ajustes"
+         routerLinkActive="active"
+         class="nav-item"
+         title="Ajustes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span class="nav-label">Ajustes</span>
+      </a>
+
     </nav>
 
     <!-- ── Grupos recientes ── -->
@@ -143,8 +142,6 @@
       </div>
     }
 
-    <div class="sidebar-version nav-label">Lockstrm v1.0.0</div>
-
   </aside>
 
   <!-- ================================================================
@@ -167,7 +164,21 @@
           <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
-      <h1 class="header-title">{{ pageTitle }}</h1>
+      @if (breadcrumbs.length > 0) {
+        <nav class="breadcrumb" aria-label="Ruta de navegación">
+          @for (crumb of breadcrumbs; track crumb.label) {
+            @if (crumb.link) {
+              <a [routerLink]="crumb.link" class="breadcrumb-link">{{ crumb.label }}</a>
+            } @else {
+              <span class="breadcrumb-current">{{ crumb.label }}</span>
+            }
+            <span class="breadcrumb-sep" aria-hidden="true">/</span>
+          }
+          <span class="breadcrumb-current">{{ pageTitle }}</span>
+        </nav>
+      } @else {
+        <h1 class="header-title">{{ pageTitle }}</h1>
+      }
     </header>
 
     <!-- ── Routed content ── -->
