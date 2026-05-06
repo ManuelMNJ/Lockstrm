@@ -43,6 +43,38 @@
   height: 15px;
 }
 
+.btn-analytics {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--color-primary-lighter);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(124, 58, 237, 0.08));
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: var(--radius-md);
+  padding: 7px 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.btn-analytics:hover {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.30), rgba(124, 58, 237, 0.15));
+  border-color: rgba(124, 58, 237, 0.60);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.20);
+  color: var(--color-primary-lightest);
+}
+
+.btn-analytics svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ==========================================================================
    HERO BANNER
    ========================================================================== */
@@ -129,6 +161,10 @@
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.grupo-hero-actions {
+  margin-top: var(--space-4);
 }
 
 .hero-meta-pill {
@@ -654,6 +690,10 @@
   flex-direction: column;
   gap: var(--space-4);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+}
+
+.section-card + .section-card {
+  margin-top: var(--space-6);
 }
 
 .section-title {
@@ -1364,8 +1404,9 @@
   font-size: var(--font-base);
 }
 
+.row--inactive { cursor: default; }
 .row--inactive td { opacity: 0.55; }
-.row--inactive:hover td { opacity: 0.85; }
+.row--inactive:hover td { opacity: 0.55; }
 
 .stats-badge--soft {
   background: rgba(255, 255, 255, 0.06);
@@ -1451,35 +1492,6 @@
   flex-wrap: wrap;
 }
 
-.rango-presets {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
-}
-
-.rango-preset {
-  background: transparent;
-  border: 0;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--font-sm);
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 120ms ease, color 120ms ease;
-}
-
-.rango-preset:hover { color: var(--text-main); }
-
-.rango-preset--active {
-  background: rgba(124, 58, 237, 0.18);
-  color: var(--color-primary-lighter);
-  font-weight: 600;
-}
 
 /* ── Sparkline ── */
 .spark-col {
@@ -1491,11 +1503,21 @@
   width: 90px;
   height: 24px;
   color: var(--color-primary-lighter);
+  opacity: 0.75;
   vertical-align: middle;
   display: inline-block;
+  transition: color 120ms ease, opacity 120ms ease;
 }
 
-.row--clickable:hover .sparkline { color: #fff; }
+.row--clickable:hover .sparkline {
+  color: var(--color-primary-lightest, #ede9fe);
+  opacity: 1;
+}
+
+.row--inactive .sparkline {
+  color: var(--text-subtle);
+  opacity: 0.35;
+}
 
 /* ── Retención ── */
 .retention-cell {
@@ -1528,4 +1550,45 @@
 .log-date {
   font-size: var(--font-sm);
   color: var(--text-muted);
+}
+
+/* ==========================================================================
+   GROUP ANALYTICS — cabecera de página (modo ruta standalone)
+   ========================================================================== */
+.ga-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+}
+
+.ga-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+  transition: color var(--transition-fast);
+}
+.ga-back-link:hover { color: var(--text-main); }
+.ga-back-link svg { width: 14px; height: 14px; }
+
+.ga-page-title {
+  font-size: var(--font-3xl);
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ga-page-sub {
+  font-size: var(--font-base);
+  color: var(--text-muted);
+  margin: 0;
 }

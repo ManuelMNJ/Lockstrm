@@ -9,9 +9,20 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AnalyticsService, GlobalAnalytics, VideoTop } from '../../core/services/analytics.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { AnalyticsService, GlobalAnalytics, GroupVideoStats, VideoTop } from '../../core/services/analytics.service';
+import { GroupService, Group } from '../../core/services/group.service';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
+
+interface GrupoResumen {
+  idGrupo:        number;
+  nombre:         string;
+  visitasTotales: number;
+  videosActivos:  number;
+  retencionMedia: number;
+}
 
 @Component({
   selector: 'app-analytics',
@@ -23,18 +34,22 @@ import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
 })
 export class AnalyticsComponent implements OnInit {
 
-  datos:        GlobalAnalytics | null = null;
-  cargando      = true;
-  error         = '';
-  failedThumbs  = new Set<number>();
+  datos:         GlobalAnalytics | null = null;
+  cargando       = true;
+  error          = '';
+  failedThumbs   = new Set<number>();
+
+  gruposResumen:  GrupoResumen[] = [];
+  cargandoGrupos = true;
 
   onThumbError(idVideo: number): void {
     this.failedThumbs = new Set(this.failedThumbs).add(idVideo);
     this.cdr.markForCheck();
   }
 
-  private cdr        = inject(ChangeDetectorRef);
-  private destroyRef = inject(DestroyRef);
+  private cdr          = inject(ChangeDetectorRef);
+  private destroyRef   = inject(DestroyRef);
+  private grupoService = inject(GroupService);
 
   constructor(private analiticasService: AnalyticsService) {}
 
@@ -53,6 +68,36 @@ export class AnalyticsComponent implements OnInit {
           this.cdr.markForCheck();
         },
       });
+
+    this.grupoService.obtenerMisGrupos().pipe(
+      switchMap(grupos => {
+        if (!grupos.length) return of([]);
+        return forkJoin(
+          grupos.map(g =>
+            this.analiticasService.getAnaliticasDelGrupo(g.idGrupo).pipe(
+              map(stats => this.calcularResumen(g, stats)),
+              catchError(() => of(null))
+            )
+          )
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(resultados => {
+      this.gruposResumen = (resultados as (GrupoResumen | null)[])
+        .filter((r): r is GrupoResumen => r != null)
+        .sort((a, b) => b.visitasTotales - a.visitasTotales);
+      this.cargandoGrupos = false;
+      this.cdr.markForCheck();
+    });
+  }
+
+  private calcularResumen(grupo: Group, stats: GroupVideoStats[]): GrupoResumen {
+    const visitasTotales = stats.reduce((s, v) => s + v.visitasTotales, 0);
+    const videosActivos  = stats.filter(v => v.visitasTotales > 0).length;
+    const retencionMedia = visitasTotales
+      ? Math.round(stats.reduce((s, v) => s + v.porcentajeCompletadoMedio * v.visitasTotales, 0) / visitasTotales)
+      : 0;
+    return { idGrupo: grupo.idGrupo, nombre: grupo.nombre, visitasTotales, videosActivos, retencionMedia };
   }
 
   /** Retención redondeada a un decimal, o null si no hay datos. */
