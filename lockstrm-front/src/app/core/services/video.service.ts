@@ -38,13 +38,10 @@ export interface Video {
   titulo:       string;
   duracion:     number | null;
   fechaSubida:  string | null;
-  /**
-   * Lista de grupos a los que pertenece el vídeo (N:M). Vacía si el vídeo
-   * no está compartido con ningún grupo (privado).
-   */
   grupos:       GrupoRef[];
   miniaturaUrl: string | null;
-  fileName:     string | null;  // nombre UUID del fichero; null si el vídeo es antiguo/migrado
+  fileName:     string | null;
+  fileSize:     number | null;
 }
 
 /** Forma exacta que devuelve VideoDTO del backend. */
@@ -56,6 +53,7 @@ interface VideoRaw {
   grupos:       GrupoRef[] | null;
   miniaturaUrl: string | null;
   fileName:     string | null;
+  fileSize:     number | null;
 }
 
 function mapVideo(raw: VideoRaw): Video {
@@ -67,6 +65,7 @@ function mapVideo(raw: VideoRaw): Video {
     grupos:       raw.grupos ?? [],
     miniaturaUrl: raw.miniaturaUrl,
     fileName:     raw.fileName,
+    fileSize:     raw.fileSize ?? null,
   };
 }
 
@@ -167,6 +166,18 @@ export class VideoService {
       tap(updated => {
         const current = this._misVideos$.value ?? [];
         this._misVideos$.next(current.map(v => v.idVideo === idVideo ? updated : v));
+      }),
+    );
+  }
+
+  actualizarMiniatura(idVideo: number, miniatura: Blob): Observable<string> {
+    const fd = new FormData();
+    fd.append('miniatura', miniatura, 'thumbnail.jpg');
+    return this.http.put<{ miniaturaUrl: string }>(`${this.apiUrl}/${idVideo}/miniatura`, fd).pipe(
+      map(res => res.miniaturaUrl),
+      tap(url => {
+        const current = this._misVideos$.value ?? [];
+        this._misVideos$.next(current.map(v => v.idVideo === idVideo ? { ...v, miniaturaUrl: url } : v));
       }),
     );
   }

@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, NgZone, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Observable, catchError, concatMap, filter, finalize, from, map, of, tap } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { A11yModule } from '@angular/cdk/a11y';
 import { VideoService, Video } from '../../core/services/video.service';
 import { GroupService, Group } from '../../core/services/group.service';
+import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
 import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VideoDurationPipe } from '../../shared/pipes/video-duration.pipe';
 import { ThumbnailSrcPipe } from '../../shared/pipes/thumbnail-src.pipe';
@@ -15,10 +16,23 @@ import { Paginator } from '../../shared/utils/paginator';
 import { extractHttpErrorMessage } from '../../shared/utils/error-utils';
 import { UI_TIMINGS, FILE_LIMITS, PAGINATION } from '../../shared/utils/ui-constants';
 
+export interface VideoUploadItem {
+  file: File;
+  titulo: string;
+  miniaturaBlob: Blob | null;
+  miniaturaPreviewUrl: string | null;
+  miniaturaPersonalizada: boolean;
+  duracion: number;
+  objectUrl: string | null;
+  estado: 'pending' | 'uploading' | 'success' | 'error';
+  progreso: number;
+  error: string;
+}
+
 @Component({
   selector: 'app-videos',
   standalone: true,
-  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe, ThumbnailSrcPipe],
+  imports: [CommonModule, FormsModule, A11yModule, VideoPlayerComponent, VideoDurationPipe, ThumbnailSrcPipe, CustomSelectComponent],
   templateUrl: './videos.component.html',
   styleUrl: './videos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,23 +41,9 @@ export class VideosComponent implements OnInit {
 
   videos: Video[] = [];
   misGrupos: Group[] = [];
-  archivoSeleccionado: File | null = null;
-  tituloVideo = '';
-  /**
-   * Set de grupos seleccionados en el modal de subida. Un vídeo puede subirse
-   * directamente vinculado a varios grupos (N:M). Se materializa como Set
-   * para que el toggle de un checkbox sea O(1) y no haya duplicados.
-   */
+  uploadItems: VideoUploadItem[] = [];
   idGruposSeleccionados = new Set<number>();
-  /** Blob JPEG para subir al backend como multipart. */
-  miniaturaBlob:    Blob   | null = null;
-  /**
-   * URL temporal (createObjectURL) usada solo para mostrar la preview en el
-   * formulario. Se revoca al cerrar / subir para liberar memoria.
-   */
-  miniaturaPreviewUrl: string | null = null;
-  private duracionVideo = 0;
-  private objectUrl: string | null = null;
+
 
   /** Controla si el panel de subida está visible. */
   uploadPanelOpen = false;
@@ -88,8 +88,9 @@ export class VideosComponent implements OnInit {
 
   videoEnEdicion: Video | null = null;
   editTitulo    = '';
-  /** Set de grupos marcados en el modal de edición. Mismo motivo que el de subida. */
   editIdGrupos  = new Set<number>();
+  editMiniaturaBlob:       Blob   | null = null;
+  editMiniaturaPreviewUrl: string | null = null;
   estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
   mensajeEdicion = '';
 
@@ -111,14 +112,40 @@ export class VideosComponent implements OnInit {
     this.storageLimitGB = (limitMB / 1024).toFixed(0);
   }
 
-  searchQuery = '';
+  searchQuery  = '';
+  criterioOrden = 'fechaDesc';
+
+  readonly sortOptions: SelectOption[] = [
+    { value: 'fechaDesc',    label: 'Más recientes'  },
+    { value: 'fechaAsc',     label: 'Más antiguos'   },
+    { value: 'duracionDesc', label: 'Mayor duración' },
+    { value: 'duracionAsc',  label: 'Menor duración' },
+    { value: 'nombreAsc',    label: 'Nombre (A-Z)'   },
+  ];
 
   get filteredVideos(): Video[] {
     const q = this.searchQuery.trim().toLowerCase();
-    return q ? this.videos.filter(v => v.titulo.toLowerCase().includes(q)) : this.videos;
+    const base = q ? this.videos.filter(v => v.titulo.toLowerCase().includes(q)) : this.videos;
+    return [...base].sort((a, b) => {
+      switch (this.criterioOrden) {
+        case 'fechaDesc':    return new Date(b.fechaSubida ?? 0).getTime() - new Date(a.fechaSubida ?? 0).getTime();
+        case 'fechaAsc':     return new Date(a.fechaSubida ?? 0).getTime() - new Date(b.fechaSubida ?? 0).getTime();
+        case 'duracionDesc': return (b.duracion ?? 0) - (a.duracion ?? 0);
+        case 'duracionAsc':  return (a.duracion ?? 0) - (b.duracion ?? 0);
+        case 'nombreAsc':    return a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' });
+        default:             return 0;
+      }
+    });
   }
 
   onSearchChange(): void {
+    this.paginator.setItems(this.filteredVideos);
+    this.paginator.goToPage(1);
+    this.cdr.markForCheck();
+  }
+
+  onCambioOrden(valor: string): void {
+    this.criterioOrden = valor;
     this.paginator.setItems(this.filteredVideos);
     this.paginator.goToPage(1);
     this.cdr.markForCheck();
@@ -135,6 +162,7 @@ export class VideosComponent implements OnInit {
 
   private cdr        = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private ngZone     = inject(NgZone);
 
   constructor(
     protected videoService: VideoService,
@@ -199,39 +227,61 @@ export class VideosComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging = false;
-    const file = event.dataTransfer?.files?.[0] ?? null;
-    if (file) this.procesarArchivo(file);
+    const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('video/'));
+    this.procesarLote(files);
     this.cdr.markForCheck();
   }
 
   seleccionarArchivo(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file  = input.files?.[0] ?? null;
-    if (file) this.procesarArchivo(file);
+    const files = Array.from(input.files ?? []);
+    this.procesarLote(files);
+  }
+
+  private procesarLote(files: File[]): void {
+    const disponibles = FILE_LIMITS.MAX_BATCH_UPLOAD - this.uploadItems.length;
+    if (disponibles <= 0) {
+      this.estadoSubida = 'error';
+      this.mensajeError = `Máximo ${FILE_LIMITS.MAX_BATCH_UPLOAD} vídeos por lote.`;
+      this.cdr.markForCheck();
+      return;
+    }
+    files.slice(0, disponibles).forEach(f => this.procesarArchivo(f));
+    if (files.length > disponibles) {
+      this.mensajeError = `Se añadieron solo ${disponibles} vídeo(s); máximo ${FILE_LIMITS.MAX_BATCH_UPLOAD} por lote.`;
+      this.estadoSubida = 'error';
+      this.cdr.markForCheck();
+    }
   }
 
   private procesarArchivo(file: File): void {
     if (!file.type.startsWith('video/')) {
-      this.estadoSubida    = 'error';
-      this.mensajeError    = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
-      this.archivoSeleccionado = null;
+      this.estadoSubida = 'error';
+      this.mensajeError = 'Solo se permiten archivos de vídeo (MP4, MOV, WebM…).';
       this.cdr.markForCheck();
       return;
     }
-    this.archivoSeleccionado = file;
-    this.miniaturaBlob       = null;
-    if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
-    this.duracionVideo       = 0;
     if (this.estadoSubida === 'error') { this.estadoSubida = 'idle'; this.mensajeError = ''; }
+    const item: VideoUploadItem = {
+      file,
+      titulo: file.name.replace(/\.[^.]+$/, ''),
+      miniaturaBlob: null,
+      miniaturaPreviewUrl: null,
+      miniaturaPersonalizada: false,
+      duracion: 0,
+      objectUrl: null,
+      estado: 'pending',
+      progreso: 0,
+      error: '',
+    };
+    this.uploadItems = [...this.uploadItems, item];
     this.cdr.markForCheck();
-    this.generarMiniatura(file);
+    this.generarMiniatura(item);
   }
 
-  private generarMiniatura(file: File): void {
-    if (this.objectUrl) {
-      URL.revokeObjectURL(this.objectUrl);
-    }
-    this.objectUrl = URL.createObjectURL(file);
+  private generarMiniatura(item: VideoUploadItem): void {
+    if (item.objectUrl) URL.revokeObjectURL(item.objectUrl);
+    item.objectUrl = URL.createObjectURL(item.file);
 
     const video = document.createElement('video');
     video.preload     = 'metadata';
@@ -239,128 +289,157 @@ export class VideosComponent implements OnInit {
     video.playsInline = true;
 
     video.onloadedmetadata = () => {
-      this.duracionVideo = Math.round(video.duration);
-      video.currentTime  = Math.min(2, video.duration * 0.1);
+      item.duracion     = Math.round(video.duration);
+      video.currentTime = Math.min(2, video.duration * 0.1);
     };
 
     video.onseeked = () => {
-      const canvas    = document.createElement('canvas');
-      canvas.width    = 320;
-      canvas.height   = 180;
-      const ctx       = canvas.getContext('2d')!;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      // toBlob es asíncrono: producimos un Blob real en lugar del data URL
-      // para poder enviarlo como MultipartFile al backend.
+      const canvas  = document.createElement('canvas');
+      canvas.width  = 320;
+      canvas.height = 180;
+      canvas.getContext('2d')!.drawImage(video, 0, 0, 320, 180);
       canvas.toBlob(blob => {
-        this.miniaturaBlob = blob;
-        // URL temporal solo para la preview en formulario; se revoca al subir.
-        if (this.miniaturaPreviewUrl) URL.revokeObjectURL(this.miniaturaPreviewUrl);
-        this.miniaturaPreviewUrl = blob ? URL.createObjectURL(blob) : null;
+        item.miniaturaBlob = blob;
+        if (item.miniaturaPreviewUrl) URL.revokeObjectURL(item.miniaturaPreviewUrl);
+        item.miniaturaPreviewUrl = blob ? URL.createObjectURL(blob) : null;
+        this.uploadItems = [...this.uploadItems];
         this.cdr.markForCheck();
       }, 'image/jpeg', 0.75);
       video.src = '';
-      URL.revokeObjectURL(this.objectUrl!);
-      this.objectUrl = null;
+      URL.revokeObjectURL(item.objectUrl!);
+      item.objectUrl = null;
     };
 
     video.onerror = () => {
-      if (this.objectUrl) {
-        URL.revokeObjectURL(this.objectUrl);
-        this.objectUrl = null;
-      }
+      if (item.objectUrl) { URL.revokeObjectURL(item.objectUrl); item.objectUrl = null; }
     };
 
-    video.src = this.objectUrl;
+    video.src = item.objectUrl;
   }
 
   subir(): void {
-    if (!this.archivoSeleccionado || !this.tituloVideo) {
+    const items = this.uploadItems.filter(i => i.estado === 'pending' || i.estado === 'error');
+    if (!items.length) {
       this.estadoSubida = 'error';
-      this.mensajeError = 'Falta el titulo o el video.';
+      this.mensajeError = 'Añade al menos un vídeo.';
       return;
     }
-
-    // FILE_LIMITS.VIDEO_BYTES debe coincidir con spring.servlet.multipart.max-file-size
-    // en application.properties (el back admite 10 MB extra en max-request-size).
-    if (this.archivoSeleccionado.size > FILE_LIMITS.VIDEO_BYTES) {
+    const sinTitulo = items.find(i => !i.titulo.trim());
+    if (sinTitulo) {
       this.estadoSubida = 'error';
-      this.mensajeError = `El video supera el limite de ${FILE_LIMITS.VIDEO_MB} MB.`;
+      this.mensajeError = 'Todos los vídeos deben tener título.';
+      return;
+    }
+    const demasiado = items.find(i => i.file.size > FILE_LIMITS.VIDEO_BYTES);
+    if (demasiado) {
+      this.estadoSubida = 'error';
+      this.mensajeError = `"${demasiado.titulo}" supera el límite de ${FILE_LIMITS.VIDEO_MB} MB.`;
       return;
     }
 
     this.estadoSubida = 'uploading';
-    this.progreso     = 0;
     this.mensajeError = '';
 
-    this.videoService.subirVideo(this.archivoSeleccionado, this.tituloVideo, [...this.idGruposSeleccionados], this.miniaturaBlob, this.duracionVideo)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => {
-          if (this.estadoSubida === 'uploading') this.estadoSubida = 'idle';
-          this.progreso = 0;
-          this.cdr.markForCheck();
-        })
-      )
-      .subscribe({
-        next: (event) => {
-          if (event.type === HttpEventType.UploadProgress && event.total) {
-            this.progreso = Math.round(100 * event.loaded / event.total);
-            this.cdr.markForCheck();
-            return;
-          }
+    from(items).pipe(
+      concatMap(item => this.subirItem(item)),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.archivoInput.nativeElement.value = '';
+        this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
 
-          if (event.type !== HttpEventType.Response) return;
-
-          const res = event.body!;
-          // Reconstruimos la lista de grupos a partir de los seleccionados en el
-          // formulario y el catálogo `misGrupos`. El backend ya validó cada
-          // pertenencia; aquí solo necesitamos el nombre para el render inmediato
-          // sin esperar a refetchear.
-          const grupos = [...this.idGruposSeleccionados]
-            .map(id => this.misGrupos.find(g => g.idGrupo === id))
-            .filter((g): g is Group => g != null)
-            .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
-
-          const nuevoVideo: Video = {
-            idVideo:      res.id_video,
-            titulo:       res.titulo,
-            duracion:     res.duracion ?? null,
-            fechaSubida:  new Date().toISOString(),
-            grupos,
-            // El backend devuelve la ruta pública resuelta o null si no hubo miniatura.
-            miniaturaUrl: res.miniaturaUrl || null,
-            fileName:     res.fileName,
-          };
-
-          // Empuja al BehaviorSubject: dashboard y cualquier otro suscriptor se actualizan
-          this.videoService.prependVideo(nuevoVideo);
-          this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
-          this.estadoSubida        = 'success';
-          this.progreso            = 0;
-          this.tituloVideo         = '';
-          this.archivoSeleccionado = null;
+        const alguienFallo = this.uploadItems.some(i => i.estado === 'error');
+        if (alguienFallo) {
+          this.estadoSubida = 'error';
+          this.mensajeError = 'Algunos vídeos no pudieron subirse.';
+        } else {
+          this.uploadItems           = [];
           this.idGruposSeleccionados = new Set<number>();
-          this.miniaturaBlob       = null;
-          if (this.miniaturaPreviewUrl) { URL.revokeObjectURL(this.miniaturaPreviewUrl); this.miniaturaPreviewUrl = null; }
-          this.archivoInput.nativeElement.value = '';
-          this.cdr.markForCheck();
-
-          // Cierra el panel automáticamente y lanza el toast externo
+          this.estadoSubida          = 'success';
           setTimeout(() => {
             this.estadoSubida    = 'idle';
             this.uploadPanelOpen = false;
             this.mostrarExitoSubida();
             this.cdr.markForCheck();
           }, UI_TIMINGS.FEEDBACK_SHORT_MS);
-        },
-        error: (err) => {
-          this.estadoSubida = 'error';
-          this.progreso     = 0;
-          this.mensajeError = extractHttpErrorMessage(err, 'Error al subir. Inténtalo de nuevo.');
-          this.refresh();
         }
-      });
+        this.cdr.markForCheck();
+      })
+    ).subscribe();
+  }
+
+  private subirItem(item: VideoUploadItem): Observable<void> {
+    item.estado   = 'uploading';
+    item.progreso = 0;
+    item.error    = '';
+    this.cdr.markForCheck();
+
+    return this.videoService.subirVideo(item.file, item.titulo.trim(), [...this.idGruposSeleccionados], item.miniaturaBlob, item.duracion).pipe(
+      tap(event => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          const loaded = event.loaded;
+          const total  = event.total;
+          this.ngZone.run(() => {
+            item.progreso = Math.round(100 * loaded / total);
+            this.cdr.markForCheck();
+          });
+        }
+        if (event.type === HttpEventType.Response) {
+          this.ngZone.run(() => {
+            const res    = event.body!;
+            const grupos = [...this.idGruposSeleccionados]
+              .map(id => this.misGrupos.find(g => g.idGrupo === id))
+              .filter((g): g is Group => g != null)
+              .map(g => ({ idGrupo: g.idGrupo, nombre: g.nombre }));
+            this.videoService.prependVideo({
+              idVideo:      res.id_video,
+              titulo:       res.titulo,
+              duracion:     res.duracion ?? null,
+              fechaSubida:  new Date().toISOString(),
+              grupos,
+              miniaturaUrl: res.miniaturaUrl || null,
+              fileName:     res.fileName,
+              fileSize:     null,
+            });
+            item.estado = 'success';
+            this.cdr.markForCheck();
+          });
+        }
+      }),
+      filter(event => event.type === HttpEventType.Response),
+      map(() => void 0),
+      catchError(err => {
+        this.ngZone.run(() => {
+          item.estado = 'error';
+          item.error  = extractHttpErrorMessage(err, 'Error al subir. Inténtalo de nuevo.');
+          this.cdr.markForCheck();
+        });
+        return of(void 0);
+      })
+    );
+  }
+
+  eliminarItem(item: VideoUploadItem): void {
+    if (item.miniaturaPreviewUrl) URL.revokeObjectURL(item.miniaturaPreviewUrl);
+    if (item.objectUrl)           URL.revokeObjectURL(item.objectUrl);
+    this.uploadItems = this.uploadItems.filter(i => i !== item);
+    this.cdr.markForCheck();
+  }
+
+  seleccionarMiniatura(item: VideoUploadItem, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file  = input.files?.[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    if (item.miniaturaPreviewUrl && item.miniaturaPersonalizada) {
+      URL.revokeObjectURL(item.miniaturaPreviewUrl);
+    }
+    // File extiende Blob: se puede pasar directamente como miniaturaBlob
+    item.miniaturaBlob         = file;
+    item.miniaturaPreviewUrl   = URL.createObjectURL(file);
+    item.miniaturaPersonalizada = true;
+    this.uploadItems = [...this.uploadItems];
+    this.cdr.markForCheck();
   }
 
   solicitarEliminacion(video: Video): void {
@@ -447,11 +526,24 @@ export class VideosComponent implements OnInit {
   }
 
   iniciarEdicion(video: Video): void {
-    this.videoEnEdicion = video;
-    this.editTitulo     = video.titulo;
-    this.editIdGrupos   = new Set(video.grupos.map(g => g.idGrupo));
-    this.estadoEdicion  = 'idle';
-    this.mensajeEdicion = '';
+    this.videoEnEdicion          = video;
+    this.editTitulo              = video.titulo;
+    this.editIdGrupos            = new Set(video.grupos.map(g => g.idGrupo));
+    this.editMiniaturaBlob       = null;
+    this.editMiniaturaPreviewUrl = null;
+    this.estadoEdicion           = 'idle';
+    this.mensajeEdicion          = '';
+    this.cdr.markForCheck();
+  }
+
+  seleccionarMiniaturaEdicion(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file  = input.files?.[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    if (this.editMiniaturaPreviewUrl) URL.revokeObjectURL(this.editMiniaturaPreviewUrl);
+    this.editMiniaturaBlob       = file;
+    this.editMiniaturaPreviewUrl = URL.createObjectURL(file);
     this.cdr.markForCheck();
   }
 
@@ -475,8 +567,10 @@ export class VideosComponent implements OnInit {
   }
 
   cancelarEdicion(): void {
-    this.videoEnEdicion = null;
-    this.estadoEdicion  = 'idle';
+    if (this.editMiniaturaPreviewUrl) { URL.revokeObjectURL(this.editMiniaturaPreviewUrl); this.editMiniaturaPreviewUrl = null; }
+    this.editMiniaturaBlob = null;
+    this.videoEnEdicion    = null;
+    this.estadoEdicion     = 'idle';
     this.cdr.markForCheck();
   }
 
@@ -485,15 +579,22 @@ export class VideosComponent implements OnInit {
     if (!video || !this.editTitulo.trim()) return;
 
     this.estadoEdicion = 'saving';
+    const blob = this.editMiniaturaBlob;
 
     this.videoService.editarVideo(video.idVideo, this.editTitulo.trim(), [...this.editIdGrupos])
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        concatMap(() => blob
+          ? this.videoService.actualizarMiniatura(video.idVideo, blob)
+          : of(null)
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => {
-          // El tap de editarVideo() actualizó el BehaviorSubject con los datos del servidor;
-          // la suscripción en cargarVideos() ya aplicó el nuevo array.
-          this.videoEnEdicion = null;
-          this.estadoEdicion  = 'idle';
+          if (this.editMiniaturaPreviewUrl) { URL.revokeObjectURL(this.editMiniaturaPreviewUrl); this.editMiniaturaPreviewUrl = null; }
+          this.editMiniaturaBlob = null;
+          this.videoEnEdicion    = null;
+          this.estadoEdicion     = 'idle';
           this.mostrarExitoEdicion();
           this.cdr.markForCheck();
         },
