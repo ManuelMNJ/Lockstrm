@@ -18,6 +18,9 @@ export class PrivateLayoutComponent {
   /** Título dinámico de la cabecera, sincronizado con la ruta activa. */
   pageTitle = 'Dashboard';
 
+  /** Breadcrumbs para vistas de detalle. Vacío en vistas raíz. */
+  breadcrumbs: { label: string; link?: string }[] = [];
+
   /** Estado del sidebar en desktop: colapsado (56px) o expandido (240px). */
   readonly sidebarCollapsed = signal(false);
 
@@ -88,13 +91,36 @@ export class PrivateLayoutComponent {
   // ── Private helpers ───────────────────────────────────────────────────────
 
   private actualizarHeader(url: string): void {
-    if      (url.startsWith('/dashboard'))             this.pageTitle = 'Dashboard';
-    else if (url.startsWith('/mi-espacio/videos'))     this.pageTitle = 'Mis Vídeos';
-    else if (url.startsWith('/mi-espacio/grupos'))     this.pageTitle = 'Mis Grupos';
-    else if (url.startsWith('/mi-espacio/analiticas')) this.pageTitle = 'Analíticas';
-    else if (url.startsWith('/compartido'))            this.pageTitle = 'Vídeos Disponibles';
-    else if (url.startsWith('/perfil'))                this.pageTitle = 'Mi Perfil';
-    else if (url.startsWith('/ajustes'))               this.pageTitle = 'Ajustes';
-    else                                               this.pageTitle = 'Lockstrm';
+    const cleanUrl = url.split('?')[0];
+
+    if (cleanUrl.startsWith('/dashboard')) {
+      this.pageTitle = 'Dashboard'; this.breadcrumbs = [];
+    } else if (/^\/mi-espacio\/grupos\/\d+/.test(cleanUrl)) {
+      this.pageTitle = 'Detalle de grupo';
+      this.breadcrumbs = [{ label: 'Mis Grupos', link: '/mi-espacio/grupos' }];
+    } else if (cleanUrl.startsWith('/mi-espacio/grupos')) {
+      this.pageTitle = 'Mis Grupos'; this.breadcrumbs = [];
+    } else if (/^\/mi-espacio\/analiticas\/grupo\/\d+\/\d+/.test(cleanUrl)) {
+      this.pageTitle = 'Analíticas de vídeo';
+      this.breadcrumbs = [{ label: 'Analíticas', link: '/mi-espacio/analiticas' }];
+    } else if (/^\/mi-espacio\/analiticas\/grupo\/\d+/.test(cleanUrl)) {
+      this.pageTitle = 'Analíticas de grupo';
+      this.breadcrumbs = [{ label: 'Analíticas', link: '/mi-espacio/analiticas' }];
+    } else if (/^\/mi-espacio\/analiticas\/\d+/.test(cleanUrl)) {
+      this.pageTitle = 'Analíticas de vídeo';
+      this.breadcrumbs = [{ label: 'Analíticas', link: '/mi-espacio/analiticas' }];
+    } else if (cleanUrl.startsWith('/mi-espacio/analiticas')) {
+      this.pageTitle = 'Analíticas'; this.breadcrumbs = [];
+    } else if (cleanUrl.startsWith('/mi-espacio/videos')) {
+      this.pageTitle = 'Mis Vídeos'; this.breadcrumbs = [];
+    } else if (cleanUrl.startsWith('/compartido')) {
+      this.pageTitle = 'Vídeos Disponibles'; this.breadcrumbs = [];
+    } else if (cleanUrl.startsWith('/perfil')) {
+      this.pageTitle = 'Mi Perfil'; this.breadcrumbs = [];
+    } else if (cleanUrl.startsWith('/ajustes')) {
+      this.pageTitle = 'Ajustes'; this.breadcrumbs = [];
+    } else {
+      this.pageTitle = 'Lockstrm'; this.breadcrumbs = [];
+    }
   }
 }
