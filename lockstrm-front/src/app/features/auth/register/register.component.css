@@ -200,6 +200,22 @@
   color: var(--text-subtle);
 }
 
+/* ── Hint explicativo del sistema username#tag ── */
+.username-hint {
+  margin: 0 0 var(--space-2) 0;
+}
+
+.username-hint__example {
+  font-family: monospace;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-primary-ghost);
+  border: 1px solid var(--color-primary-ghost-strong, var(--color-primary));
+  border-radius: 9999px;
+  padding: 1px 7px;
+}
+
 /* ── Preview del tag de usuario ── */
 .tag-preview {
   display: flex;
