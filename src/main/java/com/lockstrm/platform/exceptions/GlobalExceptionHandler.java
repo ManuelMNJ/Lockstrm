@@ -2,6 +2,7 @@ package com.lockstrm.platform.exceptions;
 
 import com.lockstrm.platform.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -87,6 +88,20 @@ public class GlobalExceptionHandler {
                                                          HttpServletRequest req) {
         return build(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE",
                 "El archivo excede el tamaño máximo permitido", req);
+    }
+
+    /**
+     * El cliente cerró la conexión a mitad de la transferencia (seek de vídeo,
+     * cambio de src, navegación, cierre de pestaña). Es comportamiento normal
+     * en streaming HTTP 206; no es un error del servidor. Devolvemos null
+     * para que Spring no intente serializar nada — la respuesta ya está
+     * comprometida con Content-Type del recurso (p. ej. video/mp4) y escribir
+     * un JSON encima fallaría con HttpMessageNotWritableException.
+     */
+    @ExceptionHandler(ClientAbortException.class)
+    public ResponseEntity<Void> handleClientAbort(ClientAbortException ex, HttpServletRequest req) {
+        log.debug("Client aborted connection at {} {}", req.getMethod(), req.getRequestURI());
+        return null;
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,24 +1,32 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable, effect, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
 /**
- * Gestiona el Service Worker proxy para streaming seguro.
+ * Gestiona el Service Worker proxy para streaming seguro y, como fallback
+ * cuando el SW no está disponible, emite tickets de stream de corta duración.
  *
- * El SW intercepta peticiones a /video-proxy/{fileName}, reescribe la URL
- * al backend e inyecta Authorization: Bearer sin exponer el token en la URL.
+ * Flujo principal (SW activo):
+ *   <video src="/video-proxy/{file}"> → SW intercepta → reescribe a backend
+ *   real e inyecta cabecera Authorization. El JWT NUNCA aparece en la URL.
  *
- * Fallback automático si SW no está disponible (HTTP, SSR, etc.):
- * buildUrl() devuelve la URL con ?token= en query string, que el filtro
- * JwtAuthenticationFilter acepta exclusivamente en rutas /stream/.
+ * Fallback (SW no disponible — HTTP local, navegador sin SW, modo incógnito
+ * con SW deshabilitado, etc.):
+ *   El cliente pide POST /api/videos/stream-ticket/{file} con el JWT
+ *   principal en cabecera. El servidor devuelve un ticket firmado, atado
+ *   a ese fichero, válido ~60 s. Se usa como ?token={ticket} en el src del
+ *   <video>. Si se filtra: solo sirve para ese vídeo y caduca enseguida —
+ *   el JWT principal nunca toca la URL.
  */
 @Injectable({ providedIn: 'root' })
 export class VideoStreamService {
 
-  private swActive: ServiceWorker | null = null;
-  private swReady  = false;
+  private swReady = false;
 
   private readonly authService = inject(AuthService);
+  private readonly http        = inject(HttpClient);
 
   constructor() {
     if ('serviceWorker' in navigator) {
@@ -31,12 +39,24 @@ export class VideoStreamService {
     });
   }
 
-  buildUrl(fileName: string): string {
+  /**
+   * Devuelve la URL que el <video src=...> debe usar. Asíncrona porque la
+   * rama de fallback necesita pedir un ticket al backend.
+   */
+  async buildUrl(fileName: string): Promise<string> {
     if (this.swReady) {
       return `/video-proxy/${encodeURIComponent(fileName)}`;
     }
-    const token = this.authService.getToken() ?? '';
-    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(fileName)}?token=${token}`;
+    const ticket = await this.fetchStreamTicket(fileName);
+    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(fileName)}?token=${encodeURIComponent(ticket)}`;
+  }
+
+  private async fetchStreamTicket(fileName: string): Promise<string> {
+    const url = `${environment.apiUrl}/api/videos/stream-ticket/${encodeURIComponent(fileName)}`;
+    const resp = await firstValueFrom(
+      this.http.post<{ ticket: string; expiresIn: number }>(url, null)
+    );
+    return resp.ticket;
   }
 
   private async registerSW(): Promise<void> {
@@ -44,14 +64,13 @@ export class VideoStreamService {
       const reg = await navigator.serviceWorker.register('/stream-proxy.sw.js', { scope: '/' });
       await navigator.serviceWorker.ready;
 
-      this.swActive = reg.active ?? navigator.serviceWorker.controller;
-      this.swReady  = true;
+      this.swReady = !!(reg.active ?? navigator.serviceWorker.controller);
 
       const token = this.authService.getToken();
       this.postMessage({ type: 'LOCKSTRM_INIT', token, apiBase: environment.apiUrl });
 
     } catch {
-      // Registro fallido (HTTP local, contexto sin SW): buildUrl() usará el fallback con token en URL.
+      // Registro fallido: buildUrl() usará el fallback con ticket.
     }
   }
 

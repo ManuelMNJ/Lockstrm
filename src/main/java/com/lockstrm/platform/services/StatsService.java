@@ -65,17 +65,20 @@ public class StatsService {
 
         videoRepository.findRecentByOwner(email, limit).forEach(v ->
                 items.add(new ActivityItemDto("upload",
-                        "Subiste <strong>" + v.getTitulo() + "</strong> correctamente",
+                        "Subiste",
+                        v.getTitulo(),
                         v.getFechaSubida())));
 
         grupoRepository.findRecentByCreator(email, limit).forEach(g ->
                 items.add(new ActivityItemDto("group",
-                        "Creaste el grupo <strong>" + g.getNombre() + "</strong>",
+                        "Creaste el grupo",
+                        g.getNombre(),
                         g.getFechaCreacion())));
 
         groupMemberRepository.findRecentJoinsByUser(email, limit).forEach(mg ->
                 items.add(new ActivityItemDto("group",
-                        "Se te añadió al grupo <strong>" + mg.getGrupo().getNombre() + "</strong>",
+                        "Se te añadió al grupo",
+                        mg.getGrupo().getNombre(),
                         mg.getFechaUnion())));
 
         items.sort(Comparator.comparing(ActivityItemDto::occurredAt).reversed());

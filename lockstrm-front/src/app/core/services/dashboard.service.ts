@@ -22,7 +22,10 @@ export interface DashboardStats {
 
 export interface ActivityItem {
   icon:       string;
-  text:       string;
+  /** Verbo de la acción (texto plano, sin HTML). */
+  action:     string;
+  /** Nombre del recurso afectado (título de vídeo, nombre de grupo…). */
+  target:     string;
   occurredAt: string;
 }
 

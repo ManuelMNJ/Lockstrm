@@ -362,7 +362,7 @@
               </div>
 
               <div class="activity-content">
-                <p class="activity-text" [innerHTML]="item.text"></p>
+                <p class="activity-text">{{ item.action }} <strong>{{ item.target }}</strong></p>
                 <span class="activity-time">{{ relativeTime(item.occurredAt) }}</span>
               </div>
 

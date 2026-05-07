@@ -98,7 +98,7 @@ export class VideoService {
     });
   }
 
-  buildStreamUrl(fileName: string): string {
+  buildStreamUrl(fileName: string): Promise<string> {
     return this.streamService.buildUrl(fileName);
   }
 

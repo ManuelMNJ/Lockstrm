@@ -21,7 +21,7 @@
   <video
     #videoEl
     class="player-video"
-    [src]="streamUrl()"
+    [attr.src]="streamUrl() || null"
     preload="metadata"
     disableremoteplayback
     (click)="togglePlay()"

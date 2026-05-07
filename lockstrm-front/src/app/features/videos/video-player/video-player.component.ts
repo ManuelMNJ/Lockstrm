@@ -15,10 +15,10 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent, merge, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
 import { STORAGE_KEYS } from '../../../core/constants/storage-keys';
 import { AuthService } from '../../../core/services/auth.service';
 import { VideoService } from '../../../core/services/video.service';
+import { VideoStreamService } from '../../../core/services/video-stream.service';
 import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 
 @Component({
@@ -35,8 +35,9 @@ export class VideoPlayerComponent implements OnInit {
 
   /**
    * Nombre de fichero UUID devuelto por el backend (ej. "550e8400-e29b-41d4-a716.mp4").
-   * El componente construye la URL de streaming internamente usando environment.apiUrl
-   * y el JWT del usuario, para que funcione en local y en producción sin cambiar código.
+   * La URL final del <video src=...> la resuelve VideoStreamService: usa el SW
+   * proxy si está activo (sin token en URL) o un ticket de stream de corta vida
+   * como fallback. Ver initStreamUrl().
    */
   readonly fileName = input.required<string>();
 
@@ -80,26 +81,23 @@ export class VideoPlayerComponent implements OnInit {
 
   // ── DI ──────────────────────────────────────────────────────────────────────
 
-  private readonly authService  = inject(AuthService);
-  private readonly videoService = inject(VideoService);
-  private readonly destroyRef   = inject(DestroyRef);
+  private readonly authService        = inject(AuthService);
+  private readonly videoService       = inject(VideoService);
+  private readonly videoStreamService = inject(VideoStreamService);
+  private readonly destroyRef         = inject(DestroyRef);
 
   // ── Stream URL ──────────────────────────────────────────────────────────────
 
   /**
-   * URL completa del stream, construida dinámicamente:
-   *   {environment.apiUrl}/api/videos/stream/{fileName}?token={jwt}
-   *
-   * - environment.apiUrl apunta a http://localhost:8080 en local y a la URL del VPS
-   *   en producción (sin tocar este fichero gracias al fichero environment.prod.ts).
-   * - El token JWT se lee del AuthService y se pasa como query param porque el tag
-   *   <video src="..."> no puede enviar cabeceras HTTP Authorization.
-   * - El JwtAuthenticationFilter del backend acepta ?token= exclusivamente en /stream/.
+   * URL que se asigna al <video src=...>. La calcula VideoStreamService:
+   *   - Si el Service Worker está activo: URL same-origin /video-proxy/{file}
+   *     que el SW intercepta e inyecta el JWT en cabecera Authorization.
+   *     El token NUNCA aparece en la URL.
+   *   - Si no hay SW: el servicio pide al backend un TICKET firmado de ~60 s
+   *     atado a este fichero y lo usa como ?token=. No es el JWT principal,
+   *     así que un leak está acotado a este vídeo durante el TTL.
    */
-  readonly streamUrl = computed(() => {
-    const token = this.authService.getToken() ?? '';
-    return `${environment.apiUrl}/api/videos/stream/${encodeURIComponent(this.fileName())}?token=${token}`;
-  });
+  readonly streamUrl = signal<string>('');
 
   // ── State signals ───────────────────────────────────────────────────────────
 
@@ -168,6 +166,7 @@ export class VideoPlayerComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initStreamUrl();
     this.initHeartbeat();
     this.initWatermark();
     this.initFullscreenListener();
@@ -177,6 +176,17 @@ export class VideoPlayerComponent implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({ error: () => {} });
     }
+  }
+
+  /**
+   * Resuelve la URL de streaming asíncronamente. Mientras se resuelve, el
+   * <video> queda con src="" (no carga). En cuanto se obtiene, el signal
+   * dispara la asignación reactiva de [src] y el navegador inicia el fetch.
+   */
+  private initStreamUrl(): void {
+    this.videoStreamService.buildUrl(this.fileName())
+      .then(url => this.streamUrl.set(url))
+      .catch(() => this.videoError.set(true));
   }
 
   // ── Private init helpers ────────────────────────────────────────────────────
