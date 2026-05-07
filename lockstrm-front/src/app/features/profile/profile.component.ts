@@ -56,6 +56,9 @@ export class ProfileComponent implements OnInit, PendingChanges {
   // ── Copiar handle ─────────────────────────────────────────────────
   handleCopiado = false;
 
+  // ── Confirmación cambio de username ───────────────────────────────
+  mostrarConfirmUsername = false;
+
   // ── Cambio de correo ──────────────────────────────────────────────
   modoEditarEmail   = false;
   formEmail!: FormGroup;
@@ -119,34 +122,27 @@ export class ProfileComponent implements OnInit, PendingChanges {
     if (this.formPerfil.invalid) { this.formPerfil.markAllAsTouched(); return; }
 
     const originalUsername = this.perfil?.username ?? '';
+    const usernameWillChange = (this.formPerfil.value.username?.toLowerCase() ?? '') !== originalUsername.toLowerCase();
+
+    if (usernameWillChange) {
+      this.mostrarConfirmUsername = true;
+      return;
+    }
+
     this.estadoPerfil = 'loading';
 
     this.usuarioService.actualizarPerfil(this.formPerfil.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (actualizado) => {
-          const usernameChanged = (actualizado.username?.toLowerCase() ?? '') !== originalUsername.toLowerCase();
           this.perfil      = { ...this.perfil!, ...actualizado };
           this.modoEdicion = false;
+          this.authService.updateUserData(actualizado);
+          this.estadoPerfil  = 'success';
+          this.mensajePerfil = 'Perfil actualizado correctamente.';
           this.cdr.markForCheck();
-
-          if (usernameChanged) {
-            this.estadoPerfil  = 'success';
-            this.mensajePerfil = 'Nombre de usuario actualizado. Cerrando sesión...';
-            this.cdr.markForCheck();
-            timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => this.authService.logout(
-                ['/login'],
-                { identificadorCambiado: '1', tag: `${actualizado.username}#${actualizado.tag}` }
-              ));
-          } else {
-            this.authService.updateUserData(actualizado);
-            this.estadoPerfil  = 'success';
-            this.mensajePerfil = 'Perfil actualizado correctamente.';
-            this.cdr.markForCheck();
-            timer(UI_TIMINGS.FEEDBACK_SUCCESS_MS).pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => { this.estadoPerfil = 'idle'; this.cdr.markForCheck(); });
-          }
+          timer(UI_TIMINGS.FEEDBACK_SUCCESS_MS).pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => { this.estadoPerfil = 'idle'; this.cdr.markForCheck(); });
         },
         error: (err) => {
           this.estadoPerfil  = 'error';
@@ -154,6 +150,34 @@ export class ProfileComponent implements OnInit, PendingChanges {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  confirmarCambioUsername(): void {
+    this.mostrarConfirmUsername = false;
+    this.estadoPerfil = 'loading';
+    this.usuarioService.actualizarPerfil(this.formPerfil.value)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (actualizado) => {
+          this.estadoPerfil  = 'success';
+          this.mensajePerfil = 'Nombre de usuario actualizado. Cerrando sesión...';
+          this.cdr.markForCheck();
+          timer(UI_TIMINGS.FEEDBACK_SHORT_MS).pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.authService.logout(
+              ['/login'],
+              { identificadorCambiado: '1', tag: `${actualizado.username}#${actualizado.tag}` }
+            ));
+        },
+        error: (err) => {
+          this.estadoPerfil  = 'error';
+          this.mensajePerfil = extractHttpErrorMessage(err, 'No se pudo actualizar el perfil.');
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  cancelarConfirmUsername(): void {
+    this.mostrarConfirmUsername = false;
   }
 
   private usernameDisponibleValidator(): AsyncValidatorFn {
