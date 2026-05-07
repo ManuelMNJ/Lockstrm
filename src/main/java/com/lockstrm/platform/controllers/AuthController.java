@@ -1,10 +1,13 @@
 package com.lockstrm.platform.controllers;
 
 import com.lockstrm.platform.dto.AuthResponse;
+import com.lockstrm.platform.dto.ForgotPasswordRequest;
 import com.lockstrm.platform.dto.LoginRequest;
 import com.lockstrm.platform.dto.RegisterRequest;
+import com.lockstrm.platform.dto.ResetPasswordRequest;
 import com.lockstrm.platform.entities.User;
 import com.lockstrm.platform.security.JwtService;
+import com.lockstrm.platform.services.PasswordResetService;
 import com.lockstrm.platform.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +23,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService     userService;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService      jwtService;
+    private final UserService          userService;
+    private final PasswordEncoder      passwordEncoder;
+    private final JwtService           jwtService;
+    private final PasswordResetService passwordResetService;
 
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
@@ -64,5 +68,19 @@ public class AuthController {
                 token, usuario.getUsername(), usuario.getTag(),
                 usuario.getNombre(), usuario.getApellidos(), usuario.getIdUsuario(),
                 avatarUrl));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.solicitarReset(request.getEmail());
+        // Respuesta genérica para no revelar si el email existe
+        return ResponseEntity.ok(Map.of("mensaje",
+            "Si el correo está registrado recibirás un enlace para restablecer tu contraseña."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.confirmarReset(request.getToken(), request.getNuevaContrasena());
+        return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada correctamente."));
     }
 }

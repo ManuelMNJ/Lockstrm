@@ -1,15 +1,47 @@
 <div class="perfil-page">
 
   <!-- ================================================================
+  SKELETON (cargando)
+  ================================================================ -->
+  @if (cargando) {
+    <div class="profile-card sk-profile-card" aria-hidden="true" aria-busy="true">
+      <div class="profile-banner">
+        <div class="sk-avatar-circle"></div>
+        <div class="sk-identity">
+          <div class="sk-line sk-line--name"></div>
+          <div class="sk-line sk-line--handle"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="info-stats">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="info-stat sk-stat-tile">
+              <div class="sk-line sk-line--stat-label"></div>
+              <div class="sk-line sk-line--stat-value"></div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section settings-section--accordion sk-accordion" aria-hidden="true">
+      <div class="accordion-trigger" style="pointer-events:none">
+        <div class="accordion-trigger-left">
+          <div class="sk-icon-circle"></div>
+          <div class="sk-identity">
+            <div class="sk-line sk-line--section-title"></div>
+            <div class="sk-line sk-line--section-sub"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================
   MI PERFIL
   ================================================================ -->
-  <section class="profile-card" aria-labelledby="perfil-heading">
+  <section class="profile-card" aria-labelledby="perfil-heading" [style.display]="cargando ? 'none' : null">
 
-    @if (cargando) {
-      <div class="card-body">
-        <div class="info-loading" aria-live="polite">Cargando perfil…</div>
-      </div>
-    }
     @if (error) {
       <div class="card-body">
         <p class="feedback-msg feedback-msg--error" role="alert">{{ error }}</p>
@@ -328,7 +360,8 @@
   <!-- ================================================================
   SEGURIDAD — Cambio de contraseña (acordeón)
   ================================================================ -->
-  <section class="settings-section settings-section--accordion" aria-labelledby="seguridad-heading">
+  <section class="settings-section settings-section--accordion" aria-labelledby="seguridad-heading"
+           [style.display]="cargando ? 'none' : null">
 
     <!-- Cabecera clicable que abre/cierra el formulario -->
     <button type="button"
