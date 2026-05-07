@@ -40,11 +40,13 @@ services:
       UPLOAD_DIR: /var/lockstrm/videos
       THUMBNAILS_DIR: /var/lockstrm/thumbnails
       AVATARS_DIR: /var/lockstrm/avatars
+      GRUPOS_IMG_DIR: /var/lockstrm/grupos
       CORS_ORIGIN: ${CORS_ORIGIN}
     volumes:
       - ./uploads/videos:/var/lockstrm/videos
       - ./uploads/thumbnails:/var/lockstrm/thumbnails
       - ./uploads/avatars:/var/lockstrm/avatars
+      - ./uploads/grupos:/var/lockstrm/grupos
     ports:
       - "8080:8080"
 

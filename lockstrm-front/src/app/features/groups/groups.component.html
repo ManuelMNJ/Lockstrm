@@ -417,7 +417,7 @@
         <button class="btn-primary"
                 (click)="crearGrupo()"
                 [disabled]="estadoCreacion === 'loading' || !nombreNuevoGrupo.trim()">
-          {{ estadoCreacion === 'loading' ? 'Creando...' : 'Crear grupo' }}
+          {{ estadoCreacion === 'loading' ? 'Creando...' : estadoCreacion === 'error' ? 'Reintentar' : 'Crear grupo' }}
         </button>
       </div>
 
