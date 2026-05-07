@@ -119,3 +119,27 @@
     }
   </ul>
 </section>
+
+@if (confirmarRolVisible && pendingRolMiembro) {
+  <div class="modal-overlay confirm-overlay"
+    (click)="cancelarCambioRol()"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="confirm-rol-title"
+    aria-describedby="confirm-rol-desc">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-body">
+        <h3 class="confirm-title" id="confirm-rol-title">¿Cambiar rol?</h3>
+        <p class="confirm-desc" id="confirm-rol-desc">
+          Vas a cambiar el rol de
+          <strong>{{ pendingRolMiembro.username }}#{{ pendingRolMiembro.tag }}</strong>
+          de <strong>{{ pendingRolMiembro.rol }}</strong> a <strong>{{ pendingRolNuevo }}</strong>.
+        </p>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn-confirm-cancel" (click)="cancelarCambioRol()">Cancelar</button>
+        <button class="btn-confirm-save" (click)="confirmarCambioRol()">Confirmar cambio</button>
+      </div>
+    </div>
+  </div>
+}

@@ -45,6 +45,10 @@ export class GroupMembersComponent implements OnChanges {
   cambiandoRoles = new Set<number>();
   errorCambioRol = '';
 
+  pendingRolMiembro: Member | null = null;
+  pendingRolNuevo   = '';
+  confirmarRolVisible = false;
+
   rolesDisponiblesParaAsignar: string[] = [];
 
   private destroyRef = inject(DestroyRef);
@@ -143,6 +147,18 @@ export class GroupMembersComponent implements OnChanges {
 
   cambiarRolMiembro(miembro: Member, nuevoRol: string): void {
     if (!nuevoRol || nuevoRol === miembro.rol) return;
+    this.pendingRolMiembro  = miembro;
+    this.pendingRolNuevo    = nuevoRol;
+    this.confirmarRolVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  confirmarCambioRol(): void {
+    const miembro  = this.pendingRolMiembro!;
+    const nuevoRol = this.pendingRolNuevo;
+    this.confirmarRolVisible = false;
+    this.pendingRolMiembro   = null;
+    this.pendingRolNuevo     = '';
 
     this.cambiandoRoles = new Set(this.cambiandoRoles).add(miembro.idUsuario);
     this.errorCambioRol = '';
@@ -169,6 +185,13 @@ export class GroupMembersComponent implements OnChanges {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  cancelarCambioRol(): void {
+    this.confirmarRolVisible = false;
+    this.pendingRolMiembro   = null;
+    this.pendingRolNuevo     = '';
+    this.cdr.markForCheck();
   }
 
   private recargarMiembros(): void {

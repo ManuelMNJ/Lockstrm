@@ -195,8 +195,9 @@ export class GroupsComponent implements OnInit {
         },
         error: (err) => {
           this.estadoCreacion = 'error';
-          this.errorCreacion  = err?.error?.error || 'Error al crear el grupo.';
+          this.errorCreacion  = err?.error?.message || 'No se pudo crear el grupo. Inténtalo de nuevo.';
           this.cdr.markForCheck();
+          setTimeout(() => this.nombreGrupoInput?.nativeElement.focus(), UI_TIMINGS.DOM_FOCUS_DELAY_MS);
         },
       });
   }

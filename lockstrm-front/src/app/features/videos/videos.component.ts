@@ -84,6 +84,7 @@ export class VideosComponent implements OnInit {
   private avisoAccesoTimer: ReturnType<typeof setTimeout> | null = null;
 
   videoAEliminar: Video | null = null;
+  eliminarConfirmado = false;
   videoReproduciendose: Video | null = null;
 
   videoEnEdicion: Video | null = null;
@@ -109,12 +110,40 @@ export class VideosComponent implements OnInit {
   storageLimitGB = '5';
   storagePercent = 0;
 
+  storageWarnVisible = false;
+  private storageWarnTimer: ReturnType<typeof setTimeout> | null = null;
+  private storageWarnShown80  = false;
+  private storageWarnShown100 = false;
+
   private aplicarEspacio(usedBytes: number, limitBytes: number): void {
     const usedMB  = usedBytes  / (1024 * 1024);
     const limitMB = limitBytes / (1024 * 1024);
     this.storagePercent = limitMB ? Math.round(usedMB / limitMB * 100) : 0;
     this.storageUsedGB  = (usedMB  / 1024).toFixed(1);
     this.storageLimitGB = (limitMB / 1024).toFixed(0);
+    this.comprobarAvisoEspacio();
+  }
+
+  private comprobarAvisoEspacio(): void {
+    if (this.storagePercent >= 100 && !this.storageWarnShown100) {
+      this.storageWarnShown100 = true;
+      this.mostrarStorageWarn('Has alcanzado el límite de almacenamiento. No puedes subir más vídeos.');
+    } else if (this.storagePercent >= 80 && !this.storageWarnShown80) {
+      this.storageWarnShown80 = true;
+      this.mostrarStorageWarn(`Casi sin espacio — llevas un ${this.storagePercent}% usado.`);
+    }
+  }
+
+  storageWarnMsg = '';
+  private mostrarStorageWarn(msg: string): void {
+    if (this.storageWarnTimer) clearTimeout(this.storageWarnTimer);
+    this.storageWarnMsg     = msg;
+    this.storageWarnVisible = true;
+    this.cdr.markForCheck();
+    this.storageWarnTimer = setTimeout(() => {
+      this.storageWarnVisible = false;
+      this.cdr.markForCheck();
+    }, UI_TIMINGS.TOAST_ERROR_MS);
   }
 
   searchQuery  = '';
@@ -451,12 +480,14 @@ export class VideosComponent implements OnInit {
   }
 
   solicitarEliminacion(video: Video): void {
-    this.videoAEliminar = video;
+    this.videoAEliminar    = video;
+    this.eliminarConfirmado = false;
     this.cdr.markForCheck();
   }
 
   cancelarEliminacion(): void {
-    this.videoAEliminar = null;
+    this.videoAEliminar    = null;
+    this.eliminarConfirmado = false;
     this.cdr.markForCheck();
   }
 
