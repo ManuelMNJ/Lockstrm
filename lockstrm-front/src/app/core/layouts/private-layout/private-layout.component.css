@@ -45,8 +45,8 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg,
-    var(--bg-surface) 0%,
-    rgba(22, 25, 37, 0.97) 100%
+    var(--bg-surface)           0%,
+    var(--bg-glass-sidebar-end) 100%
   );
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;

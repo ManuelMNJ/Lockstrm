@@ -67,8 +67,8 @@
   padding: var(--space-6);
   background: linear-gradient(
     135deg,
-    rgba(26, 29, 39, 0.85) 0%,
-    rgba(18, 20, 30, 0.92) 100%
+    var(--bg-glass-start) 0%,
+    var(--bg-glass-end)   100%
   );
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);

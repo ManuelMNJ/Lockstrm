@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Lockstrm — App Shell (Root Layout)
+﻿/* ==========================================================================
+   Lockstrm â€” App Shell (Root Layout)
    app-shell.component.css
    ========================================================================== */
 
@@ -15,7 +15,7 @@
 .shell-root {
   display: flex;
   flex-direction: column;
-  height: 100dvh; /* dvh resuelve el problema del 100vh en móvil con barra de browser */
+  height: 100dvh; /* dvh resuelve el problema del 100vh en mÃ³vil con barra de browser */
   overflow: hidden;
   background-color: var(--bg-main);
 }
@@ -37,7 +37,7 @@
   z-index: var(--z-fixed);
 }
 
-/* ── Brand ── */
+/* â”€â”€ Brand â”€â”€ */
 .global-brand {
   display: flex;
   align-items: center;
@@ -72,7 +72,7 @@
   white-space: nowrap;
 }
 
-/* ── Right-side action group ── */
+/* â”€â”€ Right-side action group â”€â”€ */
 .global-nav-actions {
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@
   flex-shrink: 0;
 }
 
-/* Ghost text link (Iniciar sesión) */
+/* Ghost text link (Iniciar sesiÃ³n) */
 .nav-link {
   display: inline-flex;
   align-items: center;
@@ -101,7 +101,7 @@
 
 /* ==========================================================================
    "IR AL PANEL" BUTTON  (usuario autenticado)
-   Estilo primario compacto, con icono de cuadrícula.
+   Estilo primario compacto, con icono de cuadrÃ­cula.
    ========================================================================== */
 .btn-panel {
   display: inline-flex;
@@ -139,13 +139,13 @@
 }
 
 /* ==========================================================================
-   PROFILE WRAPPER  (botón trigger + dropdown)
+   PROFILE WRAPPER  (botÃ³n trigger + dropdown)
    ========================================================================== */
 .profile-wrapper {
   position: relative;
 }
 
-/* ── Trigger button ── */
+/* â”€â”€ Trigger button â”€â”€ */
 .profile-trigger {
   display: flex;
   align-items: center;
@@ -163,7 +163,7 @@
 
 .profile-trigger:hover {
   background-color: var(--bg-surface-hover);
-  border-color: var(--border-default, var(--border-subtle));
+  border-color: var(--border-subtle);
 }
 
 .trigger-avatar {
@@ -227,7 +227,7 @@
 
 /* ==========================================================================
    TRANSPARENT BACKDROP
-   Capa invisible a z-index 98 que cierra el menú al hacer clic fuera.
+   Capa invisible a z-index 98 que cierra el menÃº al hacer clic fuera.
    ========================================================================== */
 .menu-backdrop {
   position: fixed;
@@ -250,7 +250,7 @@
   box-shadow:
     0 4px 6px -1px var(--overlay-black-20),
     0 12px 30px -4px var(--overlay-black-40),
-    0 0 0 1px rgba(255, 255, 255, 0.03);
+    0 0 0 1px var(--overlay-white-03);
   z-index: var(--z-dropdown);
   overflow: hidden;
 
@@ -263,7 +263,7 @@
   to   { opacity: 1; transform: translateY(0);    }
 }
 
-/* ── Cabecera del dropdown ── */
+/* â”€â”€ Cabecera del dropdown â”€â”€ */
 .dropdown-profile-header {
   display: flex;
   align-items: center;
@@ -289,7 +289,7 @@
   overflow: hidden;
 }
 
-/* Imagen dentro de cualquier círculo de avatar del shell */
+/* Imagen dentro de cualquier cÃ­rculo de avatar del shell */
 .avatar-circle-img {
   width: 100%;
   height: 100%;
@@ -320,14 +320,14 @@
   font-weight: 500;
 }
 
-/* ── Divider ── */
+/* â”€â”€ Divider â”€â”€ */
 .dropdown-divider {
   height: 1px;
   background-color: var(--border-subtle);
   margin: 0;
 }
 
-/* ── Menu items ── */
+/* â”€â”€ Menu items â”€â”€ */
 .dropdown-item {
   display: flex;
   align-items: center;
@@ -375,20 +375,20 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE — NAVBAR
-   ≤ 640px: ocultar nombre/tag del perfil, compactar acciones
+   RESPONSIVE â€” NAVBAR
+   â‰¤ 640px: ocultar nombre/tag del perfil, compactar acciones
    ========================================================================== */
 @media (max-width: 640px) {
   .global-nav {
     padding: 0 var(--space-4);
   }
 
-  /* Ocultar nombre y tag — solo avatar + chevron */
+  /* Ocultar nombre y tag â€” solo avatar + chevron */
   .trigger-info {
     display: none;
   }
 
-  /* Reducir padding del trigger para que quede como botón de avatar */
+  /* Reducir padding del trigger para que quede como botÃ³n de avatar */
   .profile-trigger {
     padding: 4px;
   }
@@ -404,10 +404,11 @@
     height: 16px;
   }
 
-  /* Nombre de marca: ocultar en pantallas muy pequeñas (< 400px) */
+  /* Nombre de marca: ocultar en pantallas muy pequeÃ±as (< 400px) */
   @media (max-width: 400px) {
     .brand-name {
       display: none;
     }
   }
 }
+

@@ -71,6 +71,6 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupM
     @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.usuario WHERE mg.id.idGrupoId = :idGrupo")
     List<GroupMember> findMiembrosByGrupoId(@Param("idGrupo") Long idGrupo);
 
-    @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.grupo WHERE mg.usuario.email = :email ORDER BY mg.fechaUnion DESC")
+    @Query("SELECT mg FROM GroupMember mg JOIN FETCH mg.grupo WHERE mg.usuario.email = :email AND mg.grupo.creador.email <> :email ORDER BY mg.fechaUnion DESC")
     List<GroupMember> findRecentJoinsByUser(@Param("email") String email, Pageable pageable);
 }

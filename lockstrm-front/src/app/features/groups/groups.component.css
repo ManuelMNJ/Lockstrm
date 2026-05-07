@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Lockstrm — Grupos Component
+﻿/* ==========================================================================
+   Lockstrm â€” Grupos Component
    ========================================================================== */
 
 .grupos-page {
@@ -192,8 +192,8 @@
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 999px;
-  background: var(--surface-2, #2a2a2a);
+  border-radius: 9999px;
+  background: var(--bg-surface-hover);
   color: var(--text-subtle);
   font-size: 11px;
   font-weight: 600;
@@ -201,7 +201,7 @@
   text-transform: none;
 }
 
-/* ── Sort Controls ─────────────────────────────────────────────────── */
+/* â”€â”€ Sort Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .sort-controls {
   display: flex;
   align-items: center;
@@ -223,25 +223,25 @@
   align-items: center;
   gap: 3px;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: 9999px;
   border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--text-subtle);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .sort-btn:hover {
   color: var(--text-main);
-  border-color: var(--border-default, #444);
+  border-color: var(--border-subtle);
 }
 
 .sort-btn--active {
-  background: var(--accent-bg, rgba(99,102,241,.12));
-  color: var(--accent, #818cf8);
-  border-color: var(--accent, #818cf8);
+  background: var(--color-primary-a12);
+  color: var(--color-primary-lighter);
+  border-color: var(--color-primary-lighter);
 }
 
 .sort-icon {
@@ -250,7 +250,7 @@
   flex-shrink: 0;
 }
 
-/* ── Paginación ────────────────────────────────────────────────────── */
+/* â”€â”€ PaginaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .paginacion {
   display: flex;
   align-items: center;
@@ -273,7 +273,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .pag-btn svg {
@@ -286,7 +286,7 @@
 }
 
 .pag-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--overlay-white-07);
   color: var(--text-main);
 }
 
@@ -296,10 +296,10 @@
 }
 
 .pag-btn--active {
-  background: rgba(124, 58, 237, 0.18);
-  color: #a78bfa;
+  background: var(--color-primary-a20);
+  color: var(--accent-purple);
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.35);
+  box-shadow: inset 0 0 0 1px var(--color-primary-a35);
 }
 
 .section-icon {
@@ -318,8 +318,9 @@
    ========================================================================== */
 .grupos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--space-4);
+  max-width: 1400px;
 }
 
 .grupo-card {
@@ -376,7 +377,7 @@
   height: 52px;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.28) 0%, rgba(124, 58, 237, 0.12) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 2px 8px rgba(124, 58, 237, 0.18);
+  box-shadow: inset 0 1px 0 var(--overlay-white-10), 0 2px 8px rgba(124, 58, 237, 0.18);
   color: var(--color-primary-lighter);
   font-size: var(--font-xl);
   font-weight: 700;
@@ -392,27 +393,27 @@
 }
 
 .grupo-card:hover .grupo-card-icon {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 16px rgba(124, 58, 237, 0.30);
+  box-shadow: inset 0 1px 0 var(--overlay-white-12), 0 4px 16px rgba(124, 58, 237, 0.30);
 }
 
 .grupo-card-icon--shared {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, var(--overlay-white-06), var(--overlay-white-02));
+  box-shadow: inset 0 1px 0 var(--overlay-white-06);
   color: var(--text-muted);
 }
 
 .grupo-card--shared {
-  border-top-color: rgba(255, 255, 255, 0.06);
+  border-top-color: var(--overlay-white-06);
   border-style: solid;
   border-color: var(--border-subtle);
-  background: linear-gradient(160deg, var(--bg-surface) 70%, rgba(255, 255, 255, 0.01) 100%);
+  background: linear-gradient(160deg, var(--bg-surface) 70%, var(--overlay-white-015) 100%);
 }
 
 .grupo-card--shared:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  border-top-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--overlay-white-14);
+  border-top-color: var(--overlay-white-18);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), 0 2px 12px rgba(0, 0, 0, 0.18);
-  background: linear-gradient(150deg, var(--bg-surface-hover) 50%, rgba(255, 255, 255, 0.02) 100%);
+  background: linear-gradient(150deg, var(--bg-surface-hover) 50%, var(--overlay-white-02) 100%);
 }
 
 .grupo-card-body {
@@ -472,7 +473,7 @@
   color: var(--text-subtle);
 }
 
-/* ── Estadísticas de la tarjeta ── */
+/* â”€â”€ EstadÃ­sticas de la tarjeta â”€â”€ */
 .grupo-card-stats {
   display: flex;
   align-items: center;
@@ -545,7 +546,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  animation: overlayIn 0.15s ease;
+  animation: overlayIn var(--transition-fast);
 }
 
 @keyframes overlayIn {
@@ -655,3 +656,5 @@
   transform: none;
   box-shadow: none;
 }
+
+
