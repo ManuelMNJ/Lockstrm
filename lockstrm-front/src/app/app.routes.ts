@@ -7,6 +7,8 @@ import { PrivateLayoutComponent }   from './core/layouts/private-layout/private-
 import { HomeComponent }              from './features/home/home.component';
 import { LoginComponent }             from './features/auth/login/login.component';
 import { RegisterComponent }          from './features/auth/register/register.component';
+import { ForgotPasswordComponent }   from './features/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent }    from './features/auth/reset-password/reset-password.component';
 import { DashboardComponent }         from './features/dashboard/dashboard.component';
 import { VideosComponent }            from './features/videos/videos.component';
 import { GroupsComponent }            from './features/groups/groups.component';
@@ -41,8 +43,10 @@ export const routes: Routes = [
         children: [
           { path: '',         component: HomeComponent, pathMatch: 'full' },
           { path: 'home',     redirectTo: '',           pathMatch: 'full' },
-          { path: 'login',    component: LoginComponent,    canActivate: [noAuthGuard] },
-          { path: 'registro', component: RegisterComponent, canActivate: [noAuthGuard] },
+          { path: 'login',                 component: LoginComponent,          canActivate: [noAuthGuard] },
+          { path: 'registro',              component: RegisterComponent,        canActivate: [noAuthGuard] },
+          { path: 'recuperar-contrasena',  component: ForgotPasswordComponent,  canActivate: [noAuthGuard] },
+          { path: 'nueva-contrasena',      component: ResetPasswordComponent,   canActivate: [noAuthGuard] },
         ],
       },
 

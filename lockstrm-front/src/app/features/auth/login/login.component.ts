@@ -46,6 +46,8 @@ export class LoginComponent implements OnInit {
       this.mensajeInfo = tag
         ? `Nombre de usuario actualizado. Tu nuevo identificador es ${tag}.`
         : 'Nombre de usuario actualizado. Ya puedes iniciar sesión.';
+    } else if (params.get('passwordReset') === '1') {
+      this.mensajeInfo = 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.';
     }
   }
 
