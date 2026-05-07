@@ -134,6 +134,7 @@
   --overlay-white-02:  rgba(255, 255, 255, 0.02);
   --overlay-white-03:  rgba(255, 255, 255, 0.03);
   --overlay-white-04:  rgba(255, 255, 255, 0.04);
+  --overlay-white-05:  rgba(255, 255, 255, 0.05);
   --overlay-white-06:  rgba(255, 255, 255, 0.06);
   --overlay-white-07:  rgba(255, 255, 255, 0.07);
   --overlay-white-08:  rgba(255, 255, 255, 0.08);
@@ -142,6 +143,7 @@
   --overlay-white-12:  rgba(255, 255, 255, 0.12);
   --overlay-white-15:  rgba(255, 255, 255, 0.15);
   --overlay-white-18:  rgba(255, 255, 255, 0.18);
+  --overlay-white-14:  rgba(255, 255, 255, 0.14);
   --overlay-white-20:  rgba(255, 255, 255, 0.20);
   --overlay-white-22:  rgba(255, 255, 255, 0.22);
   --overlay-white-75:  rgba(255, 255, 255, 0.75);
@@ -220,6 +222,11 @@
   --shadow-card-md:     0 2px 12px rgba(0, 0, 0, 0.12);
   --shadow-modal:       0 24px 64px var(--overlay-black-60), 0 4px 16px var(--overlay-black-40);
   --shadow-card-hover:  0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(124, 58, 237, 0.10);
+
+  /* ── Glassmorphism backgrounds (KPI cards, paneles flotantes) ── */
+  --bg-glass-start: rgba(26, 29, 39, 0.85);
+  --bg-glass-end:   rgba(18, 20, 30, 0.92);
+  --bg-glass-sidebar-end: rgba(22, 25, 37, 0.97);
 }
 
 /* ==========================================================================
@@ -241,23 +248,70 @@ body.light-mode {
   --border-soft:   rgba(0, 0, 0, 0.12);
   --border-strong: rgba(0, 0, 0, 0.20);
 
-  /* En modo claro, los "overlay-white" (highlights sobre oscuro) pierden
-     sentido — los mapeamos a overlays negros equivalentes para que los
-     glass/separadores sigan siendo visibles. */
+  /* overlay-white → overlay-black equivalentes para que glass/separadores
+     sigan siendo visibles sobre fondos claros. */
   --overlay-white-015: rgba(0, 0, 0, 0.015);
   --overlay-white-02:  rgba(0, 0, 0, 0.02);
   --overlay-white-03:  rgba(0, 0, 0, 0.03);
   --overlay-white-04:  rgba(0, 0, 0, 0.04);
+  --overlay-white-05:  rgba(0, 0, 0, 0.05);
   --overlay-white-06:  rgba(0, 0, 0, 0.06);
   --overlay-white-07:  rgba(0, 0, 0, 0.07);
   --overlay-white-08:  rgba(0, 0, 0, 0.08);
   --overlay-white-09:  rgba(0, 0, 0, 0.09);
   --overlay-white-10:  rgba(0, 0, 0, 0.10);
   --overlay-white-12:  rgba(0, 0, 0, 0.12);
+  --overlay-white-14:  rgba(0, 0, 0, 0.14);
   --overlay-white-15:  rgba(0, 0, 0, 0.15);
   --overlay-white-18:  rgba(0, 0, 0, 0.18);
   --overlay-white-20:  rgba(0, 0, 0, 0.20);
   --overlay-white-22:  rgba(0, 0, 0, 0.22);
+
+  /* Sombras más ligeras sobre fondos blancos */
+  --shadow-sm:         0 1px 3px rgba(0, 0, 0, 0.10);
+  --shadow-md:         0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg:         0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-card-sm:    0 2px 8px  rgba(0, 0, 0, 0.07);
+  --shadow-card-md:    0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(124, 58, 237, 0.15);
+  --shadow-modal:      0 24px 64px rgba(0, 0, 0, 0.20), 0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-icon-inset: inset 0 1px 0 rgba(0, 0, 0, 0.05);
+
+  /* Glassmorphism — fondos claros */
+  --bg-glass-start: rgba(255, 255, 255, 0.80);
+  --bg-glass-end:   rgba(249, 250, 251, 0.95);
+  --bg-glass-sidebar-end: rgba(249, 250, 251, 0.99);
+
+  /* Colores "light" y accent — en modo oscuro son pasteles de alto brillo
+     (buen contraste sobre fondos oscuros) pero fallarían sobre fondos claros.
+     Se reemplazan por variantes oscuras con contraste ≥ 4.5:1 sobre blanco. */
+
+  /* Primary tints */
+  --color-primary-lighter:  #6D28D9;   /* was #a78bfa */
+  --color-primary-lightest: #7C3AED;   /* was #c4b5fd */
+
+  /* Secondary (blue) tints */
+  --color-secondary-light:   #1D4ED8;  /* was #60A5FA */
+  --color-secondary-lighter: #1E40AF;  /* was #93c5fd */
+
+  /* Status light variants */
+  --color-success-light: #059669;      /* was #34d399 */
+  --color-warning-light: #B45309;      /* was #fbbf24 */
+  --color-error-light:   #DC2626;      /* was #f87171 */
+
+  /* Accent palette — texto sobre fondos claros */
+  --accent-purple:       #6D28D9;
+  --accent-blue:         #1D4ED8;
+  --accent-green:        #059669;
+  --accent-green-bright: #047857;
+  --accent-green-soft:   #065F46;
+  --accent-amber:        #B45309;
+  --accent-amber-warm:   #92400E;
+  --accent-teal:         #0F766E;
+  --accent-cyan:         #0369A1;
+  --accent-rose:         #BE123C;
+  --accent-indigo:       #4338CA;
+  --accent-slate:        #475569;
 }
 
 /* ==========================================================================
@@ -438,8 +492,8 @@ video {
    ========================================================================== */
 .rango-presets {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--overlay-white-04);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 2px;
   gap: 2px;

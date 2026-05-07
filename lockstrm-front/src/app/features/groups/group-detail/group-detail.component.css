@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Lockstrm — Grupo Detalle Component
+﻿/* ==========================================================================
+   Lockstrm â€” Grupo Detalle Component
    ========================================================================== */
 
 .detalle-page {
@@ -83,7 +83,7 @@
   background: linear-gradient(135deg,
     rgba(124, 58, 237, 0.10) 0%,
     rgba(124, 58, 237, 0.04) 50%,
-    rgba(255, 255, 255, 0.01) 100%
+    var(--overlay-white-015) 100%
   );
   border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: 12px;
@@ -120,7 +120,7 @@
   border-radius: 13px;
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.30) 0%, rgba(124, 58, 237, 0.12) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 var(--overlay-white-12),
     0 3px 12px rgba(124, 58, 237, 0.22),
     0 0 0 1px rgba(124, 58, 237, 0.16);
   color: var(--color-primary-lighter);
@@ -215,8 +215,8 @@
   font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-muted);
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background-color: var(--overlay-white-05);
+  border: 1px solid var(--overlay-white-10);
   border-radius: 9999px;
   padding: 4px 12px 4px 9px;
   white-space: nowrap;
@@ -250,7 +250,7 @@
   opacity: 0.5;
 }
 
-/* ── Hero skeleton ── */
+/* â”€â”€ Hero skeleton â”€â”€ */
 .grupo-hero-skeleton {
   display: flex;
   align-items: center;
@@ -319,7 +319,7 @@
 }
 
 .btn-icon-action:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--overlay-white-08);
   color: var(--text-main);
 }
 
@@ -441,7 +441,7 @@
 .detalle-tabs {
   display: flex;
   gap: 2px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--overlay-white-07);
   margin-bottom: 0;
   overflow-x: auto;
   scrollbar-width: none; /* Firefox */
@@ -465,7 +465,7 @@
   font-size: var(--font-sm);
   font-weight: 500;
   cursor: pointer;
-  transition: color 120ms ease, border-color 120ms ease;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
   margin-bottom: -1px;
 }
 
@@ -579,7 +579,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-slow);
 }
 
 .video-card:hover .video-card-img {
@@ -679,7 +679,7 @@
 }
 
 /* ==========================================================================
-   VIDEO CARD — Stats button
+   VIDEO CARD â€” Stats button
    ========================================================================== */
 .btn-stats {
   display: flex;
@@ -1017,7 +1017,7 @@
 }
 
 /* ==========================================================================
-   MODAL — Reproductor de vídeo
+   MODAL â€” Reproductor de vÃ­deo
    ========================================================================== */
 .modal-overlay {
   position: fixed;
@@ -1029,7 +1029,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  animation: overlayIn 0.15s ease;
+  animation: overlayIn var(--transition-fast);
 }
 
 @keyframes overlayIn {
@@ -1127,7 +1127,7 @@
 }
 
 /* ==========================================================================
-   MODAL — Confirmar eliminación
+   MODAL â€” Confirmar eliminaciÃ³n
    ========================================================================== */
 .confirm-dialog {
   width: 100%;
@@ -1244,7 +1244,7 @@
 }
 
 /* ==========================================================================
-   MODAL — Estadísticas de vistas
+   MODAL â€” EstadÃ­sticas de vistas
    ========================================================================== */
 .stats-dialog {
   width: 100%;
@@ -1342,11 +1342,11 @@
 }
 
 /* ==========================================================================
-   ANALÍTICAS
+   ANALÃTICAS
    ========================================================================== */
 .analiticas-panel {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--overlay-white-02);
+  border: 1px solid var(--overlay-white-06);
   border-radius: 14px;
   padding: var(--space-5);
 }
@@ -1380,7 +1380,7 @@
   height: 36px;
   border-radius: 6px;
   object-fit: cover;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--overlay-white-04);
   flex-shrink: 0;
 }
 
@@ -1413,7 +1413,7 @@
   color: var(--text-subtle);
 }
 
-/* ── KPI cards ── */
+/* â”€â”€ KPI cards â”€â”€ */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1427,10 +1427,10 @@
   gap: 4px;
   padding: 16px 18px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--overlay-white-03);
+  border: 1px solid var(--overlay-white-06);
   border-left: 3px solid transparent;
-  transition: transform 120ms ease;
+  transition: transform var(--transition-fast);
 }
 
 .kpi-card:hover { transform: translateY(-2px); }
@@ -1455,12 +1455,12 @@
   color: var(--text-subtle);
 }
 
-.kpi-card--purple { border-left-color: #7c3aed; }
-.kpi-card--blue   { border-left-color: #3b82f6; }
-.kpi-card--green  { border-left-color: #10b981; }
-.kpi-card--amber  { border-left-color: #f59e0b; }
+.kpi-card--purple { border-left-color: var(--color-primary); }
+.kpi-card--blue   { border-left-color: var(--color-secondary); }
+.kpi-card--green  { border-left-color: var(--color-success); }
+.kpi-card--amber  { border-left-color: var(--color-warning); }
 
-/* ── Tabla ── */
+/* â”€â”€ Tabla â”€â”€ */
 .stats-table .num-col {
   text-align: right;
   font-feature-settings: "tnum";
@@ -1482,14 +1482,14 @@
 .row--inactive:hover td { opacity: 0.55; }
 
 .stats-badge--soft {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--overlay-white-06);
   color: var(--text-main);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid var(--overlay-white-10);
 }
 
 .row--clickable {
   cursor: pointer;
-  transition: background 120ms ease;
+  transition: background var(--transition-fast);
 }
 
 .row--clickable:hover td {
@@ -1516,10 +1516,10 @@
   width: 16px;
   height: 16px;
   color: var(--text-subtle);
-  transition: transform 120ms ease, color 120ms ease;
+  transition: transform var(--transition-fast), color var(--transition-fast);
 }
 
-/* ── Celda "Subido por" ── */
+/* â”€â”€ Celda "Subido por" â”€â”€ */
 .autor-cell {
   display: inline-flex;
   align-items: center;
@@ -1557,7 +1557,7 @@
   margin-left: 1px;
 }
 
-/* ── Presets de rango ── */
+/* â”€â”€ Presets de rango â”€â”€ */
 .analiticas-actions {
   display: flex;
   align-items: center;
@@ -1566,7 +1566,7 @@
 }
 
 
-/* ── Sparkline ── */
+/* â”€â”€ Sparkline â”€â”€ */
 .spark-col {
   width: 110px;
   text-align: center;
@@ -1579,7 +1579,7 @@
   opacity: 0.75;
   vertical-align: middle;
   display: inline-block;
-  transition: color 120ms ease, opacity 120ms ease;
+  transition: color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .row--clickable:hover .sparkline {
@@ -1592,7 +1592,7 @@
   opacity: 0.35;
 }
 
-/* ── Retención ── */
+/* â”€â”€ RetenciÃ³n â”€â”€ */
 .retention-cell {
   display: flex;
   align-items: center;
@@ -1603,7 +1603,7 @@
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.08);
+  background: var(--overlay-white-08);
   min-width: 60px;
 }
 
@@ -1626,7 +1626,7 @@
 }
 
 /* ==========================================================================
-   GROUP ANALYTICS — cabecera de página (modo ruta standalone)
+   GROUP ANALYTICS â€” cabecera de pÃ¡gina (modo ruta standalone)
    ========================================================================== */
 .ga-page-header {
   display: flex;
@@ -1667,7 +1667,7 @@
 }
 
 /* ==========================================================================
-   PAGINACIÓN
+   PAGINACIÃ“N
    ========================================================================== */
 .paginacion {
   display: flex;
@@ -1704,7 +1704,7 @@
 }
 
 .pag-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--overlay-white-07);
   color: var(--text-main);
 }
 
@@ -1715,9 +1715,9 @@
 
 .pag-btn--active {
   background: rgba(124, 58, 237, 0.18);
-  color: #a78bfa;
+  color: var(--color-primary-lighter);
   font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.35);
+  box-shadow: inset 0 0 0 1px var(--color-primary-a35);
 }
 
 .paginator {
@@ -1727,3 +1727,5 @@
   gap: 4px;
   padding-top: var(--space-4);
 }
+
+

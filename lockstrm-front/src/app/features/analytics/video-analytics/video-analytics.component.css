@@ -1,4 +1,4 @@
-.analiticas-page {
+﻿.analiticas-page {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
@@ -66,7 +66,7 @@
   margin: 0;
 }
 
-/* KPIs — versión simplificada de la vista global */
+/* KPIs â€” versiÃ³n simplificada de la vista global */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -108,13 +108,13 @@
   transition: width .4s ease;
 }
 
-/* Sección tabla */
+/* SecciÃ³n tabla */
 .top-section {
   background: var(--overlay-white-02);
   border: 1px solid var(--overlay-white-06);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  overflow-x: auto; /* tabla no desborda en móvil */
+  overflow-x: auto; /* tabla no desborda en mÃ³vil */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -201,7 +201,7 @@
 .skeleton-line--label { width: 120px; height: 12px; margin-top: 4px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ── Filtro de contexto de grupo ─────────────────────────────────────── */
+/* â”€â”€ Filtro de contexto de grupo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .section-header--with-filter {
   display: flex;
   align-items: center;
@@ -258,7 +258,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%237C3AED' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-/* ── Chip de "Visto desde" en cada fila de la tabla ──────────────────── */
+/* â”€â”€ Chip de "Visto desde" en cada fila de la tabla â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ctx-chip {
   display: inline-block;
   font-size: var(--font-xs);
@@ -279,27 +279,27 @@
 }
 .ctx-chip--none {
   color: var(--text-subtle, #9ca3af);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.10);
+  background: var(--overlay-white-04);
+  border-color: var(--overlay-white-10);
 }
 .ctx-chip--orphan {
-  color: #fca5a5;
+  color: var(--color-error-light);
   background: rgba(239, 68, 68, 0.10);
   border-color: rgba(239, 68, 68, 0.25);
 }
 
 
 /* ==========================================================================
-   RESPONSIVE — MÓVIL
+   RESPONSIVE â€” MÃ“VIL
    ========================================================================== */
 @media (max-width: 640px) {
 
-  /* Ocultar miniatura del vídeo — gana espacio para título */
+  /* Ocultar miniatura del vÃ­deo â€” gana espacio para tÃ­tulo */
   .header-thumb {
     display: none;
   }
 
-  /* Select de grupo: ancho libre en lugar de mínimo fijo */
+  /* Select de grupo: ancho libre en lugar de mÃ­nimo fijo */
   .grupo-filter__select {
     min-width: 0;
     width: 100%;
@@ -310,8 +310,9 @@
     flex-wrap: wrap;
   }
 
-  /* Presets de rango: permiten salto de línea */
+  /* Presets de rango: permiten salto de lÃ­nea */
   .rango-presets {
     flex-wrap: wrap;
   }
 }
+

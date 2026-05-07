@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Lockstrm — Videos Component Styles
+﻿/* ==========================================================================
+   Lockstrm â€” Videos Component Styles
    ========================================================================== */
 
 /* ==========================================================================
@@ -23,7 +23,7 @@
   background: linear-gradient(135deg, var(--bg-surface) 60%, rgba(124, 58, 237, 0.06) 100%);
   border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--radius-lg);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 0 var(--overlay-white-04);
   flex-wrap: wrap;
 }
 
@@ -100,7 +100,7 @@
 }
 
 /* ==========================================================================
-   UPLOAD PANEL (colapsable — entra con animación)
+   UPLOAD PANEL (colapsable â€” entra con animaciÃ³n)
    ========================================================================== */
 .upload-panel {
   display: flex;
@@ -139,7 +139,7 @@
 
 .panel-subtitle { font-size: var(--font-sm); color: var(--text-muted); margin: 0; }
 
-/* Botón × para cerrar el panel */
+/* BotÃ³n Ã— para cerrar el panel */
 .panel-close {
   display: flex;
   align-items: center;
@@ -166,7 +166,7 @@
 
 .panel-close svg { width: 15px; height: 15px; }
 
-/* ── Single-column layout ── */
+/* â”€â”€ Single-column layout â”€â”€ */
 .upload-layout {
   display: flex;
   flex-direction: column;
@@ -203,7 +203,7 @@
   box-shadow: 0 0 0 3px var(--color-primary-ghost);
 }
 
-/* Cuando está siendo arrastrado */
+/* Cuando estÃ¡ siendo arrastrado */
 .drop-zone--active {
   border-color: var(--color-primary) !important;
   border-style: solid !important;
@@ -211,7 +211,7 @@
   box-shadow: 0 0 0 3px var(--color-primary-ghost), inset 0 0 20px rgba(124, 58, 237, 0.05);
 }
 
-/* Cuando ya hay items en el lote: versión compacta */
+/* Cuando ya hay items en el lote: versiÃ³n compacta */
 .drop-zone--compact {
   min-height: 72px;
 }
@@ -358,10 +358,10 @@
   border: 1px solid var(--border-soft);
   background: var(--bg-surface);
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: border-color var(--transition-fast);
 }
 
-.batch-card--error   { border-color: var(--color-danger, #ef4444); }
+.batch-card--error   { border-color: var(--color-error); }
 .batch-card--success { border-color: var(--color-success); opacity: 0.7; }
 
 /* Miniatura */
@@ -438,7 +438,7 @@
   pointer-events: none;
 }
 
-/* Botón cámara — visible al hacer hover sobre la tarjeta */
+/* BotÃ³n cÃ¡mara â€” visible al hacer hover sobre la tarjeta */
 .batch-thumb__cam-btn {
   position: absolute;
   inset: 0;
@@ -450,14 +450,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   color: transparent;
 }
 .batch-thumb__cam-btn svg {
   width: 22px;
   height: 22px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
 }
 .batch-card:hover .batch-thumb__cam-btn {
@@ -492,7 +492,7 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   padding: 5px 7px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .batch-card__title-wrap:focus-within {
   border-color: var(--color-primary);
@@ -521,7 +521,7 @@
   flex-shrink: 0;
   color: var(--text-muted);
   opacity: 0.5;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
 }
 .batch-card__title-wrap:focus-within .batch-card__edit-icon { opacity: 0; }
 
@@ -532,7 +532,7 @@
 
 .batch-card__error {
   font-size: var(--font-xs);
-  color: var(--color-danger, #ef4444);
+  color: var(--color-error);
   margin: 0;
 }
 
@@ -546,7 +546,7 @@
 .batch-card__progress-bar {
   height: 100%;
   background: var(--color-primary);
-  transition: width 0.2s linear;
+  transition: width var(--transition-base) linear;
 }
 
 .batch-card__progress-bar--indeterminate {
@@ -567,7 +567,7 @@
   100% { background-position: -100% 0; }
 }
 
-/* Botón quitar */
+/* BotÃ³n quitar */
 .batch-card__remove {
   position: absolute;
   top: 4px;
@@ -583,7 +583,7 @@
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
 }
 .batch-card__remove:hover { background: rgba(239, 68, 68, 0.85); }
 .batch-card__remove svg { width: 12px; height: 12px; }
@@ -686,7 +686,7 @@
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-lighter) 100%);
   border-radius: 9999px;
-  transition: width 0.2s ease;
+  transition: width var(--transition-base) ease;
   min-width: 4px;
   box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
 }
@@ -725,7 +725,7 @@
   flex-shrink: 0;
 }
 
-/* Agrupa el botón de subida + search */
+/* Agrupa el botÃ³n de subida + search */
 .section-header__actions {
   display: flex;
   align-items: center;
@@ -746,7 +746,7 @@
   flex-shrink: 0;
 }
 
-/* Botón "Subir vídeo" en la cabecera de la biblioteca */
+/* BotÃ³n "Subir vÃ­deo" en la cabecera de la biblioteca */
 .btn-upload-trigger {
   display: inline-flex;
   align-items: center;
@@ -818,7 +818,7 @@
   white-space: nowrap;
 }
 
-/* ── Search ── */
+/* â”€â”€ Search â”€â”€ */
 .search-wrap {
   position: relative;
   display: flex;
@@ -918,7 +918,7 @@
   pointer-events: none;
 }
 
-/* ── Thumbnail area ── */
+/* â”€â”€ Thumbnail area â”€â”€ */
 .card-thumb {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -938,7 +938,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease;
+  transition: transform var(--transition-slow) ease;
 }
 
 .video-card:hover .card-thumb__img {
@@ -974,7 +974,7 @@
   cursor: default;
 }
 
-/* ── Duration badge ── */
+/* â”€â”€ Duration badge â”€â”€ */
 .card-duration {
   position: absolute;
   bottom: 8px;
@@ -990,7 +990,7 @@
   pointer-events: none;
 }
 
-/* ── Play overlay ── */
+/* â”€â”€ Play overlay â”€â”€ */
 .card-overlay {
   position: absolute;
   inset: 0;
@@ -1036,7 +1036,7 @@
   margin-left: 2px; /* optical centering */
 }
 
-/* ── Card body (título + meta) ── */
+/* â”€â”€ Card body (tÃ­tulo + meta) â”€â”€ */
 .card-body {
   display: flex;
   flex-direction: column;
@@ -1094,7 +1094,7 @@
   cursor: default;
 }
 
-/* ── Checklist multi-grupo (formularios de subir / editar) ─────────────── */
+/* â”€â”€ Checklist multi-grupo (formularios de subir / editar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .grupo-checklist {
   list-style: none;
   margin: 0;
@@ -1104,9 +1104,9 @@
   gap: 6px;
   max-height: 180px;
   overflow-y: auto;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border-subtle, var(--overlay-white-08));
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-white-02);
 }
 
 .grupo-checklist__item { margin: 0; }
@@ -1118,8 +1118,8 @@
   gap: 6px;
   padding: 5px 12px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--overlay-white-04);
+  border: 1px solid var(--overlay-white-08);
   cursor: pointer;
   font-size: var(--font-sm);
   font-weight: 500;
@@ -1132,7 +1132,7 @@
     box-shadow    120ms ease;
 }
 
-/* ── Ocultar el checkbox nativo — el chip ES el indicador visual ── */
+/* â”€â”€ Ocultar el checkbox nativo â€” el chip ES el indicador visual â”€â”€ */
 .grupo-checklist__label input[type="checkbox"] {
   position: absolute;
   opacity: 0;
@@ -1142,7 +1142,7 @@
   pointer-events: none;
 }
 
-/* ── Pequeño punto/tick que aparece al seleccionar ── */
+/* â”€â”€ PequeÃ±o punto/tick que aparece al seleccionar â”€â”€ */
 .grupo-checklist__label::before {
   content: '';
   display: inline-block;
@@ -1150,30 +1150,30 @@
   height: 6px;
   border-radius: 50%;
   background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.20);
+  border: 1.5px solid var(--overlay-white-20);
   flex-shrink: 0;
   transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
-/* ── Hover ── */
+/* â”€â”€ Hover â”€â”€ */
 .grupo-checklist__label:hover {
   background: rgba(124, 58, 237, 0.10);
   border-color: rgba(124, 58, 237, 0.25);
   color: var(--text-main);
 }
 
-/* ── Foco por teclado ── */
+/* â”€â”€ Foco por teclado â”€â”€ */
 .grupo-checklist__label:has(input:focus-visible) {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* ── Seleccionado ── */
+/* â”€â”€ Seleccionado â”€â”€ */
 .grupo-checklist__label:has(input:checked) {
   background: linear-gradient(135deg, rgba(124, 58, 237, 0.22), rgba(124, 58, 237, 0.10));
   border-color: rgba(124, 58, 237, 0.50);
   color: var(--color-primary-lightest, #ede9fe);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 var(--overlay-white-06);
 }
 
 .grupo-checklist__label:has(input:checked)::before {
@@ -1210,7 +1210,7 @@
 .sk-line--title { width: 75%; }
 .sk-line--meta  { width: 45%; height: 10px; }
 
-/* ── Card footer (acciones: iconos puros) ── */
+/* â”€â”€ Card footer (acciones: iconos puros) â”€â”€ */
 .card-footer {
   display: flex;
   align-items: center;
@@ -1247,7 +1247,7 @@
   animation: shimmer 1.4s infinite linear;
 }
 
-/* Base: botón icono cuadrado */
+/* Base: botÃ³n icono cuadrado */
 .card-btn {
   display: inline-flex;
   align-items: center;
@@ -1266,7 +1266,7 @@
 
 .card-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* Play — acción principal, más destacado */
+/* Play â€” acciÃ³n principal, mÃ¡s destacado */
 .card-btn--play {
   width: auto;
   padding: 0 var(--space-3);
@@ -1378,7 +1378,7 @@
 
 .empty-icon svg { width: 36px; height: 36px; }
 
-/* Variante búsqueda sin resultados */
+/* Variante bÃºsqueda sin resultados */
 .empty-icon-wrap--search .empty-icon {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0.07) 100%);
   border-color: rgba(59, 130, 246, 0.18);
@@ -1421,7 +1421,7 @@
   text-decoration: none;
 }
 
-/* Ghost button para "Limpiar búsqueda" */
+/* Ghost button para "Limpiar bÃºsqueda" */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -1870,3 +1870,5 @@
 .toast--error { background-color: var(--bg-surface); border: 1px solid var(--color-error); color: var(--color-error); }
 .toast--success { background-color: var(--bg-surface); border: 1px solid var(--color-success); color: var(--color-success); }
 .toast-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+

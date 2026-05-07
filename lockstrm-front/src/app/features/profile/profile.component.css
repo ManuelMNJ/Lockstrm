@@ -1,6 +1,6 @@
-/* ══════════════════════════════════════════════════════════════════
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PAGE LAYOUT
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .perfil-page {
   display: flex;
@@ -9,9 +9,9 @@
   max-width: 700px;
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PROFILE CARD
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .profile-card {
   background: linear-gradient(160deg, var(--bg-surface) 65%, rgba(124, 58, 237, 0.04) 100%);
@@ -22,7 +22,7 @@
   overflow: hidden;
 }
 
-/* ── Banner de identidad ── */
+/* â”€â”€ Banner de identidad â”€â”€ */
 .profile-banner {
   display: flex;
   align-items: center;
@@ -139,7 +139,7 @@
   align-self: flex-start;
 }
 
-/* ── Botón editar (banner) ── */
+/* â”€â”€ BotÃ³n editar (banner) â”€â”€ */
 .btn-edit {
   display: inline-flex;
   align-items: center;
@@ -169,7 +169,7 @@
   box-shadow: 0 0 0 3px var(--color-primary-ghost);
 }
 
-/* ── Cuerpo de la tarjeta ── */
+/* â”€â”€ Cuerpo de la tarjeta â”€â”€ */
 .card-body {
   padding: var(--space-6);
   display: flex;
@@ -177,7 +177,7 @@
   gap: var(--space-5);
 }
 
-/* ── Info en modo lectura ── */
+/* â”€â”€ Info en modo lectura â”€â”€ */
 .info-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -224,7 +224,7 @@
   color: var(--color-primary-lighter);
 }
 
-/* ── Divisor de sección en formulario ── */
+/* â”€â”€ Divisor de secciÃ³n en formulario â”€â”€ */
 .form-section-divider {
   display: flex;
   align-items: center;
@@ -248,9 +248,9 @@
   white-space: nowrap;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   SEGURIDAD — Card base (reutilizado por el acordeón)
-   ══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SEGURIDAD â€” Card base (reutilizado por el acordeÃ³n)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .settings-section {
   display: flex;
@@ -264,7 +264,7 @@
   box-shadow: var(--shadow-card-md);
 }
 
-/* ── Acordeón (sección Seguridad) ── */
+/* â”€â”€ AcordeÃ³n (secciÃ³n Seguridad) â”€â”€ */
 .settings-section--accordion {
   gap: 0;
   padding-bottom: 0;
@@ -302,7 +302,7 @@
   height: 18px;
   flex-shrink: 0;
   color: var(--text-subtle);
-  transition: transform 200ms ease;
+  transition: transform var(--transition-base);
   margin-top: 2px;
 }
 
@@ -319,7 +319,7 @@
   padding-top: var(--space-5);
 }
 
-/* ── Iconos de sección ── */
+/* â”€â”€ Iconos de secciÃ³n â”€â”€ */
 .section-icon {
   display: flex;
   align-items: center;
@@ -332,7 +332,7 @@
 
 .section-icon svg       { width: 18px; height: 18px; }
 .section-icon--purple   { background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(124, 58, 237, 0.10)); color: var(--color-primary-lighter); box-shadow: var(--shadow-icon-inset); }
-.section-icon--blue     { background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.10)); color: #93c5fd; box-shadow: var(--shadow-icon-inset); }
+.section-icon--blue     { background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.10)); color: var(--color-secondary-lighter); box-shadow: var(--shadow-icon-inset); }
 
 .section-title {
   font-size: var(--font-lg);
@@ -348,9 +348,9 @@
   margin: 0;
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    AVATAR
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .avatar-container {
   position: relative;
@@ -436,9 +436,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FORMULARIOS
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .profile-form,
 .password-form {
@@ -509,7 +509,7 @@
   gap: var(--space-3);
 }
 
-/* ── Password wrapper ── */
+/* â”€â”€ Password wrapper â”€â”€ */
 .pw-wrapper {
   position: relative;
   display: flex;
@@ -545,7 +545,7 @@
   color: var(--text-subtle);
 }
 
-/* ── Checklist requisitos ── */
+/* â”€â”€ Checklist requisitos â”€â”€ */
 .pw-checklist {
   list-style: none;
   padding: 0;
@@ -564,7 +564,7 @@
 }
 
 .pw-checklist li::before {
-  content: '✕';
+  content: 'âœ•';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -578,15 +578,15 @@
 }
 
 .pw-checklist li.req--fail         { color: var(--text-subtle); }
-.pw-checklist li.req--fail::before { content: '✕'; background-color: var(--color-error-ghost); color: var(--color-error); }
+.pw-checklist li.req--fail::before { content: 'âœ•'; background-color: var(--color-error-ghost); color: var(--color-error); }
 .pw-checklist li.req--ok           { color: var(--color-success); }
-.pw-checklist li.req--ok::before   { content: '✓'; background-color: var(--color-success-ghost); color: var(--color-success); }
+.pw-checklist li.req--ok::before   { content: 'âœ“'; background-color: var(--color-success-ghost); color: var(--color-success); }
 .pw-checklist li.req--pending         { color: var(--text-subtle); }
-.pw-checklist li.req--pending::before { content: '·'; background-color: transparent; color: var(--text-subtle); font-size: var(--font-md); font-weight: 700; }
+.pw-checklist li.req--pending::before { content: 'Â·'; background-color: transparent; color: var(--text-subtle); font-size: var(--font-md); font-weight: 700; }
 
-/* ══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FEEDBACK
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .info-loading {
   font-size: var(--font-base);
@@ -610,16 +610,16 @@
   color: var(--color-error);
 }
 
-/* ── Botones disabled ── */
+/* â”€â”€ Botones disabled â”€â”€ */
 .btn-primary:disabled,
 .btn-secondary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   CAMBIO DE CORREO ELECTRÓNICO
-   ══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CAMBIO DE CORREO ELECTRÃ“NICO
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .email-change-section {
   display: flex;
@@ -678,9 +678,9 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-/* ══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    UTILIDADES
-   ══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .visually-hidden {
   position: absolute;
@@ -693,3 +693,4 @@
   white-space: nowrap;
   border: 0;
 }
+
