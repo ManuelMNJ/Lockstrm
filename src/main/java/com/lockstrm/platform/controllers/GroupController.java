@@ -226,7 +226,7 @@ public class GroupController {
         MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(MediaType.IMAGE_JPEG);
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, must-revalidate")
                 .body(resource);
     }
 

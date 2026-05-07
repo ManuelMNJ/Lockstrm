@@ -5,6 +5,7 @@ import com.lockstrm.platform.dto.HeartbeatRequest;
 import com.lockstrm.platform.dto.VideoDto;
 import com.lockstrm.platform.dto.VideoViewStatsDto;
 import com.lockstrm.platform.entities.Video;
+import com.lockstrm.platform.security.JwtService;
 import com.lockstrm.platform.services.LogService;
 import com.lockstrm.platform.services.VideoService;
 import com.lockstrm.platform.services.VideoViewService;
@@ -41,6 +42,7 @@ public class VideoController {
     private final VideoService      videoService;
     private final LogService        logService;
     private final VideoViewService videoVistaService;
+    private final JwtService        jwtService;
 
     @Value("${lockstrm.upload.thumbnails.dir}")
     private String thumbnailsDir;
@@ -90,6 +92,28 @@ public class VideoController {
             @AuthenticationPrincipal UserDetails userDetails
     ) throws Exception {
         return videoService.streamVideoLocal(fileName, headers, userDetails.getUsername());
+    }
+
+    /**
+     * Emite un ticket de stream firmado, de corta duración (60 s) y atado al
+     * `fileName` solicitado. Lo usa el reproductor cuando el Service Worker
+     * no está activo y el <video src=...> tiene que llevar el token en la URL.
+     *
+     * El ticket NO sirve como JWT general: el filtro solo lo acepta como
+     * `?token=` en /stream/<fileName>. Si se filtra, su daño está acotado a
+     * ese vídeo durante el TTL del ticket.
+     */
+    @PostMapping("/stream-ticket/{fileName:.+}")
+    public ResponseEntity<Map<String, Object>> emitirStreamTicket(
+            @PathVariable String fileName,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        videoService.verificarAccesoStream(fileName, userDetails.getUsername());
+        String ticket = jwtService.generateStreamTicket(userDetails.getUsername(), fileName);
+        return ResponseEntity.ok(Map.of(
+                "ticket",    ticket,
+                "expiresIn", jwtService.getStreamTicketTtlSeconds()
+        ));
     }
 
     @PostMapping("/{idVideo}/heartbeat")

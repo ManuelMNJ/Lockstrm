@@ -1,6 +1,7 @@
 package com.lockstrm.platform.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -14,6 +15,12 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+
+    /** Audience claim para tickets de streaming de vídeo. */
+    public static final String STREAM_AUDIENCE = "stream";
+
+    /** TTL del ticket de stream: suficiente para que el navegador inicie el <video src=...>. */
+    private static final long STREAM_TICKET_TTL_MS = 60_000L;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -48,6 +55,54 @@ public class JwtService {
     private String credFingerprint(String bcryptHash) {
         if (bcryptHash == null || bcryptHash.length() < 23) return "";
         return bcryptHash.substring(7, 23);
+    }
+
+    // ── Stream tickets ──────────────────────────────────────────────────────────
+    //
+    // El tag <video src="..."> no puede enviar cabecera Authorization, por lo que
+    // el token tiene que ir como query param. En lugar de exponer el JWT principal
+    // (que valdría para toda la API y queda en historial / logs / referrer),
+    // emitimos un ticket de muy corta duración (60 s), audiencia "stream" y atado
+    // al fileName concreto. Si se filtra: solo sirve para ese vídeo y caduca enseguida.
+
+    /**
+     * Genera un ticket firmado de un solo recurso. Se valida con
+     * {@link #isStreamTicketValid(String, String)}.
+     */
+    public String generateStreamTicket(String email, String fileName) {
+        return Jwts.builder()
+                .subject(email)
+                .audience().add(STREAM_AUDIENCE).and()
+                .claim("file", fileName)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + STREAM_TICKET_TTL_MS))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    /**
+     * Valida un ticket de stream: firma OK, no caducado, audiencia "stream" y
+     * claim "file" coincidente con el fileName solicitado. Devuelve el subject
+     * (email) si es válido; null en caso contrario.
+     */
+    public String validateStreamTicket(String token, String fileName) {
+        try {
+            Claims c = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            if (c.getExpiration() == null || c.getExpiration().before(new Date())) return null;
+            if (c.getAudience() == null || !c.getAudience().contains(STREAM_AUDIENCE)) return null;
+            if (!fileName.equals(c.get("file", String.class))) return null;
+            return c.getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public long getStreamTicketTtlSeconds() {
+        return STREAM_TICKET_TTL_MS / 1000L;
     }
 
     private boolean isTokenExpired(String token) {

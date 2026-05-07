@@ -188,6 +188,24 @@ public class VideoService {
                 .orElseThrow(() -> new NoSuchElementException("Vídeo no encontrado: " + fileName));
 
         logService.verificarAcceso(video, emailUsuario);
+        return servirRegion(fileName, requestHeaders);
+    }
+
+    /**
+     * Comprueba que `emailUsuario` puede ver `fileName`. Reutiliza la misma
+     * verificación que streamVideoLocal — la usamos antes de emitir un ticket
+     * de stream para no permitir que un usuario emita tickets de vídeos a los
+     * que no tiene acceso.
+     */
+    @Transactional(readOnly = true)
+    public void verificarAccesoStream(String fileName, String emailUsuario) {
+        Video video = videoRepository.findByFileName(fileName)
+                .orElseThrow(() -> new NoSuchElementException("Vídeo no encontrado: " + fileName));
+        logService.verificarAcceso(video, emailUsuario);
+    }
+
+    private ResponseEntity<ResourceRegion> servirRegion(String fileName,
+                                                        HttpHeaders requestHeaders) throws IOException {
 
         Path baseDir  = Paths.get(uploadDir).toAbsolutePath().normalize();
         Path filePath = baseDir.resolve(fileName).normalize();
