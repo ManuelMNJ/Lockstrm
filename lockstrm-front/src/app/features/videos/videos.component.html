@@ -784,6 +784,39 @@
   }
 
   <!-- ================================================================
+  DISCARD EDIT CONFIRMATION MODAL
+  ================================================================ -->
+  @if (confirmarDescartarEdicion) {
+    <div class="modal-overlay confirm-overlay"
+      (click)="cerrarConfirmDescartar()"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="discard-title"
+      aria-describedby="discard-desc">
+      <div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <div class="confirm-icon-wrap" style="background-color:var(--color-warning-ghost,#fef3c7);border-color:var(--color-warning-ghost-strong,#fde68a);color:var(--color-warning,#f59e0b)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="confirm-body">
+          <h3 class="confirm-title" id="discard-title">¿Descartar cambios?</h3>
+          <p class="confirm-desc" id="discard-desc">
+            Tienes cambios sin guardar en este vídeo. Si sales ahora <strong>se perderán</strong>.
+          </p>
+        </div>
+        <div class="confirm-actions">
+          <button class="btn-confirm-cancel" (click)="cerrarConfirmDescartar()">Seguir editando</button>
+          <button class="btn-confirm-delete" (click)="descartarEdicion()">Descartar cambios</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================
   DELETE CONFIRMATION MODAL
   ================================================================ -->
   @if (videoAEliminar) {
@@ -836,7 +869,7 @@
         class="toast-icon" aria-hidden="true">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
-      <span>Vídeo subido correctamente.</span>
+      <span>{{ exitoSubidaCount === 1 ? 'Vídeo subido correctamente.' : exitoSubidaCount + ' vídeos subidos correctamente.' }}</span>
     </div>
   }
 

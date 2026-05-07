@@ -94,10 +94,15 @@ export class VideosComponent implements OnInit {
   estadoEdicion: 'idle' | 'saving' | 'error' = 'idle';
   mensajeEdicion = '';
 
+  private editTituloOriginal = '';
+  private editIdGruposOriginal = new Set<number>();
+  confirmarDescartarEdicion = false;
+
   exitoEdicionVisible = false;
   private exitoEdicionTimer: ReturnType<typeof setTimeout> | null = null;
 
   exitoSubidaVisible = false;
+  exitoSubidaCount   = 0;
   private exitoSubidaTimer: ReturnType<typeof setTimeout> | null = null;
 
   storageUsedGB  = '0.0';
@@ -261,6 +266,12 @@ export class VideosComponent implements OnInit {
       this.cdr.markForCheck();
       return;
     }
+    if (file.size > FILE_LIMITS.VIDEO_BYTES) {
+      this.estadoSubida = 'error';
+      this.mensajeError = `"${file.name}" supera el límite de ${FILE_LIMITS.VIDEO_MB} MB.`;
+      this.cdr.markForCheck();
+      return;
+    }
     if (this.estadoSubida === 'error') { this.estadoSubida = 'idle'; this.mensajeError = ''; }
     const item: VideoUploadItem = {
       file,
@@ -330,13 +341,6 @@ export class VideosComponent implements OnInit {
       this.mensajeError = 'Todos los vídeos deben tener título.';
       return;
     }
-    const demasiado = items.find(i => i.file.size > FILE_LIMITS.VIDEO_BYTES);
-    if (demasiado) {
-      this.estadoSubida = 'error';
-      this.mensajeError = `"${demasiado.titulo}" supera el límite de ${FILE_LIMITS.VIDEO_MB} MB.`;
-      return;
-    }
-
     this.estadoSubida = 'uploading';
     this.mensajeError = '';
 
@@ -348,10 +352,13 @@ export class VideosComponent implements OnInit {
         this.videoService.obtenerEspacio().pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({ next: (info) => { this.aplicarEspacio(info.usedBytes, info.limitBytes); this.cdr.markForCheck(); } });
 
+        const exitosos    = this.uploadItems.filter(i => i.estado === 'success').length;
         const alguienFallo = this.uploadItems.some(i => i.estado === 'error');
         if (alguienFallo) {
           this.estadoSubida = 'error';
-          this.mensajeError = 'Algunos vídeos no pudieron subirse.';
+          this.mensajeError = exitosos > 0
+            ? `${exitosos} vídeo${exitosos > 1 ? 's subidos' : ' subido'}, pero algunos no pudieron subirse.`
+            : 'Los vídeos no pudieron subirse.';
         } else {
           this.uploadItems           = [];
           this.idGruposSeleccionados = new Set<number>();
@@ -359,7 +366,7 @@ export class VideosComponent implements OnInit {
           setTimeout(() => {
             this.estadoSubida    = 'idle';
             this.uploadPanelOpen = false;
-            this.mostrarExitoSubida();
+            this.mostrarExitoSubida(exitosos);
             this.cdr.markForCheck();
           }, UI_TIMINGS.FEEDBACK_SHORT_MS);
         }
@@ -494,8 +501,9 @@ export class VideosComponent implements OnInit {
     }, UI_TIMINGS.TOAST_EDIT_MS);
   }
 
-  private mostrarExitoSubida(): void {
+  private mostrarExitoSubida(count = 1): void {
     if (this.exitoSubidaTimer) clearTimeout(this.exitoSubidaTimer);
+    this.exitoSubidaCount   = count;
     this.exitoSubidaVisible = true;
     this.refresh();
     this.exitoSubidaTimer = setTimeout(() => {
@@ -534,7 +542,18 @@ export class VideosComponent implements OnInit {
     this.editMiniaturaPreviewUrl = null;
     this.estadoEdicion           = 'idle';
     this.mensajeEdicion          = '';
+    this.editTituloOriginal      = video.titulo;
+    this.editIdGruposOriginal    = new Set(video.grupos.map(g => g.idGrupo));
+    this.confirmarDescartarEdicion = false;
     this.cdr.markForCheck();
+  }
+
+  private editTienecambios(): boolean {
+    if (this.editTitulo.trim() !== this.editTituloOriginal) return true;
+    if (this.editMiniaturaBlob !== null) return true;
+    if (this.editIdGrupos.size !== this.editIdGruposOriginal.size) return true;
+    for (const id of this.editIdGrupos) { if (!this.editIdGruposOriginal.has(id)) return true; }
+    return false;
   }
 
   seleccionarMiniaturaEdicion(event: Event): void {
@@ -568,10 +587,25 @@ export class VideosComponent implements OnInit {
   }
 
   cancelarEdicion(): void {
+    if (this.editTienecambios()) {
+      this.confirmarDescartarEdicion = true;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.descartarEdicion();
+  }
+
+  descartarEdicion(): void {
     if (this.editMiniaturaPreviewUrl) { URL.revokeObjectURL(this.editMiniaturaPreviewUrl); this.editMiniaturaPreviewUrl = null; }
-    this.editMiniaturaBlob = null;
-    this.videoEnEdicion    = null;
-    this.estadoEdicion     = 'idle';
+    this.editMiniaturaBlob         = null;
+    this.videoEnEdicion            = null;
+    this.estadoEdicion             = 'idle';
+    this.confirmarDescartarEdicion = false;
+    this.cdr.markForCheck();
+  }
+
+  cerrarConfirmDescartar(): void {
+    this.confirmarDescartarEdicion = false;
     this.cdr.markForCheck();
   }
 
