@@ -4,6 +4,9 @@
         Este layout sólo envuelve el área de contenido de las páginas públicas
         (/, /login, /registro).
   ========================================================================== -->
-<main class="public-content" role="main">
-  <router-outlet/>
-</main>
+<div class="public-content">
+  <main role="main">
+    <router-outlet/>
+  </main>
+  <app-footer/>
+</div>

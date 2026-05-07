@@ -1,5 +1,5 @@
-/* ==========================================================================
-   Lockstrm — Home Component Styles
+﻿/* ==========================================================================
+   Lockstrm â€” Home Component Styles
    home.component.css
    ========================================================================== */
 
@@ -58,7 +58,7 @@
   overflow: hidden;
 }
 
-/* Ambient glow — radial morado detrás del hero */
+/* Ambient glow â€” radial morado detrÃ¡s del hero */
 .hero-bg-glow {
   position: absolute;
   top: -80px;
@@ -75,7 +75,7 @@
   z-index: 0;
 }
 
-/* ── Columna izquierda ── */
+/* â”€â”€ Columna izquierda â”€â”€ */
 .hero-left {
   position: relative;
   z-index: 1;
@@ -111,7 +111,7 @@
   animation: pulse-dot 2.4s ease-in-out infinite;
 }
 
-/* Título principal */
+/* TÃ­tulo principal */
 .hero-title {
   font-size: clamp(1.75rem, 3.5vw, 2.6rem);
   font-weight: 700;
@@ -121,7 +121,7 @@
   margin: 0;
 }
 
-/* Línea con degradado morado-azul animado */
+/* LÃ­nea con degradado morado-azul animado */
 .hero-title-accent {
   background: linear-gradient(
     135deg,
@@ -153,7 +153,7 @@
   margin-top: var(--space-2);
 }
 
-/* Botón primario filled */
+/* BotÃ³n primario filled */
 .btn-cta {
   display: inline-flex;
   align-items: center;
@@ -165,7 +165,7 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-white-08);
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -206,7 +206,7 @@
   transform: translateX(3px);
 }
 
-/* Botón ghost con icono play */
+/* BotÃ³n ghost con icono play */
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -245,7 +245,7 @@
   outline-offset: 3px;
 }
 
-/* Social hint — avatares + texto debajo de los CTAs */
+/* Social hint â€” avatares + texto debajo de los CTAs */
 .hero-social-hint {
   display: flex;
   align-items: center;
@@ -289,7 +289,7 @@
   font-weight: 600;
 }
 
-/* ── Columna derecha ── */
+/* â”€â”€ Columna derecha â”€â”€ */
 .hero-right {
   position: relative;
   z-index: 1;
@@ -598,7 +598,7 @@
   background: linear-gradient(135deg, var(--bg-surface) 60%, rgba(124, 58, 237, 0.05) 100%);
   border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: var(--radius-lg);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--overlay-white-04);
   flex-wrap: wrap;
 }
 
@@ -681,7 +681,7 @@
   margin: 0;
 }
 
-/* Grid 3 columnas — colapsa a 2 y luego 1 en móvil */
+/* Grid 3 columnas â€” colapsa a 2 y luego 1 en mÃ³vil */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -819,7 +819,7 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-4);
-  box-shadow: 0 0 80px rgba(124, 58, 237, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 80px rgba(124, 58, 237, 0.08), inset 0 1px 0 var(--overlay-white-05);
 }
 
 .cta-banner-glow {
@@ -860,7 +860,7 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE — ≤ 900px
+   RESPONSIVE â€” â‰¤ 900px
    ========================================================================== */
 @media (max-width: 900px) {
   .features-grid {
@@ -869,7 +869,7 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE — ≤ 768px
+   RESPONSIVE â€” â‰¤ 768px
    ========================================================================== */
 @media (max-width: 768px) {
 
@@ -906,7 +906,7 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE — ≤ 580px
+   RESPONSIVE â€” â‰¤ 580px
    ========================================================================== */
 @media (max-width: 580px) {
 
@@ -930,3 +930,4 @@
 
   .cta-banner { padding: var(--space-8) var(--space-5); }
 }
+

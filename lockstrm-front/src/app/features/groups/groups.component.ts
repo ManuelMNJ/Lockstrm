@@ -50,10 +50,27 @@ export class GroupsComponent implements OnInit {
 
   readonly tamanioPagina = 8;
 
-  sortMisGrupos:    { campo: 'nombre' | 'fechaCreacion' | 'miembros' | 'videos'; dir: 'asc' | 'desc' } = { campo: 'fechaCreacion', dir: 'desc' };
-  sortCompartidos:  { campo: 'nombre' | 'fechaCreacion' | 'miembros' | 'videos'; dir: 'asc' | 'desc' } = { campo: 'fechaCreacion', dir: 'desc' };
+  private static readonly SORT_KEY_MIS  = 'grupos_sort_mis';
+  private static readonly SORT_KEY_COMP = 'grupos_sort_comp';
+
+  sortMisGrupos    = GroupsComponent.loadSort(GroupsComponent.SORT_KEY_MIS);
+  sortCompartidos  = GroupsComponent.loadSort(GroupsComponent.SORT_KEY_COMP);
   paginaMisGrupos   = 1;
   paginaCompartidos = 1;
+
+  private static loadSort(key: string): { campo: 'nombre' | 'fechaCreacion' | 'miembros' | 'videos'; dir: 'asc' | 'desc' } {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const camposValidos = ['nombre', 'fechaCreacion', 'miembros', 'videos'];
+        if (camposValidos.includes(parsed.campo) && ['asc', 'desc'].includes(parsed.dir)) {
+          return parsed;
+        }
+      }
+    } catch { /* ignorar errores de localStorage */ }
+    return { campo: 'fechaCreacion', dir: 'desc' };
+  }
 
   @ViewChild('nombreGrupoInput') nombreGrupoInput?: ElementRef<HTMLInputElement>;
 
@@ -217,8 +234,13 @@ export class GroupsComponent implements OnInit {
       sort.campo = campo;
       sort.dir   = campo === 'nombre' ? 'asc' : 'desc';
     }
-    if (seccion === 'mis') { this.paginaMisGrupos = 1; }
-    else                   { this.paginaCompartidos = 1; }
+    if (seccion === 'mis') {
+      this.paginaMisGrupos = 1;
+      localStorage.setItem(GroupsComponent.SORT_KEY_MIS, JSON.stringify(sort));
+    } else {
+      this.paginaCompartidos = 1;
+      localStorage.setItem(GroupsComponent.SORT_KEY_COMP, JSON.stringify(sort));
+    }
     this.cdr.markForCheck();
   }
 
