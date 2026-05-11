@@ -32,21 +32,21 @@ export class GroupService {
 
   obtenerMisGrupos(): Observable<Group[]> {
     if (!this.misGruposCache$) {
-      this.misGruposCache$ = this.http.get<Group[]>(this.apiUrl).pipe(shareReplay(1));
+      this.misGruposCache$ = this.http.get<Group[]>(this.apiUrl).pipe(shareReplay({ bufferSize: 1, refCount: true }));
     }
     return this.misGruposCache$;
   }
 
   obtenerGruposCreados(): Observable<Group[]> {
     if (!this.gruposCreadosCache$) {
-      this.gruposCreadosCache$ = this.http.get<Group[]>(`${this.apiUrl}/creados`).pipe(shareReplay(1));
+      this.gruposCreadosCache$ = this.http.get<Group[]>(`${this.apiUrl}/creados`).pipe(shareReplay({ bufferSize: 1, refCount: true }));
     }
     return this.gruposCreadosCache$;
   }
 
   obtenerGruposComoMiembro(): Observable<Group[]> {
     if (!this.gruposMiembroCache$) {
-      this.gruposMiembroCache$ = this.http.get<Group[]>(`${this.apiUrl}/miembro`).pipe(shareReplay(1));
+      this.gruposMiembroCache$ = this.http.get<Group[]>(`${this.apiUrl}/miembro`).pipe(shareReplay({ bufferSize: 1, refCount: true }));
     }
     return this.gruposMiembroCache$;
   }
@@ -122,7 +122,7 @@ export class GroupService {
   }
 
   renombrarGrupo(idGrupo: number, nombre: string): Observable<Group> {
-    return this.http.put<Group>(`${this.apiUrl}/${idGrupo}`, { nombre }).pipe(
+    return this.http.patch<Group>(`${this.apiUrl}/${idGrupo}`, { nombre }).pipe(
       tap(() => {
         this.misGruposCache$ = null;
         this.gruposCreadosCache$ = null;

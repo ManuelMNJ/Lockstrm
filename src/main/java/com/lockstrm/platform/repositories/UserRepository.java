@@ -18,8 +18,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsernameIgnoreCaseAndTag(String username, String tag);
 
+    long countByUsernameIgnoreCase(String username);
+
     default User getByEmailOrThrow(String email) {
         return findByEmail(email)
-                .orElseThrow(() -> new NoSuchElementException("User no encontrado: " + email));
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado: " + email));
     }
 }

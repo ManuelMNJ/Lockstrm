@@ -1,6 +1,7 @@
-import { Injectable, effect, inject } from '@angular/core';
-import { HttpClient, HttpEvent, HttpRequest, HttpEventType } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, merge, throwError } from 'rxjs';
+import { Injectable, effect, inject, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
+import { Observable, Subject, merge, throwError } from 'rxjs';
 import { filter, map, mergeMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { VideoStreamService } from './video-stream.service';
@@ -79,8 +80,9 @@ export class VideoService {
   private readonly apiUrl = `${environment.apiUrl}/api/videos`;
 
   // null = aún no cargado; [] = cargado sin vídeos; Video[] = datos reales
-  private readonly _misVideos$    = new BehaviorSubject<Video[] | null>(null);
+  private readonly _misVideos     = signal<Video[] | null>(null);
   private readonly _misVideosErr$ = new Subject<unknown>();
+  private readonly _misVideosObs$ = toObservable(this._misVideos);
   private _misVideosLoaded        = false;
 
   private readonly authService = inject(AuthService);
@@ -89,13 +91,13 @@ export class VideoService {
     private http:          HttpClient,
     private streamService: VideoStreamService,
   ) {
-    // Cuando el usuario cierra sesión (signal → null) limpiamos la caché
-    // para que no persistan datos de una sesión a la siguiente.
+    // Cuando el usuario cierra sesión (signal → null) limpiamos la caché.
+    // allowSignalWrites: true es necesario porque resetCache() escribe en _misVideos.
     effect(() => {
       if (this.authService.currentUser() === null) {
         this.resetCache();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   buildStreamUrl(fileName: string): Promise<string> {
@@ -103,7 +105,7 @@ export class VideoService {
   }
 
   /**
-   * Devuelve el BehaviorSubject de "mis vídeos" como Observable vivo.
+   * Devuelve un Observable vivo derivado del signal de "mis vídeos".
    * Cualquier mutación (subir, borrar, editar) emite aquí automáticamente;
    * todos los componentes suscritos (dashboard, biblioteca) se actualizan sin re-fetch.
    */
@@ -113,7 +115,7 @@ export class VideoService {
       this._fetchMisVideos();
     }
     return merge(
-      this._misVideos$.pipe(filter((v): v is Video[] => v !== null)),
+      this._misVideosObs$.pipe(filter((v): v is Video[] => v !== null)),
       this._misVideosErr$.pipe(mergeMap(err => throwError(() => err))),
     );
   }
@@ -122,7 +124,7 @@ export class VideoService {
     this.http.get<VideoRaw[]>(`${this.apiUrl}/mios`).pipe(
       map(arr => arr.map(mapVideo)),
     ).subscribe({
-      next:  v   => this._misVideos$.next(v),
+      next:  v   => this._misVideos.set(v),
       error: err => {
         this._misVideosLoaded = false;
         this._misVideosErr$.next(err);
@@ -130,15 +132,15 @@ export class VideoService {
     });
   }
 
-  /** Resetea la caché en memoria. Llamar desde AuthService.logout(). */
+  /** Resetea la caché en memoria. Se llama automáticamente al cerrar sesión. */
   resetCache(): void {
-    this._misVideos$.next(null);
+    this._misVideos.set(null);
     this._misVideosLoaded = false;
   }
 
-  /** Inserta un vídeo al principio del sujeto (llamar tras subida exitosa). */
+  /** Inserta un vídeo al principio de la lista (llamar tras subida exitosa). */
   prependVideo(video: Video): void {
-    this._misVideos$.next([video, ...(this._misVideos$.value ?? [])]);
+    this._misVideos.update(current => [video, ...(current ?? [])]);
   }
 
   /** GET /api/grupos/{idGrupo}/videos — todos los vídeos asignados a un grupo. */
@@ -160,17 +162,14 @@ export class VideoService {
     const req = new HttpRequest('POST', `${this.apiUrl}/subir`, formData, {
       reportProgress: true,
     });
-    // La actualización del BehaviorSubject la hace el componente vía prependVideo()
+    // La actualización del signal la hace el componente vía prependVideo()
     // porque solo él tiene acceso al nombre del grupo seleccionado.
     return this.http.request<VideoUploadResponse>(req);
   }
 
   eliminarVideo(idVideo: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idVideo}`).pipe(
-      tap(() => {
-        const current = this._misVideos$.value ?? [];
-        this._misVideos$.next(current.filter(v => v.idVideo !== idVideo));
-      }),
+      tap(() => this._misVideos.update(v => (v ?? []).filter(x => x.idVideo !== idVideo))),
     );
   }
 
@@ -183,10 +182,7 @@ export class VideoService {
   editarVideo(idVideo: number, titulo: string, idGrupos: number[]): Observable<Video> {
     return this.http.patch<VideoRaw>(`${this.apiUrl}/${idVideo}`, { titulo, idGrupos }).pipe(
       map(raw => mapVideo(raw)),
-      tap(updated => {
-        const current = this._misVideos$.value ?? [];
-        this._misVideos$.next(current.map(v => v.idVideo === idVideo ? updated : v));
-      }),
+      tap(updated => this._misVideos.update(v => (v ?? []).map(x => x.idVideo === idVideo ? updated : x))),
     );
   }
 
@@ -195,10 +191,7 @@ export class VideoService {
     fd.append('miniatura', miniatura, 'thumbnail.jpg');
     return this.http.put<{ miniaturaUrl: string }>(`${this.apiUrl}/${idVideo}/miniatura`, fd).pipe(
       map(res => res.miniaturaUrl),
-      tap(url => {
-        const current = this._misVideos$.value ?? [];
-        this._misVideos$.next(current.map(v => v.idVideo === idVideo ? { ...v, miniaturaUrl: url } : v));
-      }),
+      tap(url => this._misVideos.update(v => (v ?? []).map(x => x.idVideo === idVideo ? { ...x, miniaturaUrl: url } : x))),
     );
   }
 

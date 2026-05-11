@@ -1,13 +1,17 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.CrearGrupoRequest;
+import com.lockstrm.platform.dto.GroupDto;
 import com.lockstrm.platform.dto.GroupVideoStatsDto;
 import com.lockstrm.platform.dto.MemberDto;
+import com.lockstrm.platform.dto.RenombrarGrupoRequest;
 import com.lockstrm.platform.dto.VideoDto;
 import com.lockstrm.platform.entities.Group;
 import com.lockstrm.platform.enums.GroupRole;
 import com.lockstrm.platform.services.AnalyticsService;
 import com.lockstrm.platform.services.GroupService;
 import com.lockstrm.platform.services.VideoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
@@ -25,7 +29,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -42,56 +45,56 @@ public class GroupController {
     @Value("${lockstrm.upload.grupos.dir}")
     private String gruposImgDir;
 
-    /** Lista todos los grupos del usuario (propios + miembro). Mantiene compatibilidad con clientes existentes. */
+    /** Lista todos los grupos del usuario (propios + miembro). */
     @GetMapping
-    public ResponseEntity<List<Group>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(grupoService.obtenerGruposDelUsuario(userDetails.getUsername()));
+    public ResponseEntity<List<GroupDto>> obtenerMisGrupos(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                grupoService.obtenerGruposDelUsuario(userDetails.getUsername())
+                        .stream().map(GroupDto::from).toList());
     }
 
-    /** Grupos Creados por Mí: grupos donde el usuario autenticado es el administrador/creador (contexto Propietario). */
+    /** Grupos creados por el usuario (contexto Propietario). */
     @GetMapping("/creados")
-    public ResponseEntity<List<Group>> obtenerGruposCreados(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(grupoService.obtenerGruposCreados(userDetails.getUsername()));
+    public ResponseEntity<List<GroupDto>> obtenerGruposCreados(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                grupoService.obtenerGruposCreados(userDetails.getUsername())
+                        .stream().map(GroupDto::from).toList());
     }
 
-    /**
-     * Últimos N grupos en los que el usuario ha reproducido un vídeo.
-     * Usado por el sidebar para la sección "Grupos recientes".
-     * El parámetro `limit` se acota a [1, 10] para evitar abuso.
-     */
+    /** Últimos N grupos en los que el usuario ha reproducido algún vídeo (limit acotado a [1, 10]). */
     @GetMapping("/recientes")
-    public ResponseEntity<List<Group>> obtenerGruposRecientes(
+    public ResponseEntity<List<GroupDto>> obtenerGruposRecientes(
             @RequestParam(defaultValue = "3") int limit,
             @AuthenticationPrincipal UserDetails userDetails) {
         int safeLimit = Math.max(1, Math.min(limit, 10));
         return ResponseEntity.ok(
-                grupoService.obtenerGruposRecientes(userDetails.getUsername(), safeLimit));
+                grupoService.obtenerGruposRecientes(userDetails.getUsername(), safeLimit)
+                        .stream().map(GroupDto::from).toList());
     }
 
-    /** Grupos a los que pertenezco: grupos donde el usuario es solo miembro, no creador (contexto Miembro). */
+    /** Grupos en los que el usuario es solo miembro (contexto Miembro). */
     @GetMapping("/miembro")
-    public ResponseEntity<List<Group>> obtenerGruposComoMiembro(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(grupoService.obtenerGruposComoMiembro(userDetails.getUsername()));
+    public ResponseEntity<List<GroupDto>> obtenerGruposComoMiembro(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                grupoService.obtenerGruposComoMiembro(userDetails.getUsername())
+                        .stream().map(GroupDto::from).toList());
     }
 
-    /** Detalle de un grupo. Solo accesible si el usuario es creador o miembro del grupo (403 en caso contrario). */
+    /** Detalle de un grupo. 403 si el usuario no es creador ni miembro. */
     @GetMapping("/{id}")
-    public ResponseEntity<Group> obtenerDetalle(
+    public ResponseEntity<GroupDto> obtenerDetalle(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(grupoService.obtenerDetalle(id, userDetails.getUsername()));
+        return ResponseEntity.ok(GroupDto.from(
+                grupoService.obtenerDetalle(id, userDetails.getUsername())));
     }
 
     @PostMapping
-    public ResponseEntity<?> crearGrupo(
+    public ResponseEntity<GroupDto> crearGrupo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, String> body) {
-        String nombre = body.get("nombre");
-        if (nombre == null || nombre.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El nombre del grupo es obligatorio"));
-        }
-        Group grupo = grupoService.crearGrupo(userDetails.getUsername(), nombre.trim());
-        return ResponseEntity.status(201).body(grupo);
+            @Valid @RequestBody CrearGrupoRequest request) {
+        Group grupo = grupoService.crearGrupo(userDetails.getUsername(), request.nombre().trim());
+        return ResponseEntity.status(201).body(GroupDto.from(grupo));
     }
 
     @GetMapping("/{idGrupo}/videos")
@@ -168,7 +171,7 @@ public class GroupController {
             nuevoRol = GroupRole.valueOf(rolStr.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MEMBER"));
+                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MIEMBRO"));
         }
 
         grupoService.cambiarRolMiembro(idGrupo, userDetails.getUsername(), idUsuario, nuevoRol);
@@ -184,16 +187,13 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("mensaje", "Miembro eliminado correctamente"));
     }
 
-    @PutMapping("/{idGrupo}")
-    public ResponseEntity<Group> renombrarGrupo(
+    @PatchMapping("/{idGrupo}")
+    public ResponseEntity<GroupDto> renombrarGrupo(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, String> body) {
-        String nombre = body.get("nombre");
-        if (nombre == null || nombre.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(grupoService.renombrarGrupo(idGrupo, nombre, userDetails.getUsername()));
+            @Valid @RequestBody RenombrarGrupoRequest request) {
+        return ResponseEntity.ok(GroupDto.from(
+                grupoService.renombrarGrupo(idGrupo, request.nombre(), userDetails.getUsername())));
     }
 
     @DeleteMapping("/{idGrupo}")
@@ -201,7 +201,7 @@ public class GroupController {
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
         grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
-        return ResponseEntity.ok(Map.of("mensaje", "Group eliminado correctamente"));
+        return ResponseEntity.ok(Map.of("mensaje", "Grupo eliminado correctamente"));
     }
 
     @PostMapping("/{idGrupo}/imagen")
@@ -230,8 +230,4 @@ public class GroupController {
                 .body(resource);
     }
 
-    private static String resolveImagenUrl(String fileName) {
-        if (fileName == null || fileName.isBlank()) return null;
-        return "/api/grupos/imagenes/" + fileName;
-    }
 }

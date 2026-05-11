@@ -62,7 +62,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(usuario.getEmail())
@@ -121,25 +121,18 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Quedan tags libres si el nº de usuarios con ese username es < 10000.
-     * El tag se asigna aleatorio, así que solo interesa saber si el espacio (username, 0000-9999)
-     * tiene algún hueco. Con un retry de 20 es prácticamente seguro encontrarlo mientras haya huecos.
+     * Quedan tags libres si hay menos de 10.000 usuarios con ese username
+     * (el espacio de tags es 0000-9999, es decir, exactamente 10.000 valores).
      */
     public boolean usernameTieneTagLibre(String username) {
         if (username == null || username.isBlank()) return false;
-        for (int i = 0; i < TAG_MAX_INTENTOS; i++) {
-            String candidato = String.format("%04d", TAG_RNG.nextInt(10000));
-            if (!userRepository.existsByUsernameIgnoreCaseAndTag(username, candidato)) {
-                return true;
-            }
-        }
-        return false;
+        return userRepository.countByUsernameIgnoreCase(username) < 10_000;
     }
 
     @Transactional
     public User actualizarPerfil(String email, String nombre, String apellidos, String nuevoUsername) {
         User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         usuario.setNombre(nombre);
         usuario.setApellidos(apellidos);
         if (!usuario.getUsername().equalsIgnoreCase(nuevoUsername)) {
@@ -152,7 +145,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public boolean actualizarEmail(String emailActual, String nuevoEmail, String passwordActual) {
         User usuario = userRepository.findByEmail(emailActual)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
             return false; // contraseña incorrecta → el caller devuelve 400
@@ -178,7 +171,7 @@ public class UserService implements UserDetailsService {
                 .orElse(false);
     }
 
-    // ── Avatar ────────────────────────────────────────────────────────
+    // Avatar
 
     @Transactional
     public User actualizarAvatar(String email, MultipartFile file) throws IOException {
@@ -192,7 +185,7 @@ public class UserService implements UserDetailsService {
         Path   dest        = baseDir.resolve(newFileName);
 
         User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         // Eliminar avatar anterior si existe
         String oldFileName = usuario.getAvatarUrl();
@@ -254,7 +247,7 @@ public class UserService implements UserDetailsService {
         };
     }
 
-    // ── Eliminar cuenta ───────────────────────────────────────────────
+    // Eliminar cuenta
 
     /**
      * Elimina la cuenta del usuario y todos sus datos en cascada:
@@ -273,7 +266,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void eliminarCuenta(String email) {
         User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User no encontrado: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
         Long idUsuario    = usuario.getIdUsuario();
         Path videoBaseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
@@ -298,7 +291,10 @@ public class UserService implements UserDetailsService {
             String thumbRaw = video.getMiniaturaUrl();
             if (thumbRaw != null && !thumbRaw.startsWith("data:")) {
                 try {
-                    Files.deleteIfExists(thumbBaseDir.resolve(thumbRaw).normalize());
+                    Path thumbPath = thumbBaseDir.resolve(thumbRaw).normalize();
+                    if (thumbPath.startsWith(thumbBaseDir)) {
+                        Files.deleteIfExists(thumbPath);
+                    }
                 } catch (IOException e) {
                     log.warn("No se pudo eliminar miniatura '{}': {}", thumbRaw, e.getMessage());
                 }

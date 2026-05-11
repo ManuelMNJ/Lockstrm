@@ -129,8 +129,8 @@ public class GroupService {
     }
 
     /**
-     * Verifies the caller has at least the required role in the group.
-     * SUPER_ADMIN=0 is highest; ordinal comparison: caller.ordinal() <= required.ordinal() passes.
+     * Comprueba que el solicitante tiene al menos el rol indicado en el grupo.
+     * SUPER_ADMIN=0 es el más alto; pasa si caller.ordinal() <= required.ordinal().
      */
     private void verifyRolMinimo(Long idGrupo, String email, GroupRole rolMinimo, String action) {
         GroupMember miembro = getMiembroActivoOrThrow(idGrupo, email);
@@ -139,7 +139,7 @@ public class GroupService {
         }
     }
 
-    /** Returns the target member record or 404 if not found in the group. */
+    /** Devuelve el miembro objetivo o lanza 404 si no pertenece al grupo. */
     private GroupMember getTargetMiembroOrThrow(Long idUsuario, Long idGrupo) {
         return miembrosGroupRepository
                 .findById(new GroupMemberId(idUsuario, idGrupo))
@@ -176,7 +176,6 @@ public class GroupService {
         grupo.setCreador(creador);
         Group guardado = grupoRepository.save(grupo);
 
-        // ASIGNACIÓN DE SUPER_ADMIN POR DEFECTO AL CREADOR
         miembrosGroupRepository.save(
                 new GroupMember(creador.getIdUsuario(), guardado.getIdGrupo(), GroupRole.SUPER_ADMIN));
         return guardado;
@@ -188,14 +187,13 @@ public class GroupService {
 
         User invitado = userService.buscarPorIdentificador(identificadorInvitado);
         if (invitado == null) {
-            throw new NoSuchElementException("User no encontrado: " + identificadorInvitado);
+            throw new NoSuchElementException("Usuario no encontrado: " + identificadorInvitado);
         }
         GroupMemberId miembroId = new GroupMemberId(invitado.getIdUsuario(), idGrupo);
         if (miembrosGroupRepository.existsById(miembroId)) {
             throw new IllegalArgumentException("El usuario ya es miembro del grupo");
         }
 
-        // ASIGNAMOS ROL MIEMBRO POR DEFECTO AL NUEVO INVITADO
         GroupMember miembro = new GroupMember();
         miembro.setId(miembroId);
         miembro.setRol(GroupRole.MIEMBRO);
@@ -222,9 +220,19 @@ public class GroupService {
 
     @Transactional
     public Group renombrarGrupo(Long idGrupo, String nuevoNombre, String emailSolicitante) {
+        // Defensa en profundidad: aunque el controller usa Bean Validation,
+        // validamos también aquí para que llamadas directas al service no
+        // puedan persistir nombres vacíos o demasiado largos.
+        if (nuevoNombre == null || nuevoNombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del grupo es obligatorio");
+        }
+        String nombreLimpio = nuevoNombre.trim();
+        if (nombreLimpio.length() > 100) {
+            throw new IllegalArgumentException("El nombre del grupo no puede superar los 100 caracteres");
+        }
         verifyRolMinimo(idGrupo, emailSolicitante, GroupRole.ADMIN, "cambiar el nombre del grupo");
         Group grupo = grupoRepository.getByIdOrThrow(idGrupo);
-        grupo.setNombre(nuevoNombre.trim());
+        grupo.setNombre(nombreLimpio);
         return grupoRepository.save(grupo);
     }
 

@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -62,7 +63,7 @@ public class VideoController {
         Video guardado = videoService.subirVideo(
                 file, userDetails.getUsername(), titulo, idGrupos, miniatura, duracion);
         // Map.of() no acepta valores null → usamos un Map mutable para el campo opcional.
-        java.util.Map<String, Object> respuesta = new java.util.LinkedHashMap<>();
+        Map<String, Object> respuesta = new LinkedHashMap<>();
         respuesta.put("status",       "exito");
         respuesta.put("mensaje",      "Video subido correctamente");
         respuesta.put("id_video",     guardado.getIdVideo());
