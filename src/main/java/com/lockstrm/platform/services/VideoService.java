@@ -67,11 +67,7 @@ public class VideoService {
 
     private static final long MAX_FILE_SIZE = 200L * 1024 * 1024; // 200 MB
 
-    /**
-     * Guarda la miniatura JPEG en disco y devuelve el nombre de fichero UUID.
-     * Si `miniatura` es null o está vacía devuelve null (el vídeo quedará sin
-     * miniatura). Solo acepta imágenes (image/*).
-     */
+    /** Guarda la miniatura en disco y devuelve el nombre UUID, o null si no se aporta. */
     private String saveThumbnail(MultipartFile miniatura) throws IOException {
         if (miniatura == null || miniatura.isEmpty()) return null;
 
@@ -95,13 +91,8 @@ public class VideoService {
     }
 
     /**
-     * Resuelve el valor almacenado en `miniatura_url` para el campo del DTO.
-     *
-     * - null → null (sin miniatura).
-     * - Empieza con "data:" → base64 heredado; se devuelve tal cual para que
-     *   el frontend pueda seguir mostrando las imágenes antiguas sin migración.
-     * - Cualquier otra cosa → nombre de fichero almacenado en disco; se
-     *   devuelve la ruta relativa del endpoint público de miniaturas.
+     * Resuelve el valor almacenado en miniatura_url:
+     * null → null; "data:..." (heredado) → tal cual; nombre de fichero → ruta pública.
      */
     public static String resolveThumbnailUrl(String raw) {
         if (raw == null)            return null;
@@ -306,23 +297,9 @@ public class VideoService {
     }
 
     /**
-     * Reemplaza la lista de grupos del vídeo por la indicada (semántica de
-     * "set"). Se valida ANTES de tocar la BBDD que el propietario tenga rol
-     * EDITOR+ en cada grupo de la lista; si alguna validación falla, la
-     * transacción aborta y no queda estado parcial.
-     *
-     * Implementación: borrar todas las filas de permisos del vídeo y
-     * reinsertarlas. Es más simple que un diff con `deleteById` + `save`
-     * mezclados — ese patrón con `@EmbeddedId` puede provocar fallos de
-     * orden de flush en Hibernate (el motivo del 500 visto en producción).
-     * Hacemos `flush()` entre el delete y los inserts para asegurar que
-     * el DELETE se ejecuta antes que los INSERT y no haya conflicto de PK
-     * en la sesión cuando se conserva un grupo ya existente.
-     *
-     * Reglas de seguridad:
-     *  - Solo el propietario del vídeo puede editar.
-     *  - Para que un grupo aparezca en la lista, el propietario debe ser
-     *    miembro de ese grupo con rol EDITOR o superior.
+     * Reemplaza la lista de grupos del vídeo por la indicada (semántica "set").
+     * Solo el propietario puede editar y debe tener rol EDITOR+ en cada grupo
+     * destino. Si alguna validación falla, la transacción aborta sin cambios.
      */
     @Transactional
     public VideoDto editarVideo(Long idVideo, String emailUsuario, String titulo, List<Long> idGrupos) {
@@ -351,13 +328,9 @@ public class VideoService {
             permisosGroupRepository.save(new GroupPermission(idVideo, g.getIdGrupo()));
         }
 
-        // No releemos con `buildGrupoMap` después de los inserts: Hibernate
-        // cachea las GroupPermission recién persistidas con su relación `grupo`
-        // a null (la columna está marcada `insertable=false`), y el JOIN FETCH
-        // posterior devuelve la instancia gestionada en lugar de hidratar la
-        // fresca → NPE en `pg.getGrupo().getNombre()`. Construimos el listado
-        // a mano con los Group ya validados — son justo los que acabamos de
-        // persistir.
+        // Construimos las refs a mano con los Group ya validados en lugar de
+        // releer con buildGrupoMap: tras los inserts, Hibernate cachea las
+        // GroupPermission con la relación `grupo` a null y provocaría NPE.
         List<GroupRef> refs = gruposValidados.stream()
                 .map(g -> new GroupRef(g.getIdGrupo(), g.getNombre()))
                 .toList();

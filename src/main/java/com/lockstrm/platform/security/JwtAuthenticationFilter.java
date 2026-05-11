@@ -37,18 +37,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = null;
 
-        // 1. Intenta extraer el token de la cabecera Authorization (flujo normal)
+        // Flujo normal: token en cabecera Authorization Bearer
         final String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String headerToken = authHeader.substring(7);
             if (!headerToken.isBlank()) jwt = headerToken;
         }
 
-        // 2. Para el endpoint de streaming, el tag <video src="..."> no puede enviar
-        //    cabeceras HTTP. Aceptamos un TICKET firmado de corta duración como
-        //    query param ?token=, atado al fileName concreto. NO se acepta el JWT
-        //    principal aquí: si se filtra el ticket, solo sirve para ese vídeo
-        //    durante ~60 s.
+        // Streaming: el tag <video> no envía cabeceras; aceptamos un ticket firmado
+        // de corta duración (~60 s) por query param, atado al fileName concreto.
         final String requestUri = request.getRequestURI();
         if (jwt == null && requestUri.contains("/stream/")) {
             String paramToken = request.getParameter("token");

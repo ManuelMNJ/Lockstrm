@@ -171,7 +171,7 @@ public class UserService implements UserDetailsService {
                 .orElse(false);
     }
 
-    // ── Avatar ────────────────────────────────────────────────────────
+    // Avatar
 
     @Transactional
     public User actualizarAvatar(String email, MultipartFile file) throws IOException {
@@ -247,7 +247,7 @@ public class UserService implements UserDetailsService {
         };
     }
 
-    // ── Eliminar cuenta ───────────────────────────────────────────────
+    // Eliminar cuenta
 
     /**
      * Elimina la cuenta del usuario y todos sus datos en cascada:

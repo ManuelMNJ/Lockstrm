@@ -599,9 +599,9 @@ export class VideosComponent implements OnInit {
   }
 
   /**
-   * Toggle helper para los checkboxes de grupos. Devuelve un nuevo Set para
-   * que el ChangeDetector OnPush detecte el cambio (Set mutado in-place no
-   * dispararía repintado).
+   * Alterna la selección de un grupo en los checkboxes de subida. Devuelve un
+   * nuevo Set para que el ChangeDetector OnPush detecte el cambio (mutar el
+   * Set in-place no dispararía repintado).
    */
   toggleGrupoSubida(idGrupo: number): void {
     const next = new Set(this.idGruposSeleccionados);
