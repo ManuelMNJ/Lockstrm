@@ -264,17 +264,20 @@ export class VideoPlayerComponent implements OnInit {
   }
 
   /**
-   * Decodes the JWT payload with a plain atob() call (no external library).
-   * Spring Boot sets the `sub` claim to the authenticated user's email,
-   * so this gives us the real email for the watermark without an extra API call.
+   * Decodifica el payload del JWT para obtener el email del usuario (claim `sub`).
+   * Convierte base64url → base64 estándar antes de atob(), ya que JWT usa
+   * base64url (sin padding, con - y _). Usado en la marca de agua del vídeo.
    */
   private resolveUserIdentifier(): string {
     const token = this.authService.getToken();
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const part    = token.split('.')[1] ?? '';
+        const b64     = part.replace(/-/g, '+').replace(/_/g, '/');
+        const pad     = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+        const payload = JSON.parse(atob(b64 + pad));
         if (payload.sub) return payload.sub;
-      } catch { /* fall through to username */ }
+      } catch { /* si falla, usamos el username almacenado */ }
     }
     return this.authService.getUser()?.username ?? 'Lockstrm';
   }
@@ -351,8 +354,9 @@ export class VideoPlayerComponent implements OnInit {
   togglePlay(): void {
     const video = this.videoRef.nativeElement;
     if (video.paused) {
-      video.play();
-      this.isPlaying.set(true);
+      video.play()
+        .then(() => this.isPlaying.set(true))
+        .catch(() => this.isPlaying.set(false));
     } else {
       video.pause();
       this.isPlaying.set(false);

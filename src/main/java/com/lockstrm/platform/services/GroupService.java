@@ -176,7 +176,6 @@ public class GroupService {
         grupo.setCreador(creador);
         Group guardado = grupoRepository.save(grupo);
 
-        // ASIGNACIÓN DE SUPER_ADMIN POR DEFECTO AL CREADOR
         miembrosGroupRepository.save(
                 new GroupMember(creador.getIdUsuario(), guardado.getIdGrupo(), GroupRole.SUPER_ADMIN));
         return guardado;
@@ -188,14 +187,13 @@ public class GroupService {
 
         User invitado = userService.buscarPorIdentificador(identificadorInvitado);
         if (invitado == null) {
-            throw new NoSuchElementException("User no encontrado: " + identificadorInvitado);
+            throw new NoSuchElementException("Usuario no encontrado: " + identificadorInvitado);
         }
         GroupMemberId miembroId = new GroupMemberId(invitado.getIdUsuario(), idGrupo);
         if (miembrosGroupRepository.existsById(miembroId)) {
             throw new IllegalArgumentException("El usuario ya es miembro del grupo");
         }
 
-        // ASIGNAMOS ROL MIEMBRO POR DEFECTO AL NUEVO INVITADO
         GroupMember miembro = new GroupMember();
         miembro.setId(miembroId);
         miembro.setRol(GroupRole.MIEMBRO);
