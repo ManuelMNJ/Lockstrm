@@ -90,6 +90,9 @@ public class GroupController {
         if (nombre == null || nombre.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "El nombre del grupo es obligatorio"));
         }
+        if (nombre.trim().length() > 100) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El nombre del grupo no puede superar los 100 caracteres"));
+        }
         Group grupo = grupoService.crearGrupo(userDetails.getUsername(), nombre.trim());
         return ResponseEntity.status(201).body(grupo);
     }
@@ -168,7 +171,7 @@ public class GroupController {
             nuevoRol = GroupRole.valueOf(rolStr.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MEMBER"));
+                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MIEMBRO"));
         }
 
         grupoService.cambiarRolMiembro(idGrupo, userDetails.getUsername(), idUsuario, nuevoRol);
@@ -184,14 +187,17 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("mensaje", "Miembro eliminado correctamente"));
     }
 
-    @PutMapping("/{idGrupo}")
+    @PatchMapping("/{idGrupo}")
     public ResponseEntity<Group> renombrarGrupo(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
         String nombre = body.get("nombre");
         if (nombre == null || nombre.isBlank()) {
-            return ResponseEntity.badRequest().build();
+            throw new IllegalArgumentException("El nombre del grupo es obligatorio");
+        }
+        if (nombre.trim().length() > 100) {
+            throw new IllegalArgumentException("El nombre del grupo no puede superar los 100 caracteres");
         }
         return ResponseEntity.ok(grupoService.renombrarGrupo(idGrupo, nombre, userDetails.getUsername()));
     }
@@ -201,7 +207,7 @@ public class GroupController {
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails) {
         grupoService.eliminarGrupo(idGrupo, userDetails.getUsername());
-        return ResponseEntity.ok(Map.of("mensaje", "Group eliminado correctamente"));
+        return ResponseEntity.ok(Map.of("mensaje", "Grupo eliminado correctamente"));
     }
 
     @PostMapping("/{idGrupo}/imagen")
@@ -230,8 +236,4 @@ public class GroupController {
                 .body(resource);
     }
 
-    private static String resolveImagenUrl(String fileName) {
-        if (fileName == null || fileName.isBlank()) return null;
-        return "/api/grupos/imagenes/" + fileName;
-    }
 }

@@ -79,11 +79,22 @@ export class AuthService {
 
   private isTokenExpired(token: string): boolean {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return typeof payload.exp === 'number' && payload.exp * 1000 < Date.now();
+      const payload = this.decodeJwtPayload(token);
+      return typeof payload['exp'] === 'number' && payload['exp'] * 1000 < Date.now();
     } catch {
       return true; // token malformado → tratar como expirado
     }
+  }
+
+  /**
+   * Decodifica el payload de un JWT. Convierte base64url → base64 estándar
+   * antes de llamar a atob(), ya que JWT usa base64url (sin padding, con - y _).
+   */
+  private decodeJwtPayload(token: string): Record<string, unknown> {
+    const part = token.split('.')[1] ?? '';
+    const b64  = part.replace(/-/g, '+').replace(/_/g, '/');
+    const pad  = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+    return JSON.parse(atob(b64 + pad));
   }
 
   getUser(): AuthResponse | null {

@@ -89,7 +89,6 @@ export class RegisterComponent {
     };
   }
 
-  // Atajos para el template
   get nombre()          { return this.form.get('nombre')!; }
   get apellidos()       { return this.form.get('apellidos')!; }
   get username()        { return this.form.get('username')!; }

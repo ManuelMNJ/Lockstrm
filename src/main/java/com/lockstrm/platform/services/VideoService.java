@@ -181,6 +181,7 @@ public class VideoService {
      * Streaming HTTP 206 desde el sistema de archivos local.
      * Siempre responde 206 Partial Content para compatibilidad con reproductores HTML5.
      */
+    @Transactional(readOnly = true)
     public ResponseEntity<ResourceRegion> streamVideoLocal(String fileName,
                                                            HttpHeaders requestHeaders,
                                                            String emailUsuario) throws IOException {
@@ -424,8 +425,11 @@ public class VideoService {
         // Eliminar miniatura del disco (solo si es un nombre de fichero, no base64 heredado)
         if (thumbRaw != null && !thumbRaw.startsWith("data:")) {
             try {
-                Path thumbDir = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
-                Files.deleteIfExists(thumbDir.resolve(thumbRaw).normalize());
+                Path thumbDir  = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
+                Path thumbPath = thumbDir.resolve(thumbRaw).normalize();
+                if (thumbPath.startsWith(thumbDir)) {
+                    Files.deleteIfExists(thumbPath);
+                }
             } catch (IOException e) {
                 log.warn("No se pudo eliminar la miniatura '{}': {}", thumbRaw, e.getMessage());
             }

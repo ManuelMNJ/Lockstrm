@@ -13,7 +13,8 @@ public class ApplicationConfig {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    public ApplicationConfig(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public ApplicationConfig(UserDetailsService userDetailsService,
+                             PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder    = passwordEncoder;
     }
