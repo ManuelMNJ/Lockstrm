@@ -57,18 +57,11 @@ public class JwtService {
         return bcryptHash.substring(7, 23);
     }
 
-    // ── Stream tickets ──────────────────────────────────────────────────────────
-    //
-    // El tag <video src="..."> no puede enviar cabecera Authorization, por lo que
-    // el token tiene que ir como query param. En lugar de exponer el JWT principal
-    // (que valdría para toda la API y queda en historial / logs / referrer),
-    // emitimos un ticket de muy corta duración (60 s), audiencia "stream" y atado
-    // al fileName concreto. Si se filtra: solo sirve para ese vídeo y caduca enseguida.
+    // Tickets de streaming: el tag <video> no envía cabeceras, así que el token
+    // viaja por query param. Para no exponer el JWT principal, emitimos un ticket
+    // de 60 s con audiencia "stream" atado al fileName concreto.
 
-    /**
-     * Genera un ticket firmado de un solo recurso. Se valida con
-     * {@link #isStreamTicketValid(String, String)}.
-     */
+    /** Genera un ticket firmado para reproducir un único vídeo durante 60 s. */
     public String generateStreamTicket(String email, String fileName) {
         return Jwts.builder()
                 .subject(email)
@@ -80,11 +73,7 @@ public class JwtService {
                 .compact();
     }
 
-    /**
-     * Valida un ticket de stream: firma OK, no caducado, audiencia "stream" y
-     * claim "file" coincidente con el fileName solicitado. Devuelve el subject
-     * (email) si es válido; null en caso contrario.
-     */
+    /** Valida un ticket de stream y devuelve el email asociado, o null si no es válido. */
     public String validateStreamTicket(String token, String fileName) {
         try {
             Claims c = Jwts.parser()

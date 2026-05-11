@@ -31,130 +31,89 @@ import { VideoDurationPipe } from '../../../shared/pipes/video-duration.pipe';
 })
 export class VideoPlayerComponent implements OnInit {
 
-  // ── Inputs / Outputs ────────────────────────────────────────────────────────
+  // Entradas / Salidas
 
-  /**
-   * Nombre de fichero UUID devuelto por el backend (ej. "550e8400-e29b-41d4-a716.mp4").
-   * La URL final del <video src=...> la resuelve VideoStreamService: usa el SW
-   * proxy si está activo (sin token en URL) o un ticket de stream de corta vida
-   * como fallback. Ver initStreamUrl().
-   */
+  /** Nombre de fichero UUID devuelto por el backend. La URL final del <video> la resuelve VideoStreamService. */
   readonly fileName = input.required<string>();
 
   readonly idVideo = input<number>();
 
   /**
-   * Group desde el que se está reproduciendo el vídeo. Puede ser undefined/null
-   * si la reproducción ocurre fuera de un contexto de grupo (p. ej. el
-   * propietario viendo su vídeo desde "Mis vídeos"). Se incluye en cada
-   * heartbeat para que el backend segmente las analíticas por grupo: ver el
-   * mismo vídeo desde el Group A y desde el Group B genera dos series de
-   * datos independientes.
+   * Grupo desde el que se reproduce el vídeo. Puede ser null si la reproducción
+   * ocurre fuera de un contexto de grupo. Se envía en cada heartbeat para que
+   * el backend segmente las analíticas por grupo.
    */
   readonly grupoId = input<number | null | undefined>();
 
-  /**
-   * Emits the video's currentTime (seconds), the player-instance sessionId and
-   * the optional grupoId every 5 s while playing. The parent component forwards
-   * the payload to the backend heartbeat endpoint; the backend uses
-   * (usuario, video, grupoId) as the upsert key, so each (group, session)
-   * combination is recorded independently in the analytics panel.
-   */
+  /** Emite cada 5 s mientras el vídeo se reproduce; el padre lo reenvía al endpoint de heartbeat. */
   @Output() heartbeat = new EventEmitter<{
     currentTime: number;
     sessionId:   string;
     grupoId:     number | null;
   }>();
 
-  /**
-   * UUID generado una sola vez por instancia del reproductor. Dos aperturas
-   * distintas del <video-player> (por ejemplo: abrir, cerrar, volver a abrir)
-   * producen dos sessionId diferentes, y por tanto dos filas separadas en la
-   * analítica del vídeo con su propio timestamp y tiempo visto.
-   */
+  /** UUID generado una sola vez por instancia del reproductor: identifica la sesión de visionado. */
   private readonly sessionId: string = this.generateSessionId();
 
-  // ── Template references ─────────────────────────────────────────────────────
+  // Referencias del template
 
   @ViewChild('videoEl',         { static: true }) private videoRef!:     ElementRef<HTMLVideoElement>;
   @ViewChild('playerContainer', { static: true }) private containerRef!: ElementRef<HTMLDivElement>;
 
-  // ── DI ──────────────────────────────────────────────────────────────────────
+  // Inyección de dependencias
 
   private readonly authService        = inject(AuthService);
   private readonly videoService       = inject(VideoService);
   private readonly videoStreamService = inject(VideoStreamService);
   private readonly destroyRef         = inject(DestroyRef);
 
-  // ── Stream URL ──────────────────────────────────────────────────────────────
+  // URL de streaming
 
-  /**
-   * URL que se asigna al <video src=...>. La calcula VideoStreamService:
-   *   - Si el Service Worker está activo: URL same-origin /video-proxy/{file}
-   *     que el SW intercepta e inyecta el JWT en cabecera Authorization.
-   *     El token NUNCA aparece en la URL.
-   *   - Si no hay SW: el servicio pide al backend un TICKET firmado de ~60 s
-   *     atado a este fichero y lo usa como ?token=. No es el JWT principal,
-   *     así que un leak está acotado a este vídeo durante el TTL.
-   */
+  /** URL que se asigna al <video src=...>. La resuelve VideoStreamService (SW proxy o ticket firmado). */
   readonly streamUrl = signal<string>('');
 
-  // ── State signals ───────────────────────────────────────────────────────────
+  // Signals de estado
 
   readonly isPlaying    = signal(false);
   readonly isMuted      = signal(false);
-  readonly volume       = signal(1);        // 0 → 1
-  readonly currentTime  = signal(0);        // seconds
-  readonly duration     = signal(0);        // seconds
+  readonly volume       = signal(1);
+  readonly currentTime  = signal(0);
+  readonly duration     = signal(0);
   readonly isFullscreen = signal(false);
   readonly showControls = signal(true);
 
-  /**
-   * SCRUBBING STATE
-   * isDragging: true while the user is holding the progress thumb.
-   * scrubValue: the slider's value while dragging (driven by mouse, not timeupdate).
-   * See onScrubStart / onScrubInput / onScrubEnd for the full explanation.
-   */
+  /** isDragging bloquea las actualizaciones de timeupdate mientras el usuario arrastra el slider. */
   readonly isDragging = signal(false);
   readonly scrubValue = signal(0);
 
-  /** true while the browser is stalling waiting for data (HTTP 206 buffering). */
+  /** true mientras el navegador está esperando datos (buffering HTTP 206). */
   readonly isBuffering = signal(false);
 
   /** true cuando el elemento <video> dispara un evento 'error' (stream no disponible). */
   readonly videoError = signal(false);
 
-  /**
-   * Drives a brief icon-flash animation in the center of the screen
-   * whenever the user toggles play/pause, giving instant tactile feedback.
-   * Auto-resets after 500 ms.
-   */
+  /** Activa el icono central de play/pause durante 500 ms para dar feedback visual. */
   readonly showClickFlash = signal(false);
 
-  /** Position of the moving watermark overlay (percentage strings). */
+  /** Posición de la marca de agua en porcentajes. */
   readonly watermarkPos = signal({ top: '10%', left: '5%' });
 
-  // ── Derived / computed ──────────────────────────────────────────────────────
+  // Valores derivados (computed)
 
-  /** 0-100 percentage, used to paint the filled track of the progress slider. */
+  /** Porcentaje 0-100 usado para pintar la barra de progreso. */
   readonly progressPercent = computed(() =>
     this.duration() > 0 ? (this.currentTime() / this.duration()) * 100 : 0
   );
 
-  /**
-   * The identifier shown in the watermark.
-   * We decode the JWT payload (no library needed — it is just base64) to read
-   * the `sub` claim, which Spring Boot sets to the user's email address.
-   * Falls back to the stored username if decoding fails for any reason.
-   */
+  /** Identificador mostrado en la marca de agua: email del JWT, o username si la decodificación falla. */
   readonly userIdentifier: string;
 
-  // ── Private ──────────────────────────────────────────────────────────────────
+  // Privado
 
   private hideControlsTimer: ReturnType<typeof setTimeout> | null = null;
   private clickFlashTimer:  ReturnType<typeof setTimeout> | null = null;
 
-  // ── Lifecycle ────────────────────────────────────────────────────────────────
+  // Ciclo de vida
 
   constructor() {
     this.userIdentifier = this.resolveUserIdentifier();
@@ -189,17 +148,11 @@ export class VideoPlayerComponent implements OnInit {
       .catch(() => this.videoError.set(true));
   }
 
-  // ── Private init helpers ────────────────────────────────────────────────────
+  // Helpers de inicialización
 
   /**
-   * Pulso de telemetría reactivo gobernado por eventos DOM del <video>:
-   *   play  → arranca un timer(0, 5_000) que emite al padre.
-   *   pause / ended → switchMap corta el timer, así no seguimos "ping-eando"
-   *     al servidor mientras el vídeo está parado.
-   * El throttle natural del timer (5 s) garantiza como máximo 1 HTTP/5 s.
-   * timer(0, 5_000) dispara inmediatamente al hacer play para capturar
-   * sesiones muy cortas, y luego cada 5 s.
-   * takeUntilDestroyed se encarga de cerrar todo al destruir el componente.
+   * Heartbeat reactivo gobernado por eventos del <video>: play arranca un timer
+   * de 5 s que emite al padre; pause/ended lo corta. Como máximo 1 HTTP cada 5 s.
    */
   private initHeartbeat(): void {
     const video  = this.videoRef.nativeElement;
@@ -218,13 +171,7 @@ export class VideoPlayerComponent implements OnInit {
     });
   }
 
-  /**
-   * Produce un UUID v4. Usa crypto.randomUUID cuando está disponible (Chrome 92+,
-   * Firefox 95+, Safari 15.4+); si no — p. ej. contextos HTTP antiguos —, genera
-   * un UUID compatible a partir de crypto.getRandomValues. Solo se necesita
-   * unicidad práctica: colisiones entre sesiones del mismo usuario/vídeo son
-   * astronómicamente improbables en ambos caminos.
-   */
+  /** Genera un UUID v4 usando crypto.randomUUID, con fallback a getRandomValues si no está disponible. */
   private generateSessionId(): string {
     const cryptoObj = (globalThis as { crypto?: Crypto }).crypto;
     if (cryptoObj?.randomUUID) {
@@ -241,10 +188,7 @@ export class VideoPlayerComponent implements OnInit {
     return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
   }
 
-  /**
-   * Moves the watermark to a random position every 10 s.
-   * timer(0, 10_000) fires immediately (0 ms delay) then every 10 s.
-   */
+  /** Mueve la marca de agua a una posición aleatoria cada 10 s. */
   private initWatermark(): void {
     timer(0, 10_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -256,18 +200,14 @@ export class VideoPlayerComponent implements OnInit {
       });
   }
 
-  /** Keeps isFullscreen in sync with the native fullscreenchange DOM event. */
+  /** Sincroniza isFullscreen con el evento DOM nativo fullscreenchange. */
   private initFullscreenListener(): void {
     fromEvent(document, 'fullscreenchange')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.isFullscreen.set(!!document.fullscreenElement));
   }
 
-  /**
-   * Decodifica el payload del JWT para obtener el email del usuario (claim `sub`).
-   * Convierte base64url → base64 estándar antes de atob(), ya que JWT usa
-   * base64url (sin padding, con - y _). Usado en la marca de agua del vídeo.
-   */
+  /** Decodifica el JWT para obtener el email (claim `sub`). Convierte base64url → base64 antes de atob(). */
   private resolveUserIdentifier(): string {
     const token = this.authService.getToken();
     if (token) {
@@ -282,7 +222,7 @@ export class VideoPlayerComponent implements OnInit {
     return this.authService.getUser()?.username ?? 'Lockstrm';
   }
 
-  // ── Video event handlers ────────────────────────────────────────────────────
+  // Manejadores de eventos del <video>
 
   onLoadedMetadata(): void {
     const video = this.videoRef.nativeElement;
@@ -308,16 +248,8 @@ export class VideoPlayerComponent implements OnInit {
   }
 
   /**
-   * SCRUBBING — KEY GUARD:
-   *
-   * timeupdate fires ~4×/second during playback and would continuously push
-   * a new value into the currentTime signal, which drives the slider's [value].
-   * Without the isDragging guard, that signal update would fight the user's
-   * mouse position and the thumb would jitter or snap back during a drag.
-   *
-   * Guard: while isDragging() is true, timeupdate is ignored. The slider
-   * is instead driven exclusively by scrubValue(), which is written in
-   * onScrubInput(). The two update paths are mutually exclusive.
+   * Si el usuario está arrastrando el slider (isDragging), ignoramos timeupdate
+   * para que no compita con la posición del ratón y el thumb no salte.
    */
   onTimeUpdate(): void {
     if (!this.isDragging()) {
@@ -332,24 +264,24 @@ export class VideoPlayerComponent implements OnInit {
     if (this.hideControlsTimer) clearTimeout(this.hideControlsTimer);
   }
 
-  /** Fired by the <video> 'waiting' event — browser is stalling for data. */
+  /** Evento 'waiting' del <video>: el navegador está esperando datos. */
   onWaiting(): void {
     this.isBuffering.set(true);
   }
 
-  /** Fired by the <video> 'canplay' event — enough data to resume. */
+  /** Evento 'canplay' del <video>: ya hay datos suficientes para reanudar. */
   onCanPlay(): void {
     this.isBuffering.set(false);
   }
 
-  /** Fired by the <video> 'error' event — stream 404, token expirado, red caída. */
+  /** Evento 'error' del <video>: stream 404, token expirado o caída de red. */
   onVideoError(): void {
     this.isBuffering.set(false);
     this.isPlaying.set(false);
     this.videoError.set(true);
   }
 
-  // ── Playback controls ───────────────────────────────────────────────────────
+  // Controles de reproducción
 
   togglePlay(): void {
     const video = this.videoRef.nativeElement;
@@ -364,12 +296,7 @@ export class VideoPlayerComponent implements OnInit {
     this.triggerClickFlash();
   }
 
-  /**
-   * Shows the center flash icon for 500 ms.
-   * By the time the template reads isPlaying() inside the flash div,
-   * the signal already holds the new state — so the icon always matches
-   * the action the user just took (play → play icon, pause → pause icon).
-   */
+  /** Muestra el icono central de play/pause durante 500 ms tras pulsar. */
   private triggerClickFlash(): void {
     if (this.clickFlashTimer) clearTimeout(this.clickFlashTimer);
     this.showClickFlash.set(true);
@@ -396,35 +323,22 @@ export class VideoPlayerComponent implements OnInit {
     }
   }
 
-  // ── Scrubbing (progress bar) ────────────────────────────────────────────────
+  // Arrastre de la barra de progreso
 
-  /**
-   * Step 1 — User presses down on the progress thumb.
-   * We raise the isDragging flag so onTimeUpdate() stops overwriting the slider.
-   * We also seed scrubValue with the current position so the thumb does not jump.
-   */
+  /** Pulsa el thumb: activa isDragging para que onTimeUpdate no compita con el ratón. */
   onScrubStart(): void {
     this.isDragging.set(true);
     this.scrubValue.set(this.currentTime());
   }
 
-  /**
-   * Step 2 — User moves the thumb (fires continuously while dragging).
-   * We update scrubValue (which drives [value] in the template while isDragging)
-   * AND seek the video immediately so the user gets a live preview.
-   * timeupdate fires here too, but isDragging() blocks it from touching the slider.
-   */
+  /** Mueve el thumb: actualiza scrubValue y hace seek en vivo para preview. */
   onScrubInput(event: Event): void {
     const value = +(event.target as HTMLInputElement).value;
     this.scrubValue.set(value);
     this.videoRef.nativeElement.currentTime = value;
   }
 
-  /**
-   * Step 3 — User releases the thumb (mouseup / touchend).
-   * We perform the final seek, lower isDragging, and resync currentTime so the
-   * very next timeupdate does not produce a visible jump.
-   */
+  /** Suelta el thumb: seek final, baja isDragging y resincroniza currentTime. */
   onScrubEnd(event: Event): void {
     const value = +(event.target as HTMLInputElement).value;
     this.videoRef.nativeElement.currentTime = value;
@@ -432,7 +346,7 @@ export class VideoPlayerComponent implements OnInit {
     this.isDragging.set(false);
   }
 
-  // ── Fullscreen ──────────────────────────────────────────────────────────────
+  // Pantalla completa
 
   toggleFullscreen(): void {
     if (!document.fullscreenElement) {
@@ -442,7 +356,7 @@ export class VideoPlayerComponent implements OnInit {
     }
   }
 
-  // ── Controls visibility ─────────────────────────────────────────────────────
+  // Visibilidad de los controles
 
   onMouseMove(): void {
     this.showControls.set(true);
@@ -458,9 +372,9 @@ export class VideoPlayerComponent implements OnInit {
     }
   }
 
-  // ── Security ────────────────────────────────────────────────────────────────
+  // Seguridad
 
-  /** Blocks the browser's native "Save video as…" context menu. */
+  /** Bloquea el menú contextual nativo del navegador ("Guardar vídeo como…"). */
   onContextMenu(event: MouseEvent): void {
     event.preventDefault();
   }

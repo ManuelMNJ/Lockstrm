@@ -72,7 +72,7 @@ export interface VideoLog {
   fechaHora:      string;
   segundosVistos: number | null;
   /**
-   * Group desde el que se reprodujo el vídeo. null cuando el propietario
+   * Grupo desde el que se reprodujo el vídeo. null cuando el propietario
    * lo abrió desde "Mis vídeos" (sin contexto de grupo) o el espectador
    * desde "Vídeos compartidos".
    */

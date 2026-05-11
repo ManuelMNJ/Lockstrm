@@ -86,10 +86,7 @@ export class AuthService {
     }
   }
 
-  /**
-   * Decodifica el payload de un JWT. Convierte base64url → base64 estándar
-   * antes de llamar a atob(), ya que JWT usa base64url (sin padding, con - y _).
-   */
+  /** Decodifica el payload de un JWT (base64url → base64 + atob). */
   private decodeJwtPayload(token: string): Record<string, unknown> {
     const part = token.split('.')[1] ?? '';
     const b64  = part.replace(/-/g, '+').replace(/_/g, '/');

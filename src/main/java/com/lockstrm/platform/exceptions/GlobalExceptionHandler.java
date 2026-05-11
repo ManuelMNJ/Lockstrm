@@ -34,11 +34,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
                                                           HttpServletRequest req) {
         Map<String, String> campos = new HashMap<>();
+        String primerMensaje = null;
         for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
             campos.put(fe.getField(), fe.getDefaultMessage());
+            if (primerMensaje == null) primerMensaje = fe.getDefaultMessage();
         }
+        // Usamos el primer mensaje específico como `message` para que el
+        // frontend lo pueda mostrar directamente; los detalles por campo van en `campos`.
+        String message = primerMensaje != null ? primerMensaje : "Datos de entrada inválidos";
         return ResponseEntity.badRequest().body(ErrorResponse.withFields(
-                400, "VALIDATION_ERROR", "Datos de entrada inválidos",
+                400, "VALIDATION_ERROR", message,
                 req.getRequestURI(), campos));
     }
 
