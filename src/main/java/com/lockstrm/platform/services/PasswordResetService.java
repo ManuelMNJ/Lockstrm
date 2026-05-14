@@ -13,9 +13,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.Optional;
 
 @Slf4j
@@ -42,9 +46,11 @@ public class PasswordResetService {
     @Transactional
     public void solicitarReset(String email) {
         // Respuesta siempre positiva para no revelar si el email existe
-        Optional<User> optUser = userRepository.findByEmail(email);
+        String emailNorm = email == null ? null : email.trim().toLowerCase();
+        if (emailNorm == null || emailNorm.isBlank()) return;
+        Optional<User> optUser = userRepository.findByEmail(emailNorm);
         if (optUser.isEmpty()) {
-            log.debug("Reset solicitado para email no registrado: {}", email);
+            log.debug("Reset solicitado para email no registrado: {}", emailNorm);
             return;
         }
 
@@ -54,9 +60,11 @@ public class PasswordResetService {
         tokenRepository.deleteByUsuarioId(user.getIdUsuario());
         tokenRepository.deleteExpired(LocalDateTime.now());
 
+        // El token RAW solo viaja por correo. En BBDD guardamos su hash SHA-256
+        // para que una filtración de la tabla no permita secuestrar cuentas.
         String rawToken = generarToken();
         PasswordResetToken prt = new PasswordResetToken();
-        prt.setToken(rawToken);
+        prt.setToken(hashToken(rawToken));
         prt.setUsuario(user);
         prt.setExpiraEn(LocalDateTime.now().plusMinutes(expiryMinutes));
         tokenRepository.save(prt);
@@ -66,7 +74,7 @@ public class PasswordResetService {
 
     @Transactional
     public void confirmarReset(String token, String nuevaContrasena) {
-        PasswordResetToken prt = tokenRepository.findByToken(token)
+        PasswordResetToken prt = tokenRepository.findByToken(hashToken(token))
                 .orElseThrow(() -> new com.lockstrm.platform.exceptions.BusinessException("Token inválido o expirado."));
 
         if (prt.isUsado()) {
@@ -115,5 +123,17 @@ public class PasswordResetService {
         byte[] bytes = new byte[48];
         SECURE_RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /** SHA-256 en hex (64 chars). Cabe en la columna `token VARCHAR(64)`. */
+    private static String hashToken(String raw) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(raw.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256 está garantizado por la JVM (JEP 290); si falta, el entorno está roto.
+            throw new IllegalStateException("SHA-256 no disponible en la JVM", e);
+        }
     }
 }

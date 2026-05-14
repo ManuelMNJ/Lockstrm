@@ -61,17 +61,6 @@ public interface LogRepository extends JpaRepository<Log, Long> {
     void deleteByUsuarioId(@Param("idUsuario") Long idUsuario);
 
     /**
-     * Limpia la referencia al grupo eliminado en los logs históricos.
-     * Se usa SET NULL en lugar de DELETE para conservar el historial de
-     * reproducción — la sesión sigue siendo válida aunque el grupo ya no exista.
-     * El id_grupo se vuelve null, con lo que esas filas se suman al agregado
-     * global (sin contexto de grupo) en las consultas analíticas futuras.
-     */
-    @Modifying
-    @Query("UPDATE Log l SET l.grupoId = NULL WHERE l.grupoId = :idGrupo")
-    void nullifyGrupoId(@Param("idGrupo") Long idGrupo);
-
-    /**
      * Segundos máximos de reproducción alcanzados por cada usuario en un vídeo.
      * Si `grupoId` viene a null se devuelve el agregado global (todos los
      * contextos); si trae un id concreto, la consulta se acota a las sesiones
