@@ -48,6 +48,10 @@ export class LoginComponent implements OnInit {
         : 'Nombre de usuario actualizado. Ya puedes iniciar sesión.';
     } else if (params.get('passwordReset') === '1') {
       this.mensajeInfo = 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.';
+    } else if (params.get('cuentaEliminada') === '1') {
+      this.mensajeInfo = 'Tu cuenta y todos sus datos se han eliminado correctamente.';
+    } else if (params.get('sesionExpirada') === '1') {
+      this.mensajeInfo = 'Tu sesión ha expirado. Vuelve a iniciar sesión para continuar.';
     }
   }
 
@@ -66,7 +70,17 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.identificador.value, this.password.value)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next:  () => { this.cargando = false; this.router.navigate(['/mi-espacio/videos']); },
+        next:  () => {
+          this.cargando = false;
+          // returnUrl viene del authGuard cuando el usuario intentó acceder a
+          // una ruta privada sin sesión. Solo aceptamos rutas internas (que
+          // empiecen por "/") para evitar open-redirect a dominios externos.
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          const destino = returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+            ? returnUrl
+            : '/mi-espacio/videos';
+          this.router.navigateByUrl(destino);
+        },
         error: (err) => {
           this.cargando   = false;
           this.errorLogin = err?.error?.error ?? 'Credenciales incorrectas o usuario no encontrado.';

@@ -75,7 +75,8 @@ public class GroupService {
      * reproducido algún vídeo, ordenados de más reciente a más antiguo.
      * La fuente es la tabla Log (grupoId + fechaHora), por lo que refleja
      * actividad real sin necesidad de un campo extra en la entidad Group.
-     * Grupos eliminados no aparecen porque nullifyGrupoId() pone su id a NULL.
+     * Grupos eliminados no aparecen porque la FK fk_logs_grupo (ON DELETE SET NULL)
+     * convierte su id_grupo a NULL al borrar la fila de `grupos`.
      */
     @Transactional(readOnly = true)
     public List<Group> obtenerGruposRecientes(String email, int limit) {
@@ -239,15 +240,14 @@ public class GroupService {
     /**
      * Elimina el grupo. Los vídeos asignados al grupo quedan como privados
      * (se borran sus permisos). Los logs históricos conservan los datos de
-     * reproducción pero pierden la referencia al grupo (id_grupo → NULL) para
-     * no dejar FKs huérfanas ni borrar el historial del usuario.
+     * reproducción pero pierden la referencia al grupo (id_grupo → NULL vía
+     * fk_logs_grupo ON DELETE SET NULL) para no dejar FKs huérfanas ni borrar
+     * el historial del usuario.
      */
     @Transactional
     public void eliminarGrupo(Long idGrupo, String emailSolicitante) {
         verifyRolMinimo(idGrupo, emailSolicitante, GroupRole.SUPER_ADMIN, "eliminar el grupo");
 
-        // Primero limpiamos referencias en logs (SET NULL) para conservar historial.
-        logRepository.nullifyGrupoId(idGrupo);
         miembrosGroupRepository.deleteByGrupoId(idGrupo);
         permisosGroupRepository.deleteByGrupoId(idGrupo);
         Group grupo = grupoRepository.getByIdOrThrow(idGrupo);

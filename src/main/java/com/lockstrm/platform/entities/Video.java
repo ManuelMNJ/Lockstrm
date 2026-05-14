@@ -21,6 +21,7 @@ public class Video {
 
     @Column(columnDefinition = "LONGTEXT")
     private String miniaturaUrl;
+    @Column(name = "fecha_subida", nullable = false, updatable = false)
     private LocalDateTime fechaSubida;
 
     @ManyToOne

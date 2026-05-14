@@ -35,16 +35,18 @@ public class User {
     @Column(length = 4, nullable = false)
     private String tag;
 
+    @Column(nullable = false)
     private String password;
 
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
     private LocalDateTime fechaRegistro;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    // CascadeType.REMOVE ausente a propósito: la eliminación de vídeos pasa por
-    // UserService.eliminarCuenta, que también borra los ficheros del filesystem.
-    @OneToMany(mappedBy = "propietario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    // Relación inversa, no se persiste/borra a través del usuario: la gestión
+    // de vídeos pasa siempre por VideoService / UserService.eliminarCuenta.
+    @OneToMany(mappedBy = "propietario")
     @JsonIgnore
     @ToString.Exclude
     private List<Video> videosSubidos;

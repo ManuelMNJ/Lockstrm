@@ -59,10 +59,22 @@ public class UserService implements UserDetailsService {
     private final VideoViewRepository        videoViewRepository;
     private final LogRepository              logRepository;
 
+    /** Normaliza emails: trim + lowercase. null-safe. */
+    static String normalizarEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
+    /** Normaliza usernames: trim + lowercase para que la unicidad lógica
+     *  case-insensitive coincida con la constraint física. */
+    static String normalizarUsername(String username) {
+        return username == null ? null : username.trim().toLowerCase();
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+        String emailNorm = normalizarEmail(email);
+        User usuario = userRepository.findByEmail(emailNorm)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + emailNorm));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(usuario.getEmail())
@@ -72,13 +84,14 @@ public class UserService implements UserDetailsService {
     }
 
     public User registrarUsuario(RegisterRequest request) {
+        String usernameNorm = normalizarUsername(request.getUsername());
         User nuevo = new User();
         nuevo.setNombre(request.getNombre());
         nuevo.setApellidos(request.getApellidos());
-        nuevo.setUsername(request.getUsername());
-        nuevo.setEmail(request.getEmail());
+        nuevo.setUsername(usernameNorm);
+        nuevo.setEmail(normalizarEmail(request.getEmail()));
         nuevo.setPassword(passwordEncoder.encode(request.getPassword()));
-        nuevo.setTag(generarTagLibre(request.getUsername()));
+        nuevo.setTag(generarTagLibre(usernameNorm));
         return userRepository.save(nuevo);
     }
 
@@ -94,7 +107,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User buscarPorEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return userRepository.findByEmail(normalizarEmail(email)).orElse(null);
     }
 
     public User buscarPorIdentificador(String identificador) {
@@ -117,7 +130,9 @@ public class UserService implements UserDetailsService {
     }
 
     public boolean emailDisponible(String email) {
-        return !userRepository.existsByEmail(email);
+        String norm = normalizarEmail(email);
+        if (norm == null || norm.isBlank()) return false;
+        return !userRepository.existsByEmail(norm);
     }
 
     /**
@@ -131,27 +146,29 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User actualizarPerfil(String email, String nombre, String apellidos, String nuevoUsername) {
-        User usuario = userRepository.findByEmail(email)
+        User usuario = userRepository.findByEmail(normalizarEmail(email))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         usuario.setNombre(nombre);
         usuario.setApellidos(apellidos);
-        if (!usuario.getUsername().equalsIgnoreCase(nuevoUsername)) {
-            usuario.setUsername(nuevoUsername);
-            usuario.setTag(generarTagLibre(nuevoUsername));
+        String usernameNorm = normalizarUsername(nuevoUsername);
+        if (!usuario.getUsername().equalsIgnoreCase(usernameNorm)) {
+            usuario.setUsername(usernameNorm);
+            usuario.setTag(generarTagLibre(usernameNorm));
         }
         return userRepository.save(usuario);
     }
 
     @Transactional
     public boolean actualizarEmail(String emailActual, String nuevoEmail, String passwordActual) {
-        User usuario = userRepository.findByEmail(emailActual)
+        String emailActualNorm = normalizarEmail(emailActual);
+        User usuario = userRepository.findByEmail(emailActualNorm)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
             return false; // contraseña incorrecta → el caller devuelve 400
         }
-        String cleanEmail = nuevoEmail.toLowerCase().trim();
-        if (!emailActual.equalsIgnoreCase(cleanEmail) && !emailDisponible(cleanEmail)) {
+        String cleanEmail = normalizarEmail(nuevoEmail);
+        if (!emailActualNorm.equals(cleanEmail) && !emailDisponible(cleanEmail)) {
             throw new com.lockstrm.platform.exceptions.BusinessException("El email ya está registrado");
         }
         usuario.setEmail(cleanEmail);
@@ -161,7 +178,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public boolean cambiarContrasena(String email, String actual, String nueva) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(normalizarEmail(email))
                 .filter(u -> passwordEncoder.matches(actual, u.getPassword()))
                 .map(u -> {
                     u.setPassword(passwordEncoder.encode(nueva));
@@ -184,7 +201,7 @@ public class UserService implements UserDetailsService {
         String newFileName = UUID.randomUUID() + "." + ext;
         Path   dest        = baseDir.resolve(newFileName);
 
-        User usuario = userRepository.findByEmail(email)
+        User usuario = userRepository.findByEmail(normalizarEmail(email))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         // Eliminar avatar anterior si existe
@@ -265,15 +282,16 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public void eliminarCuenta(String email) {
-        User usuario = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+        String emailNorm = normalizarEmail(email);
+        User usuario = userRepository.findByEmail(emailNorm)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + emailNorm));
 
         Long idUsuario    = usuario.getIdUsuario();
         Path videoBaseDir = Paths.get(uploadDir).toAbsolutePath().normalize();
         Path thumbBaseDir = Paths.get(thumbnailsDir).toAbsolutePath().normalize();
 
         // 1. Vídeos propiedad del usuario
-        List<Video> videos = videoRepository.findByPropietario_Email(email);
+        List<Video> videos = videoRepository.findByPropietario_Email(emailNorm);
         for (Video video : videos) {
             Long idVideo = video.getIdVideo();
             groupPermissionRepository.deleteByVideoId(idVideo);
@@ -305,8 +323,8 @@ public class UserService implements UserDetailsService {
         List<Group> grupos = grupoRepository.findByCreador_Email(email);
         for (Group grupo : grupos) {
             Long idGrupo = grupo.getIdGrupo();
-            // SET NULL en logs para conservar el historial de otros miembros
-            logRepository.nullifyGrupoId(idGrupo);
+            // La FK fk_logs_grupo (ON DELETE SET NULL) conserva el historial
+            // de otros miembros al borrar el grupo.
             groupMemberRepository.deleteByGrupoId(idGrupo);
             groupPermissionRepository.deleteByGrupoId(idGrupo);
             grupoRepository.delete(grupo);
@@ -332,6 +350,6 @@ public class UserService implements UserDetailsService {
 
         // 6. Usuario
         userRepository.delete(usuario);
-        log.info("Cuenta eliminada: {}", email);
+        log.info("Cuenta eliminada: {}", emailNorm);
     }
 }

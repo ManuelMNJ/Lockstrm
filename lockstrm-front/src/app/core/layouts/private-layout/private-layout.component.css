@@ -118,12 +118,8 @@
   flex: 1;
 }
 
-/* ── Nav items ──────────────────────────────────────────────────────────────
-   FIX: font-weight fijo en 500 en TODOS los estados.
-   Antes era 500 (inactivo) → 600 (activo); ese cambio ensanchaba el texto
-   y producía un reflow visible ("salto") al hacer clic.
-   La distinción activo/inactivo se hace SÓLO con color y fondo.
-   ─────────────────────────────────────────────────────────────────────── */
+/* Nav items: font-weight constante (500) para evitar reflow al cambiar de
+   estado activo/inactivo. La distinción visual se hace con color y fondo. */
 .nav-item {
   display: flex;
   align-items: center;
