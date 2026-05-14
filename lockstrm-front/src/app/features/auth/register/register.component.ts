@@ -111,7 +111,18 @@ export class RegisterComponent {
     this.cargando    = true;
     this.errorGlobal = '';
 
-    this.http.post<{ displayTag?: string }>(`${this.apiUrl}/registro`, this.form.value)
+    // Trim de username/email para que el cliente envíe el mismo valor que
+    // luego normaliza el backend. passwordConfirm se queda en el formulario.
+    const v = this.form.value;
+    const payload = {
+      nombre:    (v.nombre    ?? '').trim(),
+      apellidos: (v.apellidos ?? '').trim(),
+      username:  (v.username  ?? '').trim(),
+      email:     (v.email     ?? '').trim(),
+      password:  v.password,
+    };
+
+    this.http.post<{ displayTag?: string }>(`${this.apiUrl}/registro`, payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

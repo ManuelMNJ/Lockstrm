@@ -33,7 +33,7 @@ public class GroupMember implements Serializable {
     @Column(name = "rol", nullable = false, columnDefinition = "varchar(20)")
     private GroupRole rol = GroupRole.MIEMBRO;
 
-    @Column(name = "fecha_union")
+    @Column(name = "fecha_union", nullable = false, updatable = false)
     private LocalDateTime fechaUnion;
 
     @PrePersist

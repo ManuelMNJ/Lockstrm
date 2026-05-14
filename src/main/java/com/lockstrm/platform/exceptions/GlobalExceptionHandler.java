@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -86,6 +87,20 @@ public class GlobalExceptionHandler {
                                                                HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT",
                 ex.getMessage() != null ? ex.getMessage() : "Argumento inválido", req);
+    }
+
+    /**
+     * Backup ante carreras en checks "no duplicado": dos peticiones simultáneas
+     * pasan el chequeo lógico y la BD rechaza la segunda por unique constraint.
+     * Devolvemos 409 con un mensaje genérico para no filtrar qué campo chocó.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex,
+                                                             HttpServletRequest req) {
+        log.warn("Data integrity violation at {} {}: {}", req.getMethod(), req.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "CONFLICT",
+                "El recurso ya existe o entra en conflicto con otro existente", req);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

@@ -1,14 +1,20 @@
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+/**
+ * Guard de área privada. Si no hay sesión activa, redirige a /login
+ * preservando la URL solicitada en el query param `returnUrl` para
+ * volver a ella tras autenticarse.
+ */
+export const authGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router      = inject(Router);
 
   if (authService.isLoggedIn()) return true;
 
-  router.navigate(['/login']);
+  router.navigate(['/login'], {
+    queryParams: { returnUrl: state.url },
+  });
   return false;
 };

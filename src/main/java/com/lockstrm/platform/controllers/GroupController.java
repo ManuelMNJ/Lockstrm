@@ -1,5 +1,7 @@
 package com.lockstrm.platform.controllers;
 
+import com.lockstrm.platform.dto.AniadirMiembroRequest;
+import com.lockstrm.platform.dto.CambiarRolRequest;
 import com.lockstrm.platform.dto.CrearGrupoRequest;
 import com.lockstrm.platform.dto.GroupDto;
 import com.lockstrm.platform.dto.GroupVideoStatsDto;
@@ -7,7 +9,6 @@ import com.lockstrm.platform.dto.MemberDto;
 import com.lockstrm.platform.dto.RenombrarGrupoRequest;
 import com.lockstrm.platform.dto.VideoDto;
 import com.lockstrm.platform.entities.Group;
-import com.lockstrm.platform.enums.GroupRole;
 import com.lockstrm.platform.services.AnalyticsService;
 import com.lockstrm.platform.services.GroupService;
 import com.lockstrm.platform.services.VideoService;
@@ -145,12 +146,8 @@ public class GroupController {
     public ResponseEntity<Map<String, String>> aniadirMiembro(
             @PathVariable Long idGrupo,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, String> body) {
-        String identificador = body.getOrDefault("identificador", body.get("email"));
-        if (identificador == null || identificador.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El identificador del nuevo miembro es obligatorio"));
-        }
-        grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), identificador.trim());
+            @Valid @RequestBody AniadirMiembroRequest request) {
+        grupoService.aniadirMiembro(idGrupo, userDetails.getUsername(), request.identificador().trim());
         return ResponseEntity.ok(Map.of("mensaje", "Miembro añadido correctamente"));
     }
 
@@ -159,22 +156,8 @@ public class GroupController {
             @PathVariable Long idGrupo,
             @PathVariable Long idUsuario,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, String> body) {
-
-        String rolStr = body.get("rol");
-        if (rolStr == null || rolStr.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El campo 'rol' es obligatorio"));
-        }
-
-        GroupRole nuevoRol;
-        try {
-            nuevoRol = GroupRole.valueOf(rolStr.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Rol no válido. Valores permitidos: SUPER_ADMIN, ADMIN, EDITOR, MIEMBRO"));
-        }
-
-        grupoService.cambiarRolMiembro(idGrupo, userDetails.getUsername(), idUsuario, nuevoRol);
+            @Valid @RequestBody CambiarRolRequest request) {
+        grupoService.cambiarRolMiembro(idGrupo, userDetails.getUsername(), idUsuario, request.rol());
         return ResponseEntity.ok(Map.of("mensaje", "Rol actualizado correctamente"));
     }
 

@@ -22,7 +22,11 @@
       "Bash(git -C /c/Users/manue/Desktop/GithubMNJ/Lockstrm checkout -- lockstrm-front/package-lock.json .claude/settings.local.json)",
       "Bash(git -C /c/Users/manue/Desktop/GithubMNJ/Lockstrm status --short)",
       "Bash(git -C /c/Users/manue/Desktop/GithubMNJ/Lockstrm status)",
-      "Bash(git -C /c/Users/manue/Desktop/GithubMNJ/Lockstrm log --oneline -5)"
+      "Bash(git -C /c/Users/manue/Desktop/GithubMNJ/Lockstrm log --oneline -5)",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -File | Select-Object -ExpandProperty FullName\")",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -File -Include *.ts,*.html,*.css | Select-Object -ExpandProperty FullName\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path src/main/resources -Recurse -File | Select-Object -ExpandProperty FullName\")",
+      "Bash(mvn -q -DskipTests compile)"
     ]
   }
 }

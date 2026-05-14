@@ -22,7 +22,7 @@ public class Group {
     @JoinColumn(name = "id_creador", nullable = false)
     private User creador;
 
-    @Column(name = "fecha_creacion", updatable = false)
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
     @Column(name = "imagen_url")

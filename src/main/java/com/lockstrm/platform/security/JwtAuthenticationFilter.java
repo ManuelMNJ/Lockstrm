@@ -46,11 +46,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Streaming: el tag <video> no envía cabeceras; aceptamos un ticket firmado
         // de corta duración (~60 s) por query param, atado al fileName concreto.
+        // Restringimos a la ruta exacta del endpoint para que ninguna ruta futura
+        // que contenga "/stream/" en otro contexto acepte tickets por error.
         final String requestUri = request.getRequestURI();
-        if (jwt == null && requestUri.contains("/stream/")) {
+        final String STREAM_PREFIX = "/api/videos/stream/";
+        if (jwt == null && requestUri.startsWith(STREAM_PREFIX)) {
             String paramToken = request.getParameter("token");
             if (paramToken != null && !paramToken.isBlank()) {
-                String fileName = requestUri.substring(requestUri.indexOf("/stream/") + "/stream/".length());
+                String fileName = requestUri.substring(STREAM_PREFIX.length());
                 String ticketSubject = jwtService.validateStreamTicket(paramToken, fileName);
                 if (ticketSubject != null
                         && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -579,7 +579,7 @@ export class VideosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  private editTienecambios(): boolean {
+  private editTieneCambios(): boolean {
     if (this.editTitulo.trim() !== this.editTituloOriginal) return true;
     if (this.editMiniaturaBlob !== null) return true;
     if (this.editIdGrupos.size !== this.editIdGruposOriginal.size) return true;
@@ -618,7 +618,7 @@ export class VideosComponent implements OnInit {
   }
 
   cancelarEdicion(): void {
-    if (this.editTienecambios()) {
+    if (this.editTieneCambios()) {
       this.confirmarDescartarEdicion = true;
       this.cdr.markForCheck();
       return;

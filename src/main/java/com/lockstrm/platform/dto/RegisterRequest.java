@@ -10,9 +10,11 @@ import lombok.Data;
 public class RegisterRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 100, message = "El nombre no puede superar 100 caracteres")
     private String nombre;
 
     @NotBlank(message = "Los apellidos son obligatorios")
+    @Size(max = 100, message = "Los apellidos no pueden superar 100 caracteres")
     private String apellidos;
 
     @NotBlank(message = "El nombre de usuario es obligatorio")
@@ -24,10 +26,15 @@ public class RegisterRequest {
     private String username;
 
     @NotBlank(message = "El email es obligatorio")
+    @Size(max = 254, message = "El email no puede superar 254 caracteres")
     @Email(message = "El email no tiene un formato válido")
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Size(max = 72, message = "La contraseña no puede superar 72 caracteres")
+    @Pattern(
+        regexp = ChangePasswordRequest.PASSWORD_REGEX,
+        message = "La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo especial"
+    )
     private String password;
 }

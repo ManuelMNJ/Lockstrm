@@ -37,7 +37,7 @@ public class Log {
     @JoinColumn(name = "id_video", nullable = false)
     private Video video;
 
-    @Column(name = "fecha_hora")
+    @Column(name = "fecha_hora", nullable = false, updatable = false)
     private LocalDateTime fechaHora;
 
     @Column(name = "ip_acceso", length = 45)
