@@ -112,8 +112,7 @@ export class AuthService {
         return null;
       }
       return user;
-    } catch (e) {
-      console.warn('[AuthService] Sesión corrupta en localStorage, se descarta.', e);
+    } catch {
       localStorage.removeItem(this.STORAGE_KEY);
       return null;
     }
