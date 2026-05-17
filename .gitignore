@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Claude Code CLI (herramienta de desarrollo — no entregar) ###
+.claude/
+
 ### Variables de entorno (nunca subir al repo) ###
 .env
 .env.*

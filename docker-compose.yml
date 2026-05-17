@@ -42,6 +42,11 @@ services:
       AVATARS_DIR: /var/lockstrm/avatars
       GRUPOS_IMG_DIR: /var/lockstrm/grupos
       CORS_ORIGIN: ${CORS_ORIGIN}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      APP_URL: ${APP_URL}
+      RESET_TOKEN_EXPIRY_MINUTES: ${RESET_TOKEN_EXPIRY_MINUTES:-30}
     volumes:
       - ./uploads/videos:/var/lockstrm/videos
       - ./uploads/thumbnails:/var/lockstrm/thumbnails
