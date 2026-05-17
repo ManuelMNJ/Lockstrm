@@ -26,7 +26,8 @@ jobs:
             cd /home/deploy/lockstrm
 
             echo "→ Pulling latest code..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "→ Rebuilding containers..."
             docker compose up -d --build --remove-orphans
