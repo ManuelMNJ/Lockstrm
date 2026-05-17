@@ -1,21 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs wc -l)",
-      "Bash(Remove-Item \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\\\\FALTANTES_Codigo.md\" -Force)",
-      "Bash(Remove-Item \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\\\\REVISION_Documentacion_UT5.md\" -Force)",
-      "Bash(Write-Host \"Borrados correctamente\")",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\" -Directory | Where-Object { $_.Name -notin @\\('src','lockstrm-front','.git','.idx','target'\\) } | Select-Object Name)",
-      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && grep -n \"^\\\\s*//\" \"{}\" | head -5')",
-      "Bash(grep -r \"^\\\\s*//\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --include=\"*.properties\" --include=\"*.yml\" --include=\"*.yaml\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
-      "Bash(grep -rn \"^\\\\s*//\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --include=\"*.properties\" --include=\"*.yml\" --include=\"*.yaml\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
-      "Read(//tmp/**)",
-      "Bash(grep -rn \"^\\\\s*//.*\\\\\\(Este componente\\\\|Este servicio\\\\|Este método\\\\|Este archivo\\\\|Archivo:\\\\|Componente de\\\\|Este guard\\\\|Este validador\\\\|Este interceptor\\\\\\)\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
-      "Bash(grep -rn \"^\\\\s*//.*\\\\\\(TODO\\\\|FIXME\\\\|HACK\\\\|BUG\\\\|XXX\\\\|REVISADO\\\\|revisar\\\\|pendiente\\\\|falta\\\\|arreglar\\\\|revisar\\\\\\)\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
-      "Bash(cd \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\" && grep -rn \"^\\\\s*//\\\\s*[─━═]\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist 2>/dev/null > /tmp/separators.txt && cat /tmp/separators.txt)",
-      "Bash(grep -n \"^\\\\s*//.*Archivo\\\\|^\\\\s*//.*\\\\\\(Entry\\\\|Main\\\\|punto de entrada\\\\\\)\" ./src/main/java/com/lockstrm/platform/**/*.java)",
-      "Bash(grep -rn \"^\\\\s*//.*\" . --include=\"*.ts\" --include=\"*.java\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
-      "Bash(grep -v \"^\\\\s*$\")"
+      "Bash(where soffice *)",
+      "Bash(where libreoffice *)",
+      "Bash(where pandoc *)",
+      "Bash(where wkhtmltopdf *)",
+      "Bash(where python *)",
+      "Bash(py --version)",
+      "Bash(powershell -Command \"Get-Command soffice,python,pandoc,wkhtmltopdf -ErrorAction SilentlyContinue | Select-Object Name,Source\")",
+      "Bash(powershell -Command \"Test-Path 'C:\\\\Program Files\\\\LibreOffice\\\\program\\\\soffice.exe'\")",
+      "Bash(powershell -Command \"Test-Path 'C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe'\")",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=\"C:\\\\Users\\\\manue\\\\Downloads\\\\Documentacion tecnica - Lockstrm \\(corregida\\).pdf\" \"file:///C:/Users/manue/Downloads/lockstrm_corregido.html\")",
+      "Bash(findstr /i \"error written saved\")"
     ]
   }
 }
