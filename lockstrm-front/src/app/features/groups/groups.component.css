@@ -132,7 +132,7 @@
   text-align: center;
 }
 
-.empty-state svg {
+.empty-state > svg {
   width: 40px;
   height: 40px;
   opacity: 0.3;
@@ -309,7 +309,7 @@
   opacity: 0.6;
 }
 
-.empty-state--muted svg {
+.empty-state--muted > svg {
   color: var(--text-subtle);
 }
 
