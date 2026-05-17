@@ -113,7 +113,10 @@ cp .env.example .env
 # En Linux/Mac: nano .env
 # En Windows:   notepad .env
 
-# 4. Levantar todos los servicios
+# 4. Crear las carpetas de almacenamiento (Docker las monta como bind mounts)
+mkdir -p uploads/videos uploads/thumbnails uploads/avatars uploads/grupos
+
+# 5. Levantar todos los servicios
 docker compose up --build
 ```
 
@@ -121,9 +124,9 @@ La primera vez tarda 3-5 minutos (Maven descarga dependencias, Node compila Angu
 
 | Servicio | URL |
 |---|---|
-| Aplicación (frontend) | http://localhost:4200 |
+| Aplicación (frontend) | http://localhost |
 | API (backend) | http://localhost:8080 |
-| Base de datos | localhost:3306 |
+| Base de datos | localhost:**3307** (puerto del host mapeado al 3306 del contenedor) |
 
 ```bash
 # Parar los servicios (conserva datos)
@@ -132,6 +135,10 @@ docker compose down
 # Parar y borrar todos los datos (vídeos, BD)
 docker compose down -v
 ```
+
+> **Nota para entrega en ZIP:** excluye las carpetas `lockstrm-front/node_modules/` al comprimir. Las dependencias se instalan automáticamente durante el `docker compose up --build`.
+
+> **Conflicto de puertos:** si el puerto 80 u 8080 ya están en uso, edita `docker-compose.yml` y cambia el mapeo afectado (ej: `"8081:80"`).
 
 ### Lo que Docker gestiona automáticamente
 

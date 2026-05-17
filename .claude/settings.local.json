@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc -l)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\\\\FALTANTES_Codigo.md\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\\\\REVISION_Documentacion_UT5.md\" -Force)",
+      "Bash(Write-Host \"Borrados correctamente\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\" -Directory | Where-Object { $_.Name -notin @\\('src','lockstrm-front','.git','.idx','target'\\) } | Select-Object Name)",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && grep -n \"^\\\\s*//\" \"{}\" | head -5')",
+      "Bash(grep -r \"^\\\\s*//\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --include=\"*.properties\" --include=\"*.yml\" --include=\"*.yaml\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
+      "Bash(grep -rn \"^\\\\s*//\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --include=\"*.properties\" --include=\"*.yml\" --include=\"*.yaml\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
+      "Read(//tmp/**)",
+      "Bash(grep -rn \"^\\\\s*//.*\\\\\\(Este componente\\\\|Este servicio\\\\|Este método\\\\|Este archivo\\\\|Archivo:\\\\|Componente de\\\\|Este guard\\\\|Este validador\\\\|Este interceptor\\\\\\)\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
+      "Bash(grep -rn \"^\\\\s*//.*\\\\\\(TODO\\\\|FIXME\\\\|HACK\\\\|BUG\\\\|XXX\\\\|REVISADO\\\\|revisar\\\\|pendiente\\\\|falta\\\\|arreglar\\\\|revisar\\\\\\)\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
+      "Bash(cd \"C:\\\\Users\\\\manue\\\\Desktop\\\\GithubMNJ\\\\Lockstrm\" && grep -rn \"^\\\\s*//\\\\s*[─━═]\" . --include=\"*.ts\" --include=\"*.java\" --include=\"*.html\" --include=\"*.css\" --include=\"*.scss\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist 2>/dev/null > /tmp/separators.txt && cat /tmp/separators.txt)",
+      "Bash(grep -n \"^\\\\s*//.*Archivo\\\\|^\\\\s*//.*\\\\\\(Entry\\\\|Main\\\\|punto de entrada\\\\\\)\" ./src/main/java/com/lockstrm/platform/**/*.java)",
+      "Bash(grep -rn \"^\\\\s*//.*\" . --include=\"*.ts\" --include=\"*.java\" --exclude-dir=node_modules --exclude-dir=target --exclude-dir=dist)",
+      "Bash(grep -v \"^\\\\s*$\")"
+    ]
+  }
+}

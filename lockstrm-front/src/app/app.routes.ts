@@ -25,18 +25,11 @@ import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 export const routes: Routes = [
 
-  // ── ROOT SHELL — envuelve toda la aplicación ─────────────────────────────
-  // AppShellComponent persiste en todas las rutas: muestra el navbar global
-  // con el estado de autenticación reactivo y un <router-outlet> para el
-  // contenido de cada página.
   {
     path: '',
     component: AppShellComponent,
     children: [
 
-      // ── ÁREA PÚBLICA ────────────────────────────────────────────────────
-      // PublicLayoutComponent es un wrapper mínimo (sólo padding + outlet).
-      // El navbar ya lo gestiona AppShell.
       {
         path: '',
         component: PublicLayoutComponent,
@@ -50,9 +43,6 @@ export const routes: Routes = [
         ],
       },
 
-      // ── ÁREA PRIVADA (auth requerida) ────────────────────────────────────
-      // PrivateLayoutComponent aporta el sidebar de navegación y la cabecera
-      // con el título de página. El guard redirige a /login si no hay sesión.
       {
         path: '',
         component: PrivateLayoutComponent,

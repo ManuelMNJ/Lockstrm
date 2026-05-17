@@ -210,7 +210,6 @@ export class GroupsComponent implements OnInit {
     return this.videosPerGrupo.get(idGrupo) ?? null;
   }
 
-  // ── Ordenación ──────────────────────────────────────────────────────
   private ordenar(lista: Group[], sort: typeof this.sortMisGrupos): Group[] {
     return [...lista].sort((a, b) => {
       let cmp = 0;
@@ -245,7 +244,6 @@ export class GroupsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ── Paginación ───────────────────────────────────────────────────────
   private paginar(lista: Group[], pagina: number): Group[] {
     const inicio = (pagina - 1) * this.tamanioPagina;
     return lista.slice(inicio, inicio + this.tamanioPagina);

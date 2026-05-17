@@ -89,8 +89,6 @@ export class PrivateLayoutComponent {
     return nombre.trim().charAt(0).toUpperCase();
   }
 
-  // ── Private helpers ───────────────────────────────────────────────────────
-
   private actualizarHeader(url: string): void {
     const cleanUrl = url.split('?')[0];
 

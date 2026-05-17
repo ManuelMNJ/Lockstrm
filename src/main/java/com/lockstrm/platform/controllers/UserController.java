@@ -36,8 +36,6 @@ public class UserController {
     @Value("${lockstrm.upload.avatars.dir}")
     private String avatarsDir;
 
-    // ── Perfil ────────────────────────────────────────────────────────
-
     @GetMapping("/perfil")
     public ResponseEntity<Map<String, Object>> obtenerPerfil(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -72,8 +70,6 @@ public class UserController {
         resp.put("avatarUrl", resolveAvatarUrl(usuario.getAvatarUrl()));
         return ResponseEntity.ok(resp);
     }
-
-    // ── Avatar ────────────────────────────────────────────────────────
 
     @PostMapping(value = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> subirAvatar(
@@ -111,8 +107,6 @@ public class UserController {
                 .body(resource);
     }
 
-    // ── Email ─────────────────────────────────────────────────────────
-
     @PutMapping("/email")
     public ResponseEntity<Map<String, String>> actualizarEmail(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -126,8 +120,6 @@ public class UserController {
         }
         return ResponseEntity.ok(Map.of("mensaje", "Correo actualizado correctamente"));
     }
-
-    // ── Contraseña ────────────────────────────────────────────────────
 
     @PostMapping("/cambiar-contrasena")
     public ResponseEntity<Map<String, String>> cambiarContrasena(
@@ -143,8 +135,6 @@ public class UserController {
         return ResponseEntity.ok(Map.of("mensaje", "Contraseña actualizada correctamente"));
     }
 
-    // ── Cuenta ────────────────────────────────────────────────────────
-
     /**
      * Elimina la cuenta del usuario autenticado y todos sus datos en cascada
      * (vídeos, grupos, membresías, logs, vistas y archivos en disco).
@@ -157,8 +147,6 @@ public class UserController {
         userService.eliminarCuenta(userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────
 
     private static String resolveAvatarUrl(String fileName) {
         if (fileName == null || fileName.isBlank()) return null;

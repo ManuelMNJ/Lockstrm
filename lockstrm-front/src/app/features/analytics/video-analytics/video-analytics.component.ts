@@ -224,8 +224,6 @@ export class VideoAnalyticsComponent implements OnInit {
     return fromLog?.grupoNombre ?? null;
   }
 
-  // ── KPIs (sobre los logs filtrados) ────────────────────────────────────
-
   get totalRegistros(): number {
     return this.logsFiltrados.length;
   }

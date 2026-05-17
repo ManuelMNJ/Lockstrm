@@ -30,7 +30,6 @@ export class SettingsComponent {
   private readonly cdr        = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
-  // ── Apariencia ────────────────────────────────────────────────────
   modoOscuro = lsGet(KEYS.theme) !== 'light';
 
   toggleModo(): void {
@@ -39,7 +38,6 @@ export class SettingsComponent {
     lsSet(KEYS.theme, this.modoOscuro ? 'dark' : 'light');
   }
 
-  // ── Reproductor ───────────────────────────────────────────────────
   readonly velocidades = ['0.5', '0.75', '1', '1.25', '1.5', '2'];
 
   autoplay      = lsGet(KEYS.autoplay)     !== 'false';
@@ -62,7 +60,6 @@ export class SettingsComponent {
     lsSet(KEYS.volumeMemory, String(this.volumeMemory));
   }
 
-  // ── Sesión ────────────────────────────────────────────────────────
   get usuario() { return this.auth.getUser(); }
 
   cerrarSesion(): void {
@@ -71,7 +68,6 @@ export class SettingsComponent {
 
   @ViewChild('confirmInput') private confirmInput?: ElementRef<HTMLInputElement>;
 
-  // ── Zona de peligro — eliminar cuenta ─────────────────────────────
   modalEliminar    = false;
   confirmacionText = '';
   estadoEliminar: 'idle' | 'loading' | 'error' = 'idle';

@@ -34,13 +34,11 @@ export class ProfileComponent implements OnInit, PendingChanges {
   cargando = true;
   error    = '';
 
-  // ── Edición de perfil ─────────────────────────────────────────────
   modoEdicion  = false;
   formPerfil!: FormGroup;
   estadoPerfil: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   mensajePerfil = '';
 
-  // ── Cambio de contraseña ──────────────────────────────────────────
   modoPasswordAbierto = false;
   formPassword!: FormGroup;
   showNuevaPassword   = false;
@@ -48,18 +46,14 @@ export class ProfileComponent implements OnInit, PendingChanges {
   estadoPassword: 'idle' | 'loading' | 'success' | 'error' = 'idle';
   mensajePassword = '';
 
-  // ── Avatar ────────────────────────────────────────────────────────
   avatarPreview: string | null = null;  // objectURL temporal durante la subida
   subiendoAvatar = false;
   avatarError    = '';
 
-  // ── Copiar handle ─────────────────────────────────────────────────
   handleCopiado = false;
 
-  // ── Confirmación cambio de username ───────────────────────────────
   mostrarConfirmUsername = false;
 
-  // ── Cambio de correo ──────────────────────────────────────────────
   modoEditarEmail   = false;
   formEmail!: FormGroup;
   showPasswordEmail = false;
@@ -79,8 +73,6 @@ export class ProfileComponent implements OnInit, PendingChanges {
     this.cargarPerfil();
   }
 
-  // ── Carga ─────────────────────────────────────────────────────────
-
   private cargarPerfil(): void {
     this.cargando = true;
     this.usuarioService.obtenerPerfil()
@@ -93,8 +85,6 @@ export class ProfileComponent implements OnInit, PendingChanges {
         error: ()  => { this.error = 'No se pudo cargar la información de perfil.'; this.cdr.markForCheck(); },
       });
   }
-
-  // ── Edición de perfil ─────────────────────────────────────────────
 
   activarEdicion(): void {
     if (!this.perfil) return;
@@ -214,11 +204,8 @@ export class ProfileComponent implements OnInit, PendingChanges {
   get fApellidos() { return this.formPerfil.get('apellidos')!; }
   get fUsername()  { return this.formPerfil.get('username')!; }
 
-  // ── Cambio de contraseña ──────────────────────────────────────────
-
   togglePassword(): void {
     if (this.modoPasswordAbierto) {
-      // Cerrar: resetear todo
       this.modoPasswordAbierto = false;
       this.estadoPassword      = 'idle';
       this.mensajePassword     = '';
@@ -283,8 +270,6 @@ export class ProfileComponent implements OnInit, PendingChanges {
         },
       });
   }
-
-  // ── Cambio de correo ──────────────────────────────────────────────
 
   activarEditarEmail(): void {
     this.formEmail = this.fb.group({
@@ -368,8 +353,6 @@ export class ProfileComponent implements OnInit, PendingChanges {
 
   get fNuevoEmail()    { return this.formEmail.get('nuevoEmail')!; }
   get fPasswordEmail() { return this.formEmail.get('passwordActual')!; }
-
-  // ── Avatar ────────────────────────────────────────────────────────
 
   onAvatarSelected(event: Event): void {
     if (!this.modoEdicion) return;          // solo activo en modo edición
