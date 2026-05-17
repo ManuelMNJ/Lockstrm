@@ -22,7 +22,7 @@ Plataforma B2B de vídeo bajo demanda con control de acceso por grupos, analíti
 Lockstrm permite a organizaciones gestionar y distribuir vídeos de forma privada:
 
 - **Subida de vídeos** con generación automática de miniatura, validación por magic bytes y límite de 200 MB
-- **Grupos con roles**: VIEWER → EDITOR → ADMIN → SUPER_ADMIN. Cada grupo controla qué vídeos pueden ver sus miembros
+- **Grupos con roles**: MIEMBRO → EDITOR → ADMIN → SUPER_ADMIN. Cada grupo controla qué vídeos pueden ver sus miembros
 - **Streaming HTTP 206** con soporte completo de seeking sin cargar el vídeo completo en memoria
 - **Token JWT invisible en el streaming**: un Service Worker inyecta la cabecera `Authorization` de forma transparente, sin que el token aparezca en ninguna URL ni log
 - **Analíticas anti-trampa**: el tiempo de visualización se acumula en servidor a razón de 5 segundos por ping, ignorando el `currentTime` del player (no se puede inflar saltando al final)
@@ -36,7 +36,7 @@ Lockstrm permite a organizaciones gestionar y distribuir vídeos de forma privad
 | Capa | Tecnología |
 |---|---|
 | Backend | Spring Boot 3.2.3 · Java 21 · Maven |
-| Base de datos | MySQL 8.0 · JPA/Hibernate (`ddl-auto=update`) |
+| Base de datos | MySQL 8.0 · Flyway · JPA/Hibernate (`ddl-auto=validate`) |
 | Autenticación | JWT stateless · JJWT 0.12.6 · BCrypt |
 | Frontend | Angular 21 · TypeScript 5.9 · RxJS |
 | Servidor web | Nginx Alpine (reverse proxy + SPA fallback) |
@@ -263,7 +263,7 @@ Lockstrm/
 │   ├── controllers/     # AuthController, VideoController, GrupoController…
 │   ├── dto/             # DTOs de request/response (nunca entidades raw)
 │   ├── entities/        # JPA: Usuario, Video, Grupo, Log, MiembrosGrupo…
-│   ├── enums/           # RolGrupo (VIEWER → EDITOR → ADMIN → SUPER_ADMIN)
+│   ├── enums/           # RolGrupo (MIEMBRO → EDITOR → ADMIN → SUPER_ADMIN)
 │   ├── exceptions/      # GlobalExceptionHandler, excepciones de dominio
 │   ├── repositories/    # Spring Data JPA con queries JPQL custom
 │   ├── security/        # JwtAuthenticationFilter, JwtService, RateLimitFilter
